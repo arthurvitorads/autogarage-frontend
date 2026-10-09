@@ -1,0 +1,29 @@
+{
+  "name": "front",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "type-check": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "@primevue/themes": "^4.5.4",
+    "firebase": "^13.0.0",
+    "pinia": "^3.0.4",
+    "primeicons": "^8.0.2",
+    "primevue": "^4.5.5",
+    "vue": "^3.5.42",
+    "vue-router": "^5.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@vitejs/plugin-vue": "^6.0.8",
+    "sass-embedded": "^1.105.1",
+    "typescript": "6.0.2",
+    "vite": "^8.3.0",
+    "vue-tsc": "^3.3.12"
+  }
+}
