@@ -1,64 +1,92 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory } from 'vue-router'
+import { signOut } from 'firebase/auth'
 
-import MainLayout from "@/components/pages/MainLayout.vue";
-//
-import LoginPage from "@/views/LoginPage.vue";
-import HomePage from "@/views/HomePage.vue";
-import PessoaPage from "@/views/PessoaPage.vue";
+import MainLayout from '@/components/pages/MainLayout.vue'
+import LoginPage from '@/views/LoginPage.vue'
+import HomePage from '@/views/HomePage.vue'
+import PessoaPage from '@/views/PessoaPage.vue'
 
-import { isAuthenticated } from "@/services/auth.service";
+import { auth } from '@/services/firebase.service'
+import { apiMe, isFirstLogin } from '@/services/auth.service'
+
+import { useUtilStore } from '@/stores/util.store'
 
 const router = createRouter({
   history: createWebHistory(),
-
   routes: [
     {
-      path: "/",
-      redirect: "/home",
+      path: '/',
+      redirect: '/home',
     },
-
     {
-      path: "/login",
-      name: "login",
+      path: '/login',
+      name: 'login',
       component: LoginPage,
     },
-
     {
-      path: "/",
+      path: '/',
       component: MainLayout,
       meta: {
         requiresAuth: true,
       },
-
       children: [
         {
-          path: "home",
-          name: "home",
+          path: 'home',
+          name: 'home',
           component: HomePage,
         },
-
         {
-          path: "pessoas",
-          name: "pessoas",
+          path: 'pessoas',
+          name: 'pessoas',
           component: PessoaPage,
         },
       ],
     },
   ],
-});
+})
 
-router.beforeEach((to) => {
-  if (to.meta.requiresAuth && !isAuthenticated()) {
-    return {
-      name: "login",
-    };
+router.beforeEach(async (to) => {
+  await auth.authStateReady()
+
+  const requiresAuth = to.matched.some(
+    (record) => record.meta.requiresAuth,
+  )
+
+  const user = auth.currentUser
+
+  if (requiresAuth && !user) {
+    localStorage.removeItem('SESSION_TOKEN')
+    return { name: 'login' }
   }
 
-  if (to.name === "login" && isAuthenticated()) {
-    return {
-      name: "home",
-    };
+  if (to.name === 'login' && user) {
+    return { name: 'home' }
   }
-});
 
-export default router;
+  if (!requiresAuth) {
+    return true
+  }
+
+  try {
+    const token = await user!.getIdToken()
+    localStorage.setItem('SESSION_TOKEN', token)
+
+
+    if (isFirstLogin()) return true
+
+    await apiMe()
+
+    return true
+  } catch {
+    localStorage.removeItem('SESSION_TOKEN')
+
+    const utilStore = useUtilStore()
+    utilStore.cleanUser()
+
+    await signOut(auth)
+
+    return { name: 'login' }
+  }
+})
+
+export default router
