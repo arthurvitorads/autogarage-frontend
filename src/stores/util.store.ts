@@ -2,16 +2,28 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import { IEnderecoViaCep, IViaCepResponse } from '@/interface/util'
+import { IUser } from '@/interface/login'
 
 export const useUtilStore = defineStore('util', () => {
   const loadingCount = ref(0)
+
   const loading = computed(() => loadingCount.value > 0)
+
+  const user = ref<IUser | null>(null)
+
+  function setUser(dados: IUser | null) {
+    user.value = dados
+  }
+
+  function cleanUser() {
+    user.value = null
+  }
 
   function setLoading(value: boolean) {
     loadingCount.value += value ? 1 : -1
   }
 
-  async function fetchCEP(cep: string): Promise<IEnderecoViaCep> {
+  async function fetchCep(cep: string): Promise<IEnderecoViaCep> {
 
     const cleanCep = cep.replace(/\D/g, '')
 
@@ -38,7 +50,10 @@ export const useUtilStore = defineStore('util', () => {
 
   return {
     loading,
+    user,
     setLoading,
-    fetchCEP
+    fetchCep,
+    setUser,
+    cleanUser,
   }
 })

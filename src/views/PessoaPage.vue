@@ -3,9 +3,11 @@ import { computed, reactive, ref } from "vue";
 
 import type { CategoriaPessoa, TipoPessoa } from "../models/pessoa";
 
-import { validarCPF, validarCNPJ } from "../utils/documentValidation";
+import { useUtilStore } from "@/stores/util.store";
 
-import { buscarCep } from "../services/cepService";
+import { validateCNPJ, validateCPF } from "@/services/util.service";
+
+const { fetchCep } = useUtilStore()
 
 import "@/assets/styles/pessoa.css";
 
@@ -66,7 +68,7 @@ async function consultarCep() {
   try {
     buscandoCep.value = true;
 
-    const endereco = await buscarCep(formulario.cep);
+    const endereco = await fetchCep(formulario.cep);
 
     formulario.logradouro = endereco.logradouro;
 
@@ -92,11 +94,11 @@ async function consultarCep() {
 
 function validarDocumento(): boolean {
   if (tipoPessoa.value === "PF") {
-    return validarCPF(formulario.cpf);
+    return validateCPF(formulario.cpf);
   }
 
   if (tipoPessoa.value === "PJ") {
-    return validarCNPJ(formulario.cnpj);
+    return validateCNPJ(formulario.cnpj);
   }
 
   return false;

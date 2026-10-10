@@ -3,7 +3,8 @@ import logoEscura from "@/assets/img/logoEscura.png";
 
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login } from "@/services/authService"; 
+
+import { login } from "@/services/auth.service";
 
 import { useUtilStore } from "@/stores/util.store";
 

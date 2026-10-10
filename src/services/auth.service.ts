@@ -1,13 +1,17 @@
 
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 
-import { IUser } from '@/interface/login'
-
 import { auth } from '@/services/firebase.service'
+import { useUtilStore } from '@/stores/util.store'
+
+import { IUserResponse } from '@/interface/login'
 
 const API_URL = import.meta.env.VITE_API_URL
 
-export async function login(email: string, senha: string): Promise<IUser> {
+
+export async function login(email: string, senha: string): Promise<IUserResponse> {
+  const { setUser, cleanUser } = useUtilStore()
+  
   const credencial = await signInWithEmailAndPassword(auth, email.trim(), senha)
 
   try {
@@ -27,26 +31,18 @@ export async function login(email: string, senha: string): Promise<IUser> {
       throw new Error(`Falha ao consultar o usuário na API (${response.status}).`)
     }
 
-    const dados = await response.json();
+    const dados = await response.json() as IUserResponse;
 
-    const userData = dados.usuario ?? dados
-
-    return {
-      nome:
-        userData.nome ??
-        userData.an_nome ??
-        credencial.user.displayName ??
-        credencial.user.email ??
-        'Usuário',
-      email:
-        userData.email ??
-        userData.an_email ??
-        credencial.user.email ??
-        email,
+    if (!dados.autenticado) {
+      throw new Error('Usuário não autenticado na API.')
     }
-  } catch (erro) {
-    // Se o backend falhar, encerra a sessão para não deixar
-    // o frontend considerar o login concluído.
+
+    setUser(dados.usuario)
+
+    return dados
+  } catch (erro) {      
+    cleanUser()
+
     await signOut(auth)
     throw erro
   }
@@ -54,19 +50,6 @@ export async function login(email: string, senha: string): Promise<IUser> {
 
 export async function logout(): Promise<void> {
   await signOut(auth)
-}
-
-export function getUsuarioLogado(): IUser | null {
-  const usuario = auth.currentUser
-
-  if (!usuario) {
-    return null
-  }
-
-  return {
-    nome: usuario.displayName ?? usuario.email ?? 'Usuário',
-    email: usuario.email ?? '',
-  }
 }
 
 export function isAuthenticated(): boolean {

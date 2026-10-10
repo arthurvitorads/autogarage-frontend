@@ -6,7 +6,7 @@ import LoginPage from "@/views/LoginPage.vue";
 import HomePage from "@/views/HomePage.vue";
 import PessoaPage from "@/views/PessoaPage.vue";
 
-import { isAuthenticated } from "../services/authService";
+import { isAuthenticated } from "@/services/auth.service";
 
 const router = createRouter({
   history: createWebHistory(),

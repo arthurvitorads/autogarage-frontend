@@ -7,15 +7,18 @@ import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 
-import { getUsuarioLogado, logout } from '../../services/authService'
+import { logout } from '@/services/auth.service'
+
+import { useUtilStore } from '@/stores/util.store'
+
+const { user } = useUtilStore()
 
 const router = useRouter()
 
-const usuario = getUsuarioLogado()
 const menu = ref()
 
-const nome = computed(() => usuario?.nome || 'Usuário')
-const email = computed(() => usuario?.email || '')
+const nome = computed(() => user?.an_nome || 'Usuário')
+const email = computed(() => user?.an_email || '')
 const inicial = computed(() => nome.value.charAt(0).toUpperCase())
 
 const itensMenu = [
