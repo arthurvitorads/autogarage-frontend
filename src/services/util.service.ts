@@ -44,8 +44,6 @@ export function validarCPF(cpf: string): boolean {
   return segundoDigito === Number(numeros[10])
 }
 
-
-
 function normalizarCNPJ(cnpj: string): string {
   return cnpj
     .toUpperCase()

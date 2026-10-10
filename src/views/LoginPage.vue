@@ -7,6 +7,10 @@ import { login } from "@/services/authService";
 
 import { useUtilStore } from "@/stores/util.store";
 
+import { useAppToast } from "@/services/toast.service";
+
+import '@/assets/styles/login.css'
+
 const utilStore = useUtilStore()
 
 const router = useRouter()
@@ -15,6 +19,8 @@ const email = ref('')
 const senha = ref('')
 const mostrarSenha = ref(false)
 const erro = ref('')
+
+const { warn } = useAppToast()
 
 async function fazerLogin() {
   erro.value = ''
@@ -37,6 +43,7 @@ async function fazerLogin() {
       case 'auth/user-not-found':
       case 'auth/wrong-password':
         erro.value = 'E-mail ou senha incorretos.'
+        warn(erro.value)
         break
 
       case 'auth/invalid-email':
@@ -62,7 +69,6 @@ async function fazerLogin() {
   }
 }
 
-import '@/assets/styles/login.css'
 </script>
 
 <template>

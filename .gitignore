@@ -15,7 +15,6 @@ coverage
 *.local
 
 # Editor directories and files
-.vscode/*
 !.vscode/extensions.json
 .idea
 *.suo
@@ -44,6 +43,8 @@ package-lock.json
 
 # Env files
 .env
+.env.*
+!.env.example
 
 # Server files
 server/.env
