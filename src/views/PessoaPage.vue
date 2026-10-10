@@ -91,7 +91,6 @@ async function consultarCep() {
     buscandoCep.value = false;
   }
 }
-
 function validarDocumento(): boolean {
   if (tipoPessoa.value === "PF") {
     return validateCPF(formulario.cpf);
