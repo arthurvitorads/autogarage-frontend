@@ -13,13 +13,13 @@ export const useUtilStore = defineStore('util', () => {
 
   async function fetchCEP(cep: string): Promise<IEnderecoViaCep> {
 
-    const cepLimpo = cep.replace(/\D/g, '')
+    const cleanCep = cep.replace(/\D/g, '')
 
-    if (cepLimpo.length !== 8) {
+    if (cleanCep.length !== 8) {
       throw new Error('CEP inválido.')
     }
 
-    const response = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`)
+    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
 
     if (!response.ok) {
       throw new Error(
