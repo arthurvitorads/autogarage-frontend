@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 
 import Toolbar from 'primevue/toolbar'
@@ -7,10 +7,7 @@ import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 
-import {
-  getUsuarioLogado,
-  logout,
-} from '../../services/authService'
+import { getUsuarioLogado, logout } from '../../services/authService'
 
 const router = useRouter()
 
@@ -23,21 +20,10 @@ const inicial = computed(() => nome.value.charAt(0).toUpperCase())
 
 const itensMenu = [
   {
-    label: 'Meu perfil',
-    icon: 'pi pi-user',
-    command: () => {
-      // Adicione aqui a navegação para o perfil.
-      // router.push('/perfil')
-    },
-  },
-  {
-    separator: true,
-  },
-  {
     label: 'Sair',
     icon: 'pi pi-sign-out',
     class: 'menu-sair',
-    command: () => sair(),
+    command: () => handleSair(),
   },
 ]
 
@@ -45,39 +31,23 @@ function toggleMenu(event: Event) {
   menu.value.toggle(event)
 }
 
-function sair() {
-  logout()
+async function handleSair() {
+  nextTick()
+
+  await logout()
+
   router.push('/login')
 }
 </script>
 
 <template>
-  <Toolbar class="header-bar">
-    <template #start>
-      <div></div>
-    </template>
-
+  <Toolbar>
     <template #end>
-      <div class="header-actions">
+      <div>
         <Button
+          class=""
           text
-          rounded
-          icon="pi pi-bell"
-          aria-label="Notificações"
-        />
-
-        <Button
-          text
-          rounded
-          icon="pi pi-cog"
-          aria-label="Configurações"
-        />
-
-        <Button
-          text
-          class="profile-button"
-          aria-label="Menu do usuário"
-          aria-haspopup="true"
+          label="Menu do usuário"
           @click="toggleMenu"
         >
           <Avatar
@@ -118,22 +88,6 @@ function sair() {
   padding: 0 28px;
   background: var(--p-surface-0);
 }
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.profile-button {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  padding: 7px 10px;
-  color: var(--p-text-color);
-}
-
 .profile-avatar {
   background: #fff0e5;
   color: #ff7300;

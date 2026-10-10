@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import logoEscura from '../../assets/logoEscura.png'
+logoEscura
+
+import logoEscura from '@/assets/img/logoEscura.png'
 
 import Button from 'primevue/button'
 

@@ -7,7 +7,7 @@ import { validarCPF, validarCNPJ } from "../utils/documentValidation";
 
 import { buscarCep } from "../services/cepService";
 
-import "../styles/pessoa.css";
+import "@/assets/styles/pessoa.css";
 
 const tipoPessoa = ref<TipoPessoa>("PF");
 const categorias = ref<CategoriaPessoa[]>([]);

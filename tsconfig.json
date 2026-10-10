@@ -9,11 +9,14 @@
     "allowImportingTsExtensions": true,
     "noEmit": true,
     "types": ["vite/client"],
-    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
- "include": [
-  "src/**/*.ts",
-  "src/**/*.vue",
-  "src/**/*.d.ts"
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "src/**/*.d.ts"
   ]
 }

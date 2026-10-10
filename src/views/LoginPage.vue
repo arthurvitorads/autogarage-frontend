@@ -1,11 +1,11 @@
-
 <script setup lang="ts">
+import logoEscura from "@/assets/img/logoEscura.png";
+
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login } from '../../services/authService'
+import { login } from "@/services/authService"; 
 
-import { useUtilStore } from '../../stores/util.store'
-import { storeToRefs } from 'pinia'
+import { useUtilStore } from "@/stores/util.store";
 
 const utilStore = useUtilStore()
 
@@ -62,9 +62,33 @@ async function fazerLogin() {
   }
 }
 
+import '@/assets/styles/login.css'
 </script>
 
 <template>
+  <title>Login | AutoGarage</title>
+  <main class="login-page">
+  <section class="brand-panel">
+    <div class="brand">
+      <span>Auto<strong>Garage</strong></span>
+    </div>
+
+    <div class="brand-content">
+      <div class="illustration">
+        <div class="illustration-icon"><img :src="logoEscura" alt="" /></div>
+      </div>
+
+      <h1>
+        Sua oficina.<br />
+        Muito mais organizada.
+      </h1>
+
+      <p>
+        Gerencie ordens de serviço, clientes e estoque em um único lugar. Mais
+        controle para o seu negócio.
+      </p>
+    </div>
+  </section>
   <section class="form-panel">
     <div class="form-container">
 
@@ -153,4 +177,5 @@ async function fazerLogin() {
       © 2026 AutoGarage. Todos os direitos reservados.
     </div>
   </section>
+  </main>
 </template>

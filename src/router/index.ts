@@ -1,10 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
 
-import LoginView from "../views/LoginView.vue";
-import HomeView from "../views/HomeView.vue";
-import PessoaCadastroView from "../views/PessoaCadastroView.vue";
-
-import MainLayout from "../layouts/MainLayout.vue";
+import MainLayout from "@/components/pages/MainLayout.vue";
+//
+import LoginPage from "@/views/LoginPage.vue";
+import HomePage from "@/views/HomePage.vue";
+import PessoaPage from "@/views/PessoaPage.vue";
 
 import { isAuthenticated } from "../services/authService";
 
@@ -20,7 +20,7 @@ const router = createRouter({
     {
       path: "/login",
       name: "login",
-      component: LoginView,
+      component: LoginPage,
     },
 
     {
@@ -34,13 +34,13 @@ const router = createRouter({
         {
           path: "home",
           name: "home",
-          component: HomeView,
+          component: HomePage,
         },
 
         {
           path: "pessoas",
           name: "pessoas",
-          component: PessoaCadastroView,
+          component: PessoaPage,
         },
       ],
     },

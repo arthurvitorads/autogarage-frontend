@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import Sidebar from '../components/layout/Sidebar.vue'
-import HeaderBar from '../components/layout/HeaderBar.vue'
-
-import '../styles/home.css'
+import HeaderComponent from '@/components/default/HeaderComponent.vue'
+import MenuComponent from '@/components/default/MenuComponent.vue'
 
 const sidebarCollapsed = ref(false)
 
@@ -15,7 +13,7 @@ function toggleSidebar() {
 
 <template>
   <div class="home-layout">
-    <Sidebar
+    <MenuComponent
       :collapsed="sidebarCollapsed"
       @toggle="toggleSidebar"
     />
@@ -26,7 +24,7 @@ function toggleSidebar() {
         'home-main--expanded': sidebarCollapsed
       }"
     >
-      <HeaderBar />
+      <HeaderComponent />
 
       <main class="home-content">
         <RouterView />
