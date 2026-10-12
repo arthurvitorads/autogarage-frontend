@@ -9,3 +9,8 @@ export interface IUser {
   an_nome?: string
   bo_sts_reg?: boolean
 }
+
+export interface IFormLogin {
+  an_email: string
+  ca_senha: string
+}

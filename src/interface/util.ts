@@ -1,3 +1,7 @@
+export interface TGenericData {
+  [campo: string]: string
+}
+
 export interface IEnderecoViaCep {
   cep: string
   logradouro: string

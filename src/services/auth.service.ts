@@ -5,14 +5,14 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth } from '@/services/firebase.service'
 import { useUtilStore } from '@/stores/util.store'
 
-import { IUserResponse } from '@/interface/login'
+import { IFormLogin, IUserResponse } from '@/interface/login'
 
 const API_URL = import.meta.env.VITE_API_URL
 const TOKEN_KEY = 'SESSION_TOKEN'
 
 const firstLogin = ref(false)
 
-export function handleFirstLogin () {
+export function handleFirstLogin() {
   firstLogin.value = true
 }
 
@@ -70,14 +70,31 @@ export async function apiMe(): Promise<IUserResponse> {
   return dados
 }
 
-export async function login(
-  email: string,
-  senha: string,
-): Promise<IUserResponse> {
+function normalizeError(error: unknown): string {
+  const code = (error as { code?: string })?.code
+
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'E-mail ou senha incorretos.'
+    case 'auth/invalid-email':
+      return 'Informe um endereço de e-mail válido.'
+    case 'auth/too-many-requests':
+      return 'Muitas tentativas de login. Tente novamente mais tarde.'
+    case 'auth/network-request-failed':
+      return 'Falha de conexão. Verifique sua internet e tente novamente.'
+    default:
+      return error instanceof Error ? error.message : 'Não foi possível entrar. Tente novamente.'
+  }
+}
+
+export async function login(value: IFormLogin): Promise<IUserResponse> {
+
   const utilStore = useUtilStore()
 
   try {
-    await signInWithEmailAndPassword(auth, email.trim(), senha)
+    await signInWithEmailAndPassword(auth, value.an_email.trim(), value.ca_senha)
 
     return await apiMe()
   } catch (erro) {
@@ -85,7 +102,8 @@ export async function login(
     utilStore.cleanUser()
 
     await signOut(auth)
-    throw erro
+
+    throw new Error(normalizeError(erro))
   }
 }
 

@@ -1,70 +1,59 @@
 <script setup lang="ts">
-import logoEscura from "@/assets/img/logoEscura.png";
+import logoClara from '../assets/img/logo_clara.png'
 
-import { ref } from 'vue'
+import Panel from 'primevue/panel'
+import InputText from 'primevue/inputtext'
+import Password from 'primevue/password'
+import Button from 'primevue/button'
+
+import { reactive, ref } from 'vue'
+
+import { useAppToast } from '@/services/toast.service'
+
+import { useUtilStore } from '@/stores/util.store'
+
+import { IFormLogin } from '@/interface/login'
+
+import { TGenericData } from '@/interface/util'
+
+import FormPageField from '@/components/field/FormPageField.vue'
+import FormPage from '@/components/pages/FormPage.vue'
+import { login } from '@/services/auth.service'
 import { useRouter } from 'vue-router'
 
-import { login } from "@/services/auth.service";
+const utilStore = useUtilStore();
 
-import { useUtilStore } from "@/stores/util.store";
+const router = useRouter();
 
-import { useAppToast } from "@/services/toast.service";
+const toastService = useAppToast();
 
-import '@/assets/styles/login.css'
-
-const utilStore = useUtilStore()
-
-const router = useRouter()
-
-const email = ref('')
-const senha = ref('')
-const mostrarSenha = ref(false)
-const erro = ref('')
-
-const { warn } = useAppToast()
-
-async function fazerLogin() {
-  erro.value = ''
-
-  if (!email.value.trim() || !senha.value) {
-    erro.value = 'Preencha o e-mail e a senha.'
-    return
+function formDataDefault(): IFormLogin {
+  return {
+    an_email: '',
+    ca_senha: '',
   }
+}
+
+const formData = reactive<IFormLogin>(formDataDefault())
+
+const formErros = ref<TGenericData>({})
+
+async function onSubmit(values: IFormLogin) {
+
+  if (!values.an_email) 
+    formErros.value.an_email = 'Informe o e-mail.'
+  if (!values.ca_senha) 
+    formErros.value.ca_senha = 'Informe a senha.'
+
+  if (Object.keys(formErros.value).length) 
+    return
 
   utilStore.setLoading(true)
-
   try {
-    await login(email.value.trim(), senha.value)
+    await login(values)
     await router.push('/home')
-  } catch (error: unknown) {
-    const codigo = (error as { code?: string })?.code
-
-    switch (codigo) {
-      case 'auth/invalid-credential':
-      case 'auth/user-not-found':
-      case 'auth/wrong-password':
-        erro.value = 'E-mail ou senha incorretos.'
-        warn(erro.value)
-        break
-
-      case 'auth/invalid-email':
-        erro.value = 'Informe um endereço de e-mail válido.'
-        break
-
-      case 'auth/too-many-requests':
-        erro.value = 'Muitas tentativas de login. Tente novamente mais tarde.'
-        break
-
-      case 'auth/network-request-failed':
-        erro.value = 'Falha de conexão. Verifique sua internet e tente novamente.'
-        break
-
-      default:
-        erro.value =
-          error instanceof Error
-            ? error.message
-            : 'Não foi possível entrar. Tente novamente.'
-    }
+  } catch (error) {
+    toastService.warn((error as Error).message)
   } finally {
     utilStore.setLoading(false)
   }
@@ -73,116 +62,52 @@ async function fazerLogin() {
 </script>
 
 <template>
-  <title>Login | AutoGarage</title>
-  <main class="login-page">
-  <section class="brand-panel">
-    <div class="brand">
-      <span>Auto<strong>Garage</strong></span>
+  <div class="flex min-h-screen">
+    <div class="w-1/2 flex items-center justify-center bg-neutral-900">
+      <img class="w-150" :src="logoClara" alt="Logo do AutoGarage">
     </div>
 
-    <div class="brand-content">
-      <div class="illustration">
-        <div class="illustration-icon"><img :src="logoEscura" alt="" /></div>
-      </div>
-
-      <h1>
-        Sua oficina.<br />
-        Muito mais organizada.
-      </h1>
-
-      <p>
-        Gerencie ordens de serviço, clientes e estoque em um único lugar. Mais
-        controle para o seu negócio.
-      </p>
-    </div>
-  </section>
-  <section class="form-panel">
-    <div class="form-container">
-
-      <div class="mobile-brand">
-        Auto<strong>Garage</strong>
-      </div>
-
-      <div class="welcome">
-        
-       
-
-        <h2>Bem-vindo de volta!</h2>
-
-        <p>
-          Entre com suas credenciais para acessar o sistema.
-        </p>
-      </div>
-
-      <form @submit.prevent="fazerLogin">
-
-        <div class="form-group">
-          <label for="email">E-mail</label>
-
-          <input
-            id="email"
-            v-model="email"
-            type="email"
-            placeholder="seu@email.com"
-            autocomplete="email"
-            required
-          />
-        </div>
-
-        <div class="form-group">
-          <div class="label-row">
-            <label for="senha">Senha</label>
+    <div class="w-1/2 flex flex-col items-center justify-center bg-orange-50">
+      <Panel>
+        <template #header>
+          <div class="flex flex-col">
+            <span class="font-bold text-xl">Bem vindo de volta!</span>
+            <span class="text-xs">Acesse o sistema utilizando seu e-mail e senha.</span>
           </div>
+        </template>
 
-          <div class="password-field">
-            <input
-              id="senha"
-              v-model="senha"
-              :type="mostrarSenha ? 'text' : 'password'"
-              placeholder="Digite sua senha"
-              autocomplete="current-password"
-              required
+        <FormPage 
+          class="flex flex-col w-100" 
+          v-model:errors="formErros" 
+          :initialValues="formData"
+          @submit="onSubmit"
+        >
+          <FormPageField name="an_email" label="E-mail" v-slot="{ invalid, field }">
+            <InputText 
+              :name="field" 
+              placeholder="Digite seu e-mail" 
+              :invalid="invalid" 
             />
+          </FormPageField>
 
-            <button
-              type="button"
-              class="show-password"
-              @click="mostrarSenha = !mostrarSenha"
-            >
-              {{ mostrarSenha ? 'Ocultar' : 'Mostrar' }}
-            </button>
-          </div>
-        </div>
+          <FormPageField name="ca_senha" label="Senha" v-slot="{ invalid, field }">
+            <Password 
+              :name="field" 
+              placeholder="Digite sua senha" 
+              :feedback="false" 
+              toggleMask 
+              fluid
+              :invalid="invalid" 
+            />
+          </FormPageField>
 
-        <div class="form-options">
-          <label class="remember">
-            <input type="checkbox" />
-            Lembrar de mim
-          </label>
-        </div>
+          <Button type="submit" label="Entrar" icon="pi pi-arrow-right" />
+        </FormPage>
+      </Panel>
 
-        <p v-if="erro" class="error-message">
-          {{ erro }}
-        </p>
-
-        <button type="submit" class="login-button">
-          Entrar no sistema
-        </button>
-
-      </form>
-
-      <div class="form-footer">
-        <p>Problemas para acessar?</p>
-
-        <a href="mailto:suporte@seudominio.com">
-          Entre em contato com o suporte
-        </a>
+      <div class="absolute bottom-6 text-xs text-stone-400">
+        © 2026 AutoGarage. Todos os direitos reservados.
       </div>
     </div>
-
-    <div class="security-note">
-      © 2026 AutoGarage. Todos os direitos reservados.
-    </div>
-  </section>
-  </main>
+  </div>
 </template>

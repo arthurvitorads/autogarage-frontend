@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { signOut } from 'firebase/auth'
 
-import MainLayout from '@/components/pages/MainLayout.vue'
+import MainPage from '@/components/pages/MainPage.vue'
 import LoginPage from '@/views/LoginPage.vue'
 import HomePage from '@/views/HomePage.vue'
 import PessoaPage from '@/views/PessoaPage.vue'
@@ -25,7 +25,7 @@ const router = createRouter({
     },
     {
       path: '/',
-      component: MainLayout,
+      component: MainPage,
       meta: {
         requiresAuth: true,
       },

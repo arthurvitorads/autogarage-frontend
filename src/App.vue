@@ -1,10 +1,10 @@
 
 <script setup lang="ts">
-import LoaderComponent from './components/default/LoaderComponent.vue'
+import LoaderPage from './components/pages/LoaderPage.vue'
 import Toast from 'primevue/toast'
 </script>
 <template>
-  <LoaderComponent />
+  <LoaderPage />
   <Toast position="top-right" />
   <RouterView />
 </template>
