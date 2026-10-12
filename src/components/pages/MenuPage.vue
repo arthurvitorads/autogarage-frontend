@@ -1,93 +1,108 @@
 <script setup lang="ts">
-import logoEscura from '@/assets/img/logo_escura.png'
 
-import Button from 'primevue/button'
+import logoClara from '@/assets/img/logo_clara.png'
+
+import { ref, watch, onMounted } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+
+import PanelMenu, { type PanelMenuPanelOpenEvent } from 'primevue/panelmenu'
 
 defineProps<{
-  collapsed: boolean
+  visible: boolean
 }>()
 
-const emit = defineEmits<{
-  toggle: []
-}>()
+const route = useRoute()
+
+const expandedKeys = ref<Record<string, boolean>>({})
+
+const modules = [
+  {
+    key: 'geral',
+    label: 'Geral',
+    icon: 'th-large',
+    items: [{ key: 'geral:home', label: 'Home', icon: 'home', route: '/home' }],
+  },
+  {
+    key: 'cadastros',
+    label: 'Cadastros',
+    icon: 'folder',
+    items: [
+      { key: 'cadastros:pessoa', label: 'Pessoa', icon: 'users', route: '/pessoa' },
+    ],
+  },
+  {
+    key: 'admin',
+    label: 'Administração',
+    icon: 'database',
+    items: [
+      { key: 'admin:usuario', label: 'Usuário', icon: 'user-plus', route: '/usuario' }
+    ],
+  },
+]
+
+function onPanelOpen(event: PanelMenuPanelOpenEvent) {
+  expandedKeys.value = { [event.item.key]: true }
+}
+
+function openCurrentModule() {
+  const current = modules.find((m) => m.items.some((i) => route.path.startsWith(i.route)))
+
+  if (current) expandedKeys.value = { [current.key]: true }
+}
+
+watch(() => route.path, openCurrentModule)
+
+onMounted(openCurrentModule)
 </script>
 
 <template>
-  <aside
-    class="sidebar"
-    :class="{ 'sidebar--collapsed': collapsed }"
-  >
-    <!-- Cabeçalho -->
-    <div class="sidebar-header">
-      <div v-if="!collapsed" class="sidebar-brand">
-        <img
-          :src="logoEscura"
-          alt="autoGarage"
-          class="sidebar-logo"
-        />
-
-        <span class="sidebar-brand-name">
-          auto<strong>Garage</strong>
-        </span>
+  <aside class="menu" :class="{ 'menu--collapsed': !visible }">
+    <div class="menu-content">
+      <div class="menu-header">
+        <img :src="logoClara" alt="autoGarage" class="menu-logo" />
       </div>
+      <nav class="menu-nav">
+        <PanelMenu 
+          class="menu-panel" 
+          :model="modules" 
+          v-model:expandedKeys="expandedKeys" 
+          @panelOpen="onPanelOpen"
+        >
+          <template #item="{ item, active }">
+            <RouterLink 
+              v-if="item.route" 
+              :to="item.route" 
+              v-slot="{ href, navigate, isActive }"
+            >
+              <a 
+                v-ripple 
+                class="menu-link" 
+                :class="{ 'menu-link--active': isActive }" 
+                :href="href" 
+                @click="navigate"
+              >
+                <i :class="`pi pi-${item.icon}`"></i>
+                <span>{{ item.label }}</span>
+              </a>
+            </RouterLink>
 
-      <img
-        v-else
-        :src="logoEscura"
-        alt="autoGarage"
-        class="sidebar-logo sidebar-logo--collapsed"
-      />
-
-      <Button
-        text
-        rounded
-        severity="secondary"
-        class="sidebar-toggle"
-        :icon="collapsed ? 'pi pi-bars' : 'pi pi-times'"
-        aria-label="Abrir ou fechar menu"
-        @click="emit('toggle')"
-      />
+            <a v-else v-ripple class="menu-link menu-link--module">
+              <i :class="`pi pi-${item.icon}`"></i>
+              <span class="menu-link-label">{{ item.label }}</span>
+              <i :class="active ? 'pi pi-angle-up' : 'pi pi-angle-down'"></i>
+            </a>
+          </template>
+        </PanelMenu>
+      </nav>
     </div>
-
-    <!-- Navegação -->
-    <nav class="sidebar-menu">
-      <span v-if="!collapsed" class="modules-title">
-        MÓDULOS
-      </span>
-
-      <RouterLink
-        to="/home"
-        class="sidebar-link"
-        v-tooltip.right="collapsed ? 'Home' : undefined"
-      >
-        <i class="pi pi-home sidebar-link-icon"></i>
-        <span v-if="!collapsed">Home</span>
-      </RouterLink>
-
-      <RouterLink
-        to="/pessoas"
-        class="sidebar-link"
-        v-tooltip.right="collapsed ? 'Pessoas' : undefined"
-      >
-        <i class="pi pi-users sidebar-link-icon"></i>
-        <span v-if="!collapsed">Pessoas</span>
-      </RouterLink>
-    </nav>
   </aside>
 </template>
 
 <style scoped>
-.sidebar {
+.menu {
   width: 260px;
-  height: 100vh;
-
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-
-  display: flex;
-  flex-direction: column;
+  flex-shrink: 0;
+  overflow: hidden;
 
   background: #17191e;
   color: #fff;
@@ -95,151 +110,87 @@ const emit = defineEmits<{
   transition: width 0.25s ease;
 }
 
-.sidebar--collapsed {
-  width: 82px;
+.menu--collapsed {
+  width: 0;
 }
 
-/* Cabeçalho */
+.menu-content {
+  width: 260px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
 
-.sidebar-header {
-  min-height: 74px;
-  padding: 0 18px;
+.menu-header {
+  height: 64px;
+  flex-shrink: 0;
 
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 10px;
+  padding: 0 18px;
 
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.sidebar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  overflow: hidden;
-}
-
-.sidebar-logo {
-  width: 42px;
-  height: 42px;
+.menu-logo {
+  width: 250px;
+  height: 40px;
   object-fit: contain;
   flex-shrink: 0;
 }
 
-.sidebar-logo--collapsed {
-  width: 38px;
-  height: 38px;
-}
-
-.sidebar-brand-name {
-  font-size: 18px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.sidebar-brand-name strong {
-  color: #ff7300;
-}
-
-.sidebar-toggle {
-  width: 38px;
-  height: 38px;
-  flex-shrink: 0;
-  color: #fff !important;
-}
-
-/* Estado recolhido */
-
-.sidebar--collapsed .sidebar-header {
-  padding: 0;
-  justify-content: center;
-  gap: 2px;
-  flex-direction: column;
-}
-
-/* Menu */
-
-.sidebar-menu {
+.menu-nav {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  padding: 20px 14px;
+  overflow-y: auto;
+  padding: 12px 8px;
 }
 
-.modules-title {
-  padding: 0 13px 10px;
-  color: #ff7300;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.8px;
-}
-
-/* Links */
-
-.sidebar-link {
-  min-height: 44px;
+.menu-link {
   display: flex;
   align-items: center;
   gap: 12px;
 
-  padding: 0 13px;
+  padding: 10px 13px;
   border-radius: 8px;
 
   color: #aeb2ba;
-  text-decoration: none;
   font-size: 13px;
+  cursor: pointer;
+  text-decoration: none;
 
   transition:
     background 0.2s ease,
     color 0.2s ease;
 }
 
-.sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.07);
-  color: #fff;
-}
-
-.sidebar-link.router-link-active {
+.menu-link--active {
   background: rgba(255, 115, 0, 0.13);
   color: #ff7300;
 }
 
-.sidebar-link-icon {
-  width: 20px;
-  flex-shrink: 0;
-  text-align: center;
-  font-size: 17px;
+.menu-link--module {
+  font-weight: 700;
+  letter-spacing: 0.4px;
 }
 
-.sidebar--collapsed .sidebar-link {
-  justify-content: center;
-  padding: 0;
+.menu-link-label {
+  flex: 1;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 82px;
-  }
+.menu-panel {
+  --p-panelmenu-gap: 4px;
+}
 
-  .sidebar-header {
-    padding: 0;
-    justify-content: center;
-    flex-direction: column;
-    gap: 2px;
-  }
+.menu-panel :deep(.p-panelmenu-panel),
+.menu-panel :deep(.p-panelmenu-header-content),
+.menu-panel :deep(.p-panelmenu-content) {
+  background: transparent;
+  border: none;
+  color: inherit;
+}
 
-  .sidebar-brand {
-    display: none;
-  }
-
-  .sidebar-link {
-    justify-content: center;
-    padding: 0;
-  }
-
-  .modules-title {
-    display: none;
-  }
+.menu-panel :deep(.p-panelmenu-submenu) {
+  padding-left: 12px;
 }
 </style>

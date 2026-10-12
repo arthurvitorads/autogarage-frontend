@@ -4,27 +4,15 @@ import { ref } from 'vue'
 import HeaderPage from '@/components/pages/HeaderPage.vue'
 import MenuPage from '@/components/pages/MenuPage.vue'
 
-const sidebarCollapsed = ref(false)
-
-function toggleSidebar() {
-  sidebarCollapsed.value = !sidebarCollapsed.value
-}
+const showMenu = ref(true)
 </script>
 
 <template>
   <div class="home-layout">
-    <MenuPage
-      :collapsed="sidebarCollapsed"
-      @toggle="toggleSidebar"
-    />
+    <MenuPage :visible="showMenu" />
 
-    <div
-      class="home-main"
-      :class="{
-        'home-main--expanded': sidebarCollapsed
-      }"
-    >
-      <HeaderPage />
+    <div class="home-main">
+      <HeaderPage @toggle-menu="showMenu = !showMenu" />
 
       <main class="home-content">
         <RouterView />
@@ -32,3 +20,24 @@ function toggleSidebar() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.home-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.home-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.home-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+</style>

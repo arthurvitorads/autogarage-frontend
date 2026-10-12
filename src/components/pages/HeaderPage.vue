@@ -1,42 +1,46 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
 
 import Toolbar from 'primevue/toolbar'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
 
+import logoEscura from '@/assets/img/logo_escura.png'
+
 import { logout } from '@/services/auth.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
-const { user } = useUtilStore()
+const emit = defineEmits<{
+  'toggle-menu': []
+}>()
 
 const router = useRouter()
 
+const { user } = storeToRefs(useUtilStore())
+
 const menu = ref()
 
-const nome = computed(() => user?.an_nome || 'Usuário')
-const email = computed(() => user?.an_email || '')
+const nome = computed(() => user.value?.an_nome || 'Usuário')
+const email = computed(() => user.value?.an_email || '')
 const inicial = computed(() => nome.value.charAt(0).toUpperCase())
 
 const itensMenu = [
   {
     label: 'Sair',
     icon: 'pi pi-sign-out',
-    class: 'menu-sair',
     command: () => handleSair(),
   },
 ]
 
-function toggleMenu(event: Event) {
+function toggleUserMenu(event: Event) {
   menu.value.toggle(event)
 }
 
 async function handleSair() {
-  nextTick()
-
   await logout()
 
   router.push('/login')
@@ -44,57 +48,55 @@ async function handleSair() {
 </script>
 
 <template>
-  <Toolbar>
-    <template #end>
-      <div>
+  <Toolbar class="header-bar">
+    <template #start>
+      <div class="header-start">
         <Button
-          class=""
           text
-          label="Menu do usuário"
-          @click="toggleMenu"
-        >
-          <Avatar
-            :label="inicial"
-            shape="circle"
-            class="profile-avatar"
-          />
-
-          <div class="profile-info">
-            <strong>{{ nome }}</strong>
-            <small>{{ email }}</small>
-          </div>
-
-          <i class="pi pi-chevron-down profile-arrow"></i>
-        </Button>
-
-        <Menu
-          ref="menu"
-          :model="itensMenu"
-          popup
+          rounded
+          severity="secondary"
+          icon="pi pi-bars"
+          aria-label="Abrir ou fechar menu"
+          @click="emit('toggle-menu')"
         />
       </div>
+    </template>
+
+    <template #end>
+      <Button text aria-haspopup="true" aria-controls="user-menu" @click="toggleUserMenu">
+        <Avatar :label="inicial" shape="circle" class="profile-avatar" />
+
+        <div class="profile-info">
+          <strong>{{ nome }}</strong>
+          <small>{{ email }}</small>
+        </div>
+
+        <i class="pi pi-chevron-down profile-arrow"></i>
+      </Button>
+
+      <Menu ref="menu" id="user-menu" :model="itensMenu" popup />
     </template>
   </Toolbar>
 </template>
 
 <style scoped>
 .header-bar {
-  height: 74px;
-  position: sticky;
-  top: 0;
-  z-index: 900;
-
   border: none;
   border-bottom: 1px solid var(--p-surface-200);
   border-radius: 0;
-
-  padding: 0 28px;
-  background: var(--p-surface-0);
+  padding: 8px 16px;
 }
+
+.header-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+
 .profile-avatar {
   background: #fff0e5;
   color: #ff7300;
-  flex-shrink: 0;
 }
 
 .profile-info {
@@ -102,6 +104,7 @@ async function handleSair() {
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+  margin: 0 8px;
 }
 
 .profile-info strong {
@@ -116,21 +119,13 @@ async function handleSair() {
 
 .profile-arrow {
   font-size: 12px;
-  margin-left: 2px;
 }
 
 @media (max-width: 768px) {
-  .header-bar {
-    padding: 0 12px;
-  }
-
+  .header-brand,
   .profile-info,
   .profile-arrow {
     display: none;
-  }
-
-  .header-actions {
-    gap: 2px;
   }
 }
 </style>
