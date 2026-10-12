@@ -7,7 +7,7 @@ import HomePage from '@/views/HomePage.vue'
 import PessoaPage from '@/views/PessoaPage.vue'
 
 import { auth } from '@/services/firebase.service'
-import { apiMe, isFirstLogin } from '@/services/auth.service'
+import { getInitialMe, isFirstLogin } from '@/services/auth.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -17,11 +17,17 @@ const router = createRouter({
     {
       path: '/',
       redirect: '/home',
+      meta: {
+        title: 'Home | AutoGarage',
+      },
     },
     {
       path: '/login',
       name: 'login',
       component: LoginPage,
+      meta: {
+        title: 'Login | AutoGarage',
+      },
     },
     {
       path: '/',
@@ -34,11 +40,17 @@ const router = createRouter({
           path: 'home',
           name: 'home',
           component: HomePage,
+          meta: {
+            title: 'Home | AutoGarage',
+          },
         },
         {
           path: 'pessoas',
           name: 'pessoas',
           component: PessoaPage,
+          meta: {
+            title: 'Pessoas | AutoGarage',
+          },
         },
       ],
     },
@@ -48,9 +60,7 @@ const router = createRouter({
 router.beforeEach(async (to) => {
   await auth.authStateReady()
 
-  const requiresAuth = to.matched.some(
-    (record) => record.meta.requiresAuth,
-  )
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
   const user = auth.currentUser
 
@@ -74,7 +84,7 @@ router.beforeEach(async (to) => {
 
     if (isFirstLogin()) return true
 
-    await apiMe()
+    await getInitialMe()
 
     return true
   } catch {

@@ -7,8 +7,7 @@ import { useUtilStore } from '@/stores/util.store'
 
 import { IFormLogin, IUserResponse } from '@/interface/login'
 
-const API_URL = import.meta.env.VITE_API_URL
-const TOKEN_KEY = 'SESSION_TOKEN'
+import { API_URL, TOKEN_KEY } from '@/constants/utils'
 
 const firstLogin = ref(false)
 
@@ -25,15 +24,26 @@ export function isFirstLogin(): boolean {
   return false
 }
 
-export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY)
+function normalizeError(error: unknown): string {
+  const code = (error as { code?: string })?.code
+
+  switch (code) {
+    case 'auth/invalid-credential':
+    case 'auth/user-not-found':
+    case 'auth/wrong-password':
+      return 'E-mail ou senha incorretos.'
+    case 'auth/invalid-email':
+      return 'Informe um endereço de e-mail válido.'
+    case 'auth/too-many-requests':
+      return 'Muitas tentativas de login. Tente novamente mais tarde.'
+    case 'auth/network-request-failed':
+      return 'Falha de conexão. Verifique sua internet e tente novamente.'
+    default:
+      return error instanceof Error ? error.message : 'Não foi possível entrar. Tente novamente.'
+  }
 }
 
-export function isAuthenticated(): boolean {
-  return auth.currentUser !== null
-}
-
-export async function apiMe(): Promise<IUserResponse> {
+export async function getInitialMe(): Promise<IUserResponse> {
   const user = auth.currentUser
 
   if (!user) {
@@ -70,25 +80,6 @@ export async function apiMe(): Promise<IUserResponse> {
   return dados
 }
 
-function normalizeError(error: unknown): string {
-  const code = (error as { code?: string })?.code
-
-  switch (code) {
-    case 'auth/invalid-credential':
-    case 'auth/user-not-found':
-    case 'auth/wrong-password':
-      return 'E-mail ou senha incorretos.'
-    case 'auth/invalid-email':
-      return 'Informe um endereço de e-mail válido.'
-    case 'auth/too-many-requests':
-      return 'Muitas tentativas de login. Tente novamente mais tarde.'
-    case 'auth/network-request-failed':
-      return 'Falha de conexão. Verifique sua internet e tente novamente.'
-    default:
-      return error instanceof Error ? error.message : 'Não foi possível entrar. Tente novamente.'
-  }
-}
-
 export async function login(value: IFormLogin): Promise<IUserResponse> {
 
   const utilStore = useUtilStore()
@@ -96,7 +87,7 @@ export async function login(value: IFormLogin): Promise<IUserResponse> {
   try {
     await signInWithEmailAndPassword(auth, value.an_email.trim(), value.ca_senha)
 
-    return await apiMe()
+    return await getInitialMe()
   } catch (erro) {
     localStorage.removeItem(TOKEN_KEY)
     utilStore.cleanUser()

@@ -16,7 +16,7 @@ import { IFormLogin } from '@/interface/login'
 
 import { TGenericData } from '@/interface/util'
 
-import FormPageField from '@/components/field/FormPageField.vue'
+import FieldForm from '@/components/field/FieldForm.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import { login } from '@/services/auth.service'
 import { useRouter } from 'vue-router'
@@ -82,15 +82,15 @@ async function onSubmit(values: IFormLogin) {
           :initialValues="formData"
           @submit="onSubmit"
         >
-          <FormPageField name="an_email" label="E-mail" v-slot="{ invalid, field }">
+          <FieldForm name="an_email" label="E-mail" v-slot="{ invalid, field }">
             <InputText 
               :name="field" 
               placeholder="Digite seu e-mail" 
               :invalid="invalid" 
             />
-          </FormPageField>
+          </FieldForm>
 
-          <FormPageField name="ca_senha" label="Senha" v-slot="{ invalid, field }">
+          <FieldForm name="ca_senha" label="Senha" v-slot="{ invalid, field }">
             <Password 
               :name="field" 
               placeholder="Digite sua senha" 
@@ -99,7 +99,7 @@ async function onSubmit(values: IFormLogin) {
               fluid
               :invalid="invalid" 
             />
-          </FormPageField>
+          </FieldForm>
 
           <Button type="submit" label="Entrar" icon="pi pi-arrow-right" />
         </FormPage>
