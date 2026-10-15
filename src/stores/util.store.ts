@@ -3,7 +3,7 @@ import { defineStore } from 'pinia'
 
 import { IEnderecoViaCep, IViaCepResponse } from '@/interface/util'
 
-import { IMeUser } from '@/interface/pages/LoginPage'
+import { IMeUser } from '@/interface/interface-pages/LoginPage'
 
 export const useUtilStore = defineStore('util', () => {
   const loadingCount = ref(0)

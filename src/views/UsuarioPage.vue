@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
-import Panel from 'primevue/panel'
+import Skeleton from 'primevue/skeleton'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import DataTable, { DataTablePageEvent } from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 
-import { IAdmUsuario } from '@/interface/pages/UsuarioPage'
+import { IAdmUsuario } from '@/interface/interface-pages/UsuarioPage'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -27,14 +27,23 @@ const total = ref(0)
 
 const filtro = ref('')
 
+// skeleton
+const colunasSkeleton = ['Ações', 'Nome', 'E-mail', 'Perfil', 'Status', 'Dt. inclusão', 'Dt. alteração']
+const loadingGrid = ref(false)
+
 const usuarios = ref<IAdmUsuario[]>([])
 
+
 function search() {
+  if (loadingGrid.value) return
+
   pagina.value = 1
   loadUsers()
 }
 
 function changePage(event: DataTablePageEvent) {
+  if (loadingGrid.value) return
+
 	pagina.value = event.page + 1
 	limite.value = event.rows
 
@@ -50,7 +59,7 @@ function editUser(usuario: IAdmUsuario) {
 }
 
 async function loadUsers() {
-  setLoading(true)
+  loadingGrid.value = true
 
   try {
     const resultado = await getUsers(pagina.value, limite.value, filtro.value)
@@ -65,47 +74,56 @@ async function loadUsers() {
     total.value = 0
 
   } finally {
-    setLoading(false)
+    loadingGrid.value = false
   }
 }
 
-onMounted(() => {
-  loadUsers()
+onMounted(async () => {
+  setLoading(true)
+	
+  try {
+    await loadUsers()
+  } finally {
+    setLoading(false)
+  }
 })
 </script>
 <template>
-  <div class="flex flex-col h-full min-h-0 gap-4 p-6">
-    <div class="flex items-center justify-between shrink-0">
-      <span class="text-2xl font-bold">Usuários</span>
-      <Button
-        label="Novo"
-        icon="pi pi-plus"
-        @click="newUser"
-      />
-    </div>
+  <div class="flex flex-col h-full gap-4">
+		<!-- filtro -->
+    <div class="flex flex-col flex-1 border border-surface-200 rounded-xl">
+    	<div class="flex justify-between m-5">
+				<div class="flex justify-center gap-2 w-140">
+					<InputText
+						v-model="filtro"
+						placeholder="Digite o que deseja pesquisar..."
+						class="flex-1 min-w-0"
+						:disabled="loadingGrid"
+						@keyup.enter="search"
+					/>
+					<Button
+						icon="pi pi-search"
+						:disabled="loadingGrid"
+						@click="search"
+					/>
+				</div>
+				<div class="flex">
+					<Button
+						label="Novo"
+						icon="pi pi-plus"
+						@click="newUser"
+					/>
+				</div>
+			</div>
 
-    <Panel class="flex-1 min-h-0">
-
-      <div class="flex flex-col h-full min-h-0 gap-4">
-				<div class="flex items-end justify-between shrink-0">
-          <div class="flex gap-2 w-full max-w-md">
-            <InputText
-              v-model="filtro"
-              placeholder="Pesquisar usuários..."
-              class="flex-1 min-w-0"
-              @keyup.enter="search"
-            />
-
-            <Button
-              icon="pi pi-search"
-              @click="search"
-            />
-          </div>
-        </div>
+			<div class="flex-1 min-h-0" style="margin: 0px 8px 0px 8px;">
 				<DataTable
+					:pt="{
+						emptyMessage: { class: 'hidden' }
+					}"
 					:value="usuarios"
+					:aria-busy="loadingGrid"
 					dataKey="cn_usuario"
-					class="tabela-full flex-1 min-h-0"
 					size="small"
 					stripedRows
 					scrollable
@@ -120,32 +138,41 @@ onMounted(() => {
 					currentPageReportTemplate="Total: {totalRecords}"
 					@page="changePage"
 				>
-					<Column header="Ações" style="width: 90px">
-						<template #body="{ data }">
-							<Button icon="pi pi-pencil" severity="secondary" text rounded
-								v-tooltip.top="'Editar usuário'" @click="editUser(data)" />
-						</template>
-					</Column>
-					<Column field="an_nome" header="Nome" />
-					<Column field="an_email" header="E-mail" />
-					<Column field="an_perfil" header="Perfil" />
-					<Column field="bo_sts_reg" header="Status">
-						<template #body="{ data }">
-							<Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg? 'success': 'danger'" />
-						</template>
-					</Column>
-					<Column field="dt_inc" header="Dt. inclusão">
-						<template #body="{ data }">
-							<span>{{ formatDateTime(data.dt_inc) }}</span>
-						</template>
-					</Column>
-					<Column field="dt_alt" 		header="Dt. alteração">
-						<template #body="{ data }">
-							<span>{{ formatDateTime(data.dt_alt) }}</span>
-						</template>
-					</Column>
+          <template v-if="loadingGrid">
+            <Column v-for="header in colunasSkeleton" :key="header" :header="header">
+              <template #body>
+                <Skeleton height="2.8rem" />
+              </template>
+            </Column>
+          </template>
+          <template v-else>
+						<Column header="Ações" class="w-5">
+							<template #body="{ data }">
+								<Button icon="pi pi-pencil" severity="secondary" text rounded
+									v-tooltip.top="'Editar usuário'" @click="editUser(data)" />
+							</template>
+						</Column>
+						<Column field="an_nome" header="Nome" />
+						<Column field="an_email" header="E-mail" />
+						<Column field="an_perfil" header="Perfil" />
+						<Column field="bo_sts_reg" header="Status">
+							<template #body="{ data }">
+								<Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg? 'success': 'danger'" />
+							</template>
+						</Column>
+						<Column field="dt_inc" header="Dt. inclusão">
+							<template #body="{ data }">
+								<span>{{ formatDateTime(data.dt_inc) }}</span>
+							</template>
+						</Column>
+						<Column field="dt_alt" 		header="Dt. alteração">
+							<template #body="{ data }">
+								<span>{{ formatDateTime(data.dt_alt) }}</span>
+							</template>
+						</Column>
+          </template>
 				</DataTable>
-      </div>
-    </Panel>
+			</div>
+    </div>
   </div>
 </template>

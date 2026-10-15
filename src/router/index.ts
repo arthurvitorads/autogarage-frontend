@@ -7,13 +7,13 @@ import MainPage from '@/components/pages/MainPage.vue'
 import LoginPage from '@/views/LoginPage.vue'
 import HomePage from '@/views/HomePage.vue'
 import PessoaPage from '@/views/PessoaPage.vue'
+import UsuarioPage from '@/views/UsuarioPage.vue'
 
 import { auth } from '@/services/firebase.service'
 import { isFirstLogin } from '@/services/auth.service'
 import { getInitialMe } from '@/services/user.service'
 
 import { useUtilStore } from '@/stores/util.store'
-import UsuarioPage from '@/views/UsuarioPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),

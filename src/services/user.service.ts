@@ -3,9 +3,9 @@ import { auth } from "./firebase.service"
 import { useUtilStore } from "@/stores/util.store"
 import { handleFirstLogin } from "./auth.service"
 
-import { IMeResponse, IMeUser } from "@/interface/pages/LoginPage"
+import { IMeResponse, IMeUser } from "@/interface/interface-pages/LoginPage"
 
-import { IUsuarioResponse } from "@/interface/pages/UsuarioPage"
+import { IUsuarioResponse } from "@/interface/interface-pages/UsuarioPage"
 
 import { API_URL, TOKEN_KEY } from "@/constants/utils"
 

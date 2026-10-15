@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth } from '@/services/firebase.service'
 import { useUtilStore } from '@/stores/util.store'
 
-import { IFormLogin, IMeUser } from '@/interface/pages/LoginPage'
+import { IFormLogin, IMeUser } from '@/interface/interface-pages/LoginPage'
 
 import { getInitialMe } from './user.service'
 
