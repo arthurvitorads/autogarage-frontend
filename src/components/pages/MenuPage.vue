@@ -20,7 +20,7 @@ const modules = [
     key: 'geral',
     label: 'Geral',
     icon: 'th-large',
-    items: [{ key: 'geral:home', label: 'Home', icon: 'home', route: '/home' }],
+    items: [{ key: 'geral:home', label: 'Home', icon: 'home', route: '/' }],
   },
   {
     key: 'cadastros',
@@ -45,9 +45,17 @@ function onPanelOpen(event: PanelMenuPanelOpenEvent) {
 }
 
 function openCurrentModule() {
-  const current = modules.find((m) => m.items.some((i) => route.path.startsWith(i.route)))
+  const current = modules.find((m) =>
+    m.items.some((i) =>
+      i.route === '/'
+        ? route.path === '/'
+        : route.path === i.route || route.path.startsWith(i.route + '/')
+    )
+  )
 
-  if (current) expandedKeys.value = { [current.key]: true }
+  expandedKeys.value = current
+    ? { [current.key]: true }
+    : {}
 }
 
 watch(() => route.path, openCurrentModule)

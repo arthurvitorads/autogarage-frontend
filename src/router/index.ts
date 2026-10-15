@@ -1,26 +1,22 @@
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { signOut } from 'firebase/auth'
 
 import MainPage from '@/components/pages/MainPage.vue'
+
 import LoginPage from '@/views/LoginPage.vue'
 import HomePage from '@/views/HomePage.vue'
 import PessoaPage from '@/views/PessoaPage.vue'
 
 import { auth } from '@/services/firebase.service'
-import { getInitialMe, isFirstLogin } from '@/services/auth.service'
+import { isFirstLogin } from '@/services/auth.service'
+import { getInitialMe } from '@/services/user.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    {
-      path: '/',
-      redirect: '/home',
-      meta: {
-        title: 'Home | AutoGarage',
-      },
-    },
     {
       path: '/login',
       name: 'login',
@@ -37,7 +33,7 @@ const router = createRouter({
       },
       children: [
         {
-          path: 'home',
+          path: '',
           name: 'home',
           component: HomePage,
           meta: {
@@ -45,8 +41,8 @@ const router = createRouter({
           },
         },
         {
-          path: 'pessoas',
-          name: 'pessoas',
+          path: 'pessoa',
+          name: 'pessoa',
           component: PessoaPage,
           meta: {
             title: 'Pessoas | AutoGarage',
@@ -57,46 +53,80 @@ const router = createRouter({
   ],
 })
 
+let meReload: string | null = null
+
 router.beforeEach(async (to) => {
-  await auth.authStateReady()
+  const utilStore = useUtilStore()
 
-  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
-
-  const user = auth.currentUser
-
-  if (requiresAuth && !user) {
-    localStorage.removeItem('SESSION_TOKEN')
-    return { name: 'login' }
-  }
-
-  if (to.name === 'login' && user) {
-    return { name: 'home' }
-  }
-
-  if (!requiresAuth) {
-    return true
-  }
+  utilStore.setLoading(true)
 
   try {
-    const token = await user!.getIdToken()
-    localStorage.setItem('SESSION_TOKEN', token)
+    await auth.authStateReady()
 
+    const requiresAuth = to.matched.some(
+      (record) => record.meta.requiresAuth
+    )
 
-    if (isFirstLogin()) return true
+    const user = auth.currentUser
 
-    await getInitialMe()
+    if (!user) {
+      meReload = null
+    }
 
-    return true
-  } catch {
-    localStorage.removeItem('SESSION_TOKEN')
+    if (requiresAuth && !user) {
+      localStorage.removeItem('SESSION_TOKEN')
+      return { name: 'login' }
+    }
 
-    const utilStore = useUtilStore()
-    utilStore.cleanUser()
+    if (to.name === 'login' && user) {
+      return { name: 'home' }
+    }
 
-    await signOut(auth)
+    if (!requiresAuth) {
+      return true
+    }
 
-    return { name: 'login' }
+    try {
+      const token = await user!.getIdToken()
+
+      localStorage.setItem('SESSION_TOKEN', token)
+
+      if (isFirstLogin()) {
+        return true
+      }
+
+      if (meReload !== user!.uid) {
+        await getInitialMe()
+        meReload = user!.uid
+      }
+
+      return true
+    } catch (error) {
+      console.error('Erro ao carregar usuário:', error)
+
+      meReload = null
+
+      localStorage.removeItem('SESSION_TOKEN')
+      utilStore.cleanUser()
+
+      await signOut(auth)
+
+      return { name: 'login' }
+    }
+  } catch (error) {
+    console.error('Erro na navegação:', error)
+    return false
   }
+})
+
+router.afterEach(() => {
+  const utilStore = useUtilStore()
+  utilStore.setLoading(false)
+})
+
+router.onError(() => {
+  const utilStore = useUtilStore()
+  utilStore.setLoading(false)
 })
 
 export default router

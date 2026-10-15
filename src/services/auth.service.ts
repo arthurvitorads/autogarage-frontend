@@ -5,9 +5,11 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth } from '@/services/firebase.service'
 import { useUtilStore } from '@/stores/util.store'
 
-import { IFormLogin, IUserResponse } from '@/interface/login'
+import { IFormLogin, IUser } from '@/interface/login'
 
-import { API_URL, TOKEN_KEY } from '@/constants/utils'
+import { getInitialMe } from './user.service'
+
+import { TOKEN_KEY } from '@/constants/utils'
 
 const firstLogin = ref(false)
 
@@ -43,44 +45,7 @@ function normalizeError(error: unknown): string {
   }
 }
 
-export async function getInitialMe(): Promise<IUserResponse> {
-  const user = auth.currentUser
-
-  if (!user) {
-    throw new Error('Usuário não autenticado no Firebase.')
-  }
-
-  const token = await user.getIdToken()
-
-  localStorage.setItem(TOKEN_KEY, token)
-
-  const response = await fetch(`${API_URL}/auth/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(
-      `Falha ao validar a sessão (${response.status}).`,
-    )
-  }
-
-  const dados = (await response.json()) as IUserResponse
-
-  if (!dados.autenticado) {
-    throw new Error('Sessão inválida.')
-  }
-
-  const utilStore = useUtilStore()
-  utilStore.setUser(dados.usuario)
-
-  handleFirstLogin()
-
-  return dados
-}
-
-export async function login(value: IFormLogin): Promise<IUserResponse> {
+export async function login(value: IFormLogin): Promise<IUser> {
 
   const utilStore = useUtilStore()
 

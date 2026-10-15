@@ -51,7 +51,7 @@ async function onSubmit(values: IFormLogin) {
   utilStore.setLoading(true)
   try {
     await login(values)
-    await router.push('/home')
+    await router.push('/')
   } catch (error) {
     toastService.warn((error as Error).message)
   } finally {

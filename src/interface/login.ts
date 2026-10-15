@@ -1,6 +1,6 @@
 export interface IUserResponse {
-  autenticado: boolean
-  usuario: IUser
+  sucesso: boolean,
+  dados: IUser
 }
 export interface IUser {
   cn_usuario?: number
