@@ -7,6 +7,7 @@ import Button from 'primevue/button'
 import DataTable, { DataTablePageEvent } from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
+import ManutUserDialog from '@/components/dialogs/ManutUserDialog.vue'
 
 import { IAdmUsuario } from '@/interface/interface-pages/UsuarioPage'
 
@@ -31,8 +32,11 @@ const filtro = ref('')
 const colunasSkeleton = ['Ações', 'Nome', 'E-mail', 'Perfil', 'Status', 'Dt. inclusão', 'Dt. alteração']
 const loadingGrid = ref(false)
 
-const usuarios = ref<IAdmUsuario[]>([])
+// form
+const manutUserVisible = ref(false)
+const selectUser = ref<IAdmUsuario | null>(null)
 
+const usuarios = ref<IAdmUsuario[]>([])
 
 function search() {
   if (loadingGrid.value) return
@@ -51,11 +55,13 @@ function changePage(event: DataTablePageEvent) {
 }
 
 function newUser() {
-	console.log('Novo')
+  selectUser.value = null
+  manutUserVisible.value = true
 }
 
-function editUser(usuario: IAdmUsuario) {
-	console.log('Editar', usuario)
+function editUser(user: IAdmUsuario) {
+  selectUser.value = user
+  manutUserVisible.value = true
 }
 
 async function loadUsers() {
@@ -175,4 +181,5 @@ onMounted(async () => {
 			</div>
     </div>
   </div>
+  <ManutUserDialog v-model:visible="manutUserVisible" :user="selectUser" @saved="loadUsers" />
 </template>
