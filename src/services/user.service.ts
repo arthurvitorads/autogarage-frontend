@@ -3,11 +3,13 @@ import { auth } from "./firebase.service"
 import { useUtilStore } from "@/stores/util.store"
 import { handleFirstLogin } from "./auth.service"
 
-import { IUser, IUserResponse } from "@/interface/login"
+import { IMeResponse, IMeUser } from "@/interface/pages/LoginPage"
+
+import { IUsuarioResponse } from "@/interface/pages/UsuarioPage"
 
 import { API_URL, TOKEN_KEY } from "@/constants/utils"
 
-export async function getInitialMe(): Promise<IUser> {
+export async function getInitialMe(): Promise<IMeUser> {
   const user = auth.currentUser
 
   if (!user) {
@@ -30,7 +32,7 @@ export async function getInitialMe(): Promise<IUser> {
     )
   }
 
-  const res = (await response.json()) as IUserResponse
+  const res = (await response.json()) as IMeResponse
 
   if (!res.dados.cn_usuario) {
     throw new Error('Sessão inválida.')
@@ -43,3 +45,39 @@ export async function getInitialMe(): Promise<IUser> {
 
   return res.dados
 }
+
+export async function getUsers(
+  ePage: number = 1, 
+  eLimit: number = 20, 
+  search: string = ''
+): Promise<IUsuarioResponse> {
+  const user = auth.currentUser
+
+  if (!user) {
+    throw new Error('Usuário não autenticado no Firebase.')
+  }
+
+  const token = await user.getIdToken()
+
+  const params = new URLSearchParams({
+    page: String(ePage),
+    limit: String(eLimit),
+    search,
+  })
+
+  const response = await fetch(
+    `${API_URL}/usuarios?${params}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error('Erro ao carregar usuários.')
+  }
+
+  return (await response.json()) as IUsuarioResponse
+}
+

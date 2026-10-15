@@ -1,8 +1,8 @@
-export interface IUserResponse {
+export interface IMeResponse {
   sucesso: boolean,
-  dados: IUser
+  dados: IMeUser
 }
-export interface IUser {
+export interface IMeUser {
   cn_usuario?: number
   ca_id_firebase?: string
   an_email?: string

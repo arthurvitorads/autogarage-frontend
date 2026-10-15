@@ -31,6 +31,18 @@ export function normalizeDate(value?: Date | string | null) {
   return isoDate.split('.').shift()
 }
 
+export function formatDate(date: string | Date | null): string {
+  if (!date) return '-'
+
+  return new Date(date).toLocaleDateString('pt-BR')
+}
+
+export function formatDateTime(date: string | Date | null): string {
+  if (!date) return '-'
+
+  return new Date(date).toLocaleString('pt-BR')
+}
+
 export function delay(timeout: number) {
   return new Promise((resolve) => setTimeout(resolve, timeout))
 }

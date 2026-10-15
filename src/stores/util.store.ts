@@ -2,16 +2,17 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import { IEnderecoViaCep, IViaCepResponse } from '@/interface/util'
-import { IUser } from '@/interface/login'
+
+import { IMeUser } from '@/interface/pages/LoginPage'
 
 export const useUtilStore = defineStore('util', () => {
   const loadingCount = ref(0)
 
   const loading = computed(() => loadingCount.value > 0)
 
-  const user = ref<IUser | null>(null)
+  const user = ref<IMeUser | null>(null)
 
-  function setUser(dados: IUser | null) {
+  function setUser(dados: IMeUser | null) {
     user.value = dados
   }
 
@@ -48,6 +49,18 @@ export const useUtilStore = defineStore('util', () => {
     return data
   }
 
+  function normalizeError(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message
+    }
+
+    if (typeof error === 'string') {
+      return error
+    }
+
+    return 'Ocorreu um erro inesperado.'
+  }
+
   return {
     loading,
     user,
@@ -55,5 +68,6 @@ export const useUtilStore = defineStore('util', () => {
     fetchCep,
     setUser,
     cleanUser,
+    normalizeError
   }
 })

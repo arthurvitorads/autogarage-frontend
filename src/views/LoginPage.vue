@@ -12,7 +12,7 @@ import { useAppToast } from '@/services/toast.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
-import { IFormLogin } from '@/interface/login'
+import { IFormLogin } from '@/interface/pages/LoginPage'
 
 import { TGenericData } from '@/interface/util'
 

@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth } from '@/services/firebase.service'
 import { useUtilStore } from '@/stores/util.store'
 
-import { IFormLogin, IUser } from '@/interface/login'
+import { IFormLogin, IMeUser } from '@/interface/pages/LoginPage'
 
 import { getInitialMe } from './user.service'
 
@@ -45,7 +45,7 @@ function normalizeError(error: unknown): string {
   }
 }
 
-export async function login(value: IFormLogin): Promise<IUser> {
+export async function login(value: IFormLogin): Promise<IMeUser> {
 
   const utilStore = useUtilStore()
 

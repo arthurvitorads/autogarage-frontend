@@ -13,6 +13,7 @@ import { isFirstLogin } from '@/services/auth.service'
 import { getInitialMe } from '@/services/user.service'
 
 import { useUtilStore } from '@/stores/util.store'
+import UsuarioPage from '@/views/UsuarioPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -46,6 +47,14 @@ const router = createRouter({
           component: PessoaPage,
           meta: {
             title: 'Pessoas | AutoGarage',
+          },
+        },
+        {
+          path: 'usuario',
+          name: 'usuario',
+          component: UsuarioPage,
+          meta: {
+            title: 'Usuários | AutoGarage',
           },
         },
       ],
