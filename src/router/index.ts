@@ -79,11 +79,11 @@ router.beforeEach(async (to) => {
     const user = auth.currentUser
 
     if (!user) {
+      utilStore.cleanUser()
       meReload = null
     }
 
     if (requiresAuth && !user) {
-      localStorage.removeItem('SESSION_TOKEN')
       return { name: 'login' }
     }
 
@@ -96,9 +96,7 @@ router.beforeEach(async (to) => {
     }
 
     try {
-      const token = await user!.getIdToken()
-
-      localStorage.setItem('SESSION_TOKEN', token)
+      await user!.getIdToken()
 
       if (isFirstLogin()) {
         return true
@@ -115,7 +113,6 @@ router.beforeEach(async (to) => {
 
       meReload = null
 
-      localStorage.removeItem('SESSION_TOKEN')
       utilStore.cleanUser()
 
       await signOut(auth)
@@ -123,19 +120,12 @@ router.beforeEach(async (to) => {
       return { name: 'login' }
     }
   } catch (error) {
-    console.error('Erro na navegação:', error)
+    console.error('Erro inexperado:', error)
     return false
+  } finally {
+
+    utilStore.setLoading(false)
   }
-})
-
-router.afterEach(() => {
-  const utilStore = useUtilStore()
-  utilStore.setLoading(false)
-})
-
-router.onError(() => {
-  const utilStore = useUtilStore()
-  utilStore.setLoading(false)
 })
 
 export default router

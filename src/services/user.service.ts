@@ -7,7 +7,7 @@ import { IMeResponse, IMeUser } from "@/interface/interface-pages/LoginPage"
 
 import { IUsuarioResponse, IFormUsuario, ICreateUserResponse, IUpdateUser } from "@/interface/interface-pages/UsuarioPage"
 
-import { API_URL, TOKEN_KEY } from "@/constants/utils"
+import { API_URL } from "@/constants/utils"
 
 export async function updateUser(id: string | number, values: IUpdateUser): Promise<ICreateUserResponse> {
   const user = auth.currentUser
@@ -72,8 +72,6 @@ export async function getInitialMe(): Promise<IMeUser> {
   }
 
   const token = await user.getIdToken()
-
-  localStorage.setItem(TOKEN_KEY, token)
 
   const response = await fetch(`${API_URL}/auth/me`, {
     headers: {

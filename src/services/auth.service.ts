@@ -9,8 +9,6 @@ import { IFormLogin, IMeUser } from '@/interface/interface-pages/LoginPage'
 
 import { getInitialMe } from './user.service'
 
-import { TOKEN_KEY } from '@/constants/utils'
-
 const firstLogin = ref(false)
 
 export function handleFirstLogin() {
@@ -54,7 +52,6 @@ export async function login(value: IFormLogin): Promise<IMeUser> {
 
     return await getInitialMe()
   } catch (erro) {
-    localStorage.removeItem(TOKEN_KEY)
     utilStore.cleanUser()
 
     await signOut(auth)
@@ -66,7 +63,6 @@ export async function login(value: IFormLogin): Promise<IMeUser> {
 export async function logout(): Promise<void> {
   const utilStore = useUtilStore()
 
-  localStorage.removeItem(TOKEN_KEY)
   utilStore.cleanUser()
 
   await signOut(auth)

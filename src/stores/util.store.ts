@@ -21,7 +21,7 @@ export const useUtilStore = defineStore('util', () => {
   }
 
   function setLoading(value: boolean) {
-    loadingCount.value += value ? 1 : -1
+    loadingCount.value = Math.max(0, loadingCount.value + (value ? 1 : -1))
   }
 
   async function fetchCep(cep: string): Promise<IEnderecoViaCep> {
