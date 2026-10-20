@@ -35,7 +35,8 @@ const modules = [
     label: 'Administração',
     icon: 'database',
     items: [
-      { key: 'admin:usuario', label: 'Usuário', icon: 'user-plus', route: '/usuario' }
+      { key: 'admin:usuario', label: 'Usuário', icon: 'user-plus', route: '/usuario' },
+      { key: 'admin:perfil', label: 'Perfil', icon: 'book', route: '/perfil' }
     ],
   },
 ]

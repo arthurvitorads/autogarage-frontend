@@ -158,20 +158,21 @@ onMounted(async () => {
 									v-tooltip.top="'Editar usuário'" @click="editUser(data)" />
 							</template>
 						</Column>
+						<Column field="cn_usuario" header="Código" />
 						<Column field="an_nome" header="Nome" />
 						<Column field="an_email" header="E-mail" />
-						<Column field="an_perfil" header="Perfil" />
+						<Column class="w-60" field="an_perfil" header="Perfil" />
 						<Column field="bo_sts_reg" header="Status">
 							<template #body="{ data }">
 								<Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg? 'success': 'danger'" />
 							</template>
 						</Column>
-						<Column field="dt_inc" header="Dt. inclusão">
+						<Column class="w-50" field="dt_inc" header="Dt. inclusão">
 							<template #body="{ data }">
 								<span>{{ formatDateTime(data.dt_inc) }}</span>
 							</template>
 						</Column>
-						<Column field="dt_alt" 		header="Dt. alteração">
+						<Column class="w-50" field="dt_alt" header="Dt. alteração">
 							<template #body="{ data }">
 								<span>{{ formatDateTime(data.dt_alt) }}</span>
 							</template>

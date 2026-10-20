@@ -25,7 +25,7 @@ const { user } = storeToRefs(useUtilStore())
 const menu = ref()
 
 const nome = computed(() => user.value?.an_nome || 'Usuário')
-const email = computed(() => user.value?.an_email || '')
+const perfil = computed(() => user.value?.an_perfil || '')
 const inicial = computed(() => nome.value.charAt(0).toUpperCase())
 
 const itensMenu = [
@@ -68,7 +68,7 @@ async function handleSair() {
 
         <div class="profile-info">
           <strong>{{ nome }}</strong>
-          <small>{{ email }}</small>
+          <small>{{ perfil }}</small>
         </div>
 
         <i class="pi pi-chevron-down profile-arrow"></i>

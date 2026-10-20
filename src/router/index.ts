@@ -8,6 +8,7 @@ import LoginPage from '@/views/LoginPage.vue'
 import HomePage from '@/views/HomePage.vue'
 import PessoaPage from '@/views/PessoaPage.vue'
 import UsuarioPage from '@/views/UsuarioPage.vue'
+import PerfilPage from '@/views/PerfilPage.vue'
 
 import { auth } from '@/services/firebase.service'
 import { isFirstLogin } from '@/services/auth.service'
@@ -55,6 +56,14 @@ const router = createRouter({
           component: UsuarioPage,
           meta: {
             title: 'Usuários | AutoGarage',
+          },
+        },
+        {
+          path: 'perfil',
+          name: 'perfil',
+          component: PerfilPage,
+          meta: {
+            title: 'Perfil | AutoGarage',
           },
         },
       ],

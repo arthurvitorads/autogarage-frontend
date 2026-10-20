@@ -107,7 +107,7 @@ export async function getUsers(
   const user = auth.currentUser
 
   if (!user) {
-    throw new Error('Usuário não autenticado no Firebase.')
+    throw new Error('Usuário não autenticado.')
   }
 
   const token = await user.getIdToken()

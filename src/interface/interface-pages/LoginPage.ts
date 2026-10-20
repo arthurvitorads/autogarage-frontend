@@ -7,6 +7,7 @@ export interface IMeUser {
   ca_id_firebase?: string
   an_email?: string
   an_nome?: string
+  an_perfil?: string | null
   bo_sts_reg?: boolean
 }
 
