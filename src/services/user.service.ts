@@ -128,6 +128,9 @@ export async function getUsers(
   )
 
   if (!response.ok) {
+    if(response.status === 429) 
+      throw new Error('Muitas requisições foram registradas. Aguarde alguns instantes!')
+
     throw new Error('Erro ao carregar usuários.')
   }
 
