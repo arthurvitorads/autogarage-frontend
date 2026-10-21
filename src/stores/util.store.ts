@@ -1,7 +1,9 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { IEnderecoViaCep, IViaCepResponse } from '@/interface/util'
+import type { ICnpjBrasilApiResponse, IEnderecoViaCep, IViaCepResponse } from '@/interface/util'
+
+import { unMaskDocument, validateCNPJ } from '@/services/util.service'
 
 import { IMeUser } from '@/interface/interface-pages/LoginPage'
 
@@ -49,6 +51,51 @@ export const useUtilStore = defineStore('util', () => {
     return data
   }
 
+  async function fetchCnpj(cnpj: string): Promise<ICnpjBrasilApiResponse | null> {
+    const cleanCnpj = unMaskDocument(cnpj).toUpperCase()
+
+    if (!validateCNPJ(cleanCnpj))
+      throw new Error('Informe um CNPJ válido.')
+
+    let response: Response
+
+    try {
+      response = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`, {
+        signal: AbortSignal.timeout(10_000),
+      })
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TimeoutError')
+        throw new Error('A consulta do CNPJ demorou para responder. Tente novamente.')
+
+      throw new Error('Não foi possível consultar o CNPJ. Verifique sua conexão e tente novamente.')
+    }
+
+    if (response.status === 404) return null
+
+    if (response.status === 400)
+      throw new Error('O serviço de consulta não aceitou este CNPJ.')
+
+    if (response.status === 429)
+      throw new Error('Limite de consultas de CNPJ excedido. Aguarde alguns instantes e tente novamente.')
+
+    if (!response.ok)
+      throw new Error('O serviço de consulta de CNPJ está indisponível. Tente novamente mais tarde.')
+
+    let data: ICnpjBrasilApiResponse
+
+    try {
+      data = (await response.json()) as ICnpjBrasilApiResponse
+    } catch {
+      throw new Error('O serviço retornou uma resposta inválida para este CNPJ. Tente novamente.')
+    }
+
+    if (!data || typeof data.cnpj !== 'string' || unMaskDocument(data.cnpj).toUpperCase() !== cleanCnpj ||
+      typeof data.razao_social !== 'string' || !data.razao_social.trim())
+      throw new Error('O serviço retornou dados inválidos para este CNPJ. Tente novamente.')
+
+    return data
+  }
+
   function normalizeError(error: unknown): string {
     if (error instanceof Error) {
       return error.message
@@ -66,6 +113,7 @@ export const useUtilStore = defineStore('util', () => {
     user,
     setLoading,
     fetchCep,
+    fetchCnpj,
     setUser,
     cleanUser,
     normalizeError
