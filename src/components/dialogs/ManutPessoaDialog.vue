@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import Dialog from 'primevue/dialog'
+import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import SelectButton from 'primevue/selectbutton'
@@ -9,12 +9,8 @@ import Checkbox from 'primevue/checkbox'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
-import Tabs from 'primevue/tabs'
-import TabList from 'primevue/tablist'
-import Tab from 'primevue/tab'
-import TabPanels from 'primevue/tabpanels'
-import TabPanel from 'primevue/tabpanel'
 
+import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
@@ -46,21 +42,6 @@ const { fetchCep, fetchCnpj, normalizeError, setLoading } = useUtilStore()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<{ submit: () => void } | null>(null)
-const activeTab = ref<'principal' | 'endereco' | 'funcionario'>('principal')
-
-const camposEndereco = ['cep', 'logradouro', 'numero', 'complemento', 'bairro', 'cidade', 'uf']
-const camposFuncionario = ['cargo', 'comissaoPercentual']
-
-function getFieldTab(campo: string): 'principal' | 'endereco' | 'funcionario' {
-  if (camposEndereco.includes(campo)) return 'endereco'
-  if (camposFuncionario.includes(campo)) return 'funcionario'
-
-  return 'principal'
-}
-
-function hasTabErrors(aba: 'principal' | 'endereco' | 'funcionario'): boolean {
-  return Object.keys(formErrors.value).some(campo => getFieldTab(campo) === aba)
-}
 const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.pessoa)
@@ -372,14 +353,7 @@ function onSubmit(values: IFormPessoa) {
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
 
-  if (!isValidated.value) {
-    const primeiroCampo = Object.keys(errors)[0]
-
-    if (primeiroCampo)
-      activeTab.value = getFieldTab(primeiroCampo)
-
-    return
-  }
+  if (!isValidated.value) return
 
   setLoading(true)
 
@@ -458,7 +432,6 @@ watch([() => props.visible, () => props.pessoa], ([visible]) => {
 
   formErrors.value = {}
   isValidated.value = false
-  activeTab.value = 'principal'
   mensagemCep.value = ''
   cepConsultado.value = ''
   formKey.value++
@@ -493,153 +466,116 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
   if (!formData.value.bo_categ_func) {
     delete formErrors.value.cargo
     delete formErrors.value.comissaoPercentual
-
-    if (activeTab.value === 'funcionario')
-      activeTab.value = 'principal'
   }
 })
 
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'"
-    modal
-    class="w-[72rem] max-w-[95vw]"
-    :style="{ maxHeight: '90vh' }"
-  >
-    <FormPage
-      ref="formRef"
-      novalidate
-      :key="formKey"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      @submit="onSubmit(formData)"
-      @input="isValidated = false"
-      @change="isValidated = false"
-    >
-      <Tabs v-model:value="activeTab" scrollable>
-        <TabList>
-          <Tab value="principal" class="gap-2">
-            <i class="pi pi-user" aria-hidden="true"></i>
-            Dados principais
-            <i v-if="hasTabErrors('principal')" class="pi pi-exclamation-circle text-red-500" aria-label="Campos com erro"></i>
-          </Tab>
-          <Tab value="endereco" class="gap-2">
-            <i class="pi pi-map-marker" aria-hidden="true"></i>
-            Endereço
-            <i v-if="hasTabErrors('endereco')" class="pi pi-exclamation-circle text-red-500" aria-label="Campos com erro"></i>
-          </Tab>
-          <Tab v-if="isFuncionario" value="funcionario" class="gap-2">
-            <i class="pi pi-briefcase" aria-hidden="true"></i>
-            Dados do funcionário
-            <i v-if="hasTabErrors('funcionario')" class="pi pi-exclamation-circle text-red-500" aria-label="Campos com erro"></i>
-          </Tab>
-        </TabList>
-        <TabPanels class="px-0 pb-0 pt-5 sm:min-h-[28rem]">
-          <TabPanel value="principal" class="grid gap-x-4 grid-cols-12">
-            <FieldForm class="col-span-10" name="tipo" label="Tipo de pessoa">
-              <SelectButton v-model="formData.tipo" :options="tiposPessoa"
-                optionLabel="label" optionValue="value" :allowEmpty="false" />
-            </FieldForm>
-            <FieldForm class="col-span-2 flex items-end" name="bo_sts_reg" label="Status" v-slot="{ field }">
-              <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Pessoa ativa" />
-            </FieldForm>
-            <FieldForm class="col-span-12" name="bo_categ_cliente" label="Categorias *" v-slot="{ invalid }">
-              <div class="flex items-center flex-wrap gap-5 min-h-9">
-                <div class="flex items-center gap-2">
-                  <Checkbox v-model="formData.bo_categ_cliente" name="bo_categ_cliente"
-                    inputId="pessoa-cliente" binary :invalid="invalid" />
-                  <label for="pessoa-cliente">Cliente</label>
-                </div>
-                <div class="flex items-center gap-2">
-                  <Checkbox v-model="formData.bo_categ_func" name="bo_categ_func"
-                    inputId="pessoa-funcionario" binary :invalid="invalid" />
-                  <label for="pessoa-funcionario">Funcionário</label>
-                </div>
+  <CadastroDialog :visible="visible" @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'" width="96rem"
+    :disabled="loadingCep || loadingCnpj" @submit="formRef?.submit()">
+    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4"
+      v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit(formData)"
+      @input="isValidated = false" @change="isValidated = false">
+      <Fieldset legend="Dados principais">
+        <div class="grid grid-cols-12 gap-x-4">
+          <FieldForm class="col-span-10 sm:col-span-6 lg:col-span-5" name="tipo" label="Tipo de pessoa">
+            <SelectButton v-model="formData.tipo" :options="tiposPessoa"
+              optionLabel="label" optionValue="value" :allowEmpty="false" />
+          </FieldForm>
+          <FieldForm class="col-span-2 col-start-11 row-start-1 lg:col-span-1 lg:col-start-12 flex items-end" name="bo_sts_reg" label="Status" v-slot="{ field }">
+            <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Pessoa ativa" />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-4 lg:col-span-6" name="bo_categ_cliente" label="Categorias *" v-slot="{ invalid }">
+            <div class="flex items-center flex-wrap gap-5 min-h-9">
+              <div class="flex items-center gap-2">
+                <Checkbox v-model="formData.bo_categ_cliente" name="bo_categ_cliente"
+                  inputId="pessoa-cliente" binary :invalid="invalid" />
+                <label for="pessoa-cliente">Cliente</label>
               </div>
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-8" name="nome" label="Nome completo *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.nome" :name="field" :invalid="invalid" fluid placeholder="Digite o nome completo" />
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-4" name="cpf" label="CPF *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.cpf" :name="field" :invalid="invalid" fluid maxlength="14" @update:modelValue="formData.cpf = maskCpf($event ?? '')" />
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6" name="razaoSocial" label="Razão social *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.razaoSocial" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6" name="nomeFantasia" label="Nome fantasia *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.nomeFantasia" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6" name="cnpj" label="CNPJ *" v-slot="{ invalid, field }">
-              <div class="flex gap-2">
-                <InputText :modelValue="formData.cnpj" :name="field" :invalid="invalid" maxlength="18"
-                  class="flex-1 min-w-0" @update:modelValue="onCnpjChange" @blur="consultarCnpj()" />
-                <Button type="button" icon="pi pi-search" aria-label="Consultar CNPJ"
-                  :loading="loadingCnpj" @click="consultarCnpj(true)" />
+              <div class="flex items-center gap-2">
+                <Checkbox v-model="formData.bo_categ_func" name="bo_categ_func"
+                  inputId="pessoa-funcionario" binary :invalid="invalid" />
+                <label for="pessoa-funcionario">Funcionário</label>
               </div>
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6" name="telefone" label="Telefone *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.telefone" :name="field" :invalid="invalid" fluid type="tel" placeholder="(00) 00000-0000" />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-6" name="email" label="E-mail *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.email" :name="field" :invalid="invalid" fluid type="email" placeholder="email@exemplo.com" />
-            </FieldForm>
-            <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-6" name="telefone" label="Telefone *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.telefone" :name="field" :invalid="invalid" fluid type="tel" placeholder="(00) 00000-0000" />
-            </FieldForm>
-          </TabPanel>
-          <TabPanel value="endereco" class="grid gap-x-4 grid-cols-12">
-            <Message v-if="mensagemCep" severity="warn" class="col-span-12 mb-3">
-              {{ mensagemCep }}
-            </Message>
-            <FieldForm class="col-span-12 sm:col-span-4" name="cep" label="CEP *" v-slot="{ invalid, field }">
-              <div class="flex gap-2">
-                <InputText v-model="formData.cep" :name="field" placeholder="00000-000" maxlength="9"
-                  :invalid="invalid" class="flex-1 min-w-0" @blur="consultarCep()" />
-                <Button type="button" icon="pi pi-search" aria-label="Consultar CEP"
-                  :loading="loadingCep" @click="consultarCep()" />
-              </div>
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-8" name="logradouro" label="Logradouro *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.logradouro" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-3" name="numero" label="Número *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.numero" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-9" name="complemento" label="Complemento" v-slot="{ invalid, field }">
-              <InputText v-model="formData.complemento" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-5" name="bairro" label="Bairro *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.bairro" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-5" name="cidade" label="Cidade *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.cidade" :name="field" :invalid="invalid" fluid  />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-2" name="uf" label="UF *" v-slot="{ invalid, field }">
-              <InputText v-model="formData.uf" :name="field" :invalid="invalid" fluid maxlength="2" />
-            </FieldForm>
-          </TabPanel>
-          <TabPanel v-if="isFuncionario" value="funcionario" class="grid gap-x-4 grid-cols-12">
-            <FieldForm class="col-span-12 sm:col-span-8" name="cargo" label="Cargo" v-slot="{ field }">
-              <InputText v-model="formData.cargo" :name="field" placeholder="Ex.: Mecânico" fluid />
-            </FieldForm>
-            <FieldForm class="col-span-12 sm:col-span-4" name="comissaoPercentual" label="Comissão (%)" v-slot="{ invalid, field }">
-              <InputNumber v-model="formData.comissaoPercentual" :name="field" :min="0" :max="100"
-                :maxFractionDigits="2" locale="pt-BR" :invalid="invalid" fluid />
-            </FieldForm>
-          </TabPanel>
-        </TabPanels>
-      </Tabs>
+            </div>
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-8" name="nome" label="Nome completo *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.nome" :name="field" :invalid="invalid" fluid placeholder="Digite o nome completo" />
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-4" name="cpf" label="CPF *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.cpf" :name="field" :invalid="invalid" fluid maxlength="14" @update:modelValue="formData.cpf = maskCpf($event ?? '')" />
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="razaoSocial" label="Razão social *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.razaoSocial" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="nomeFantasia" label="Nome fantasia *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.nomeFantasia" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="cnpj" label="CNPJ *" v-slot="{ invalid, field }">
+            <div class="flex gap-2">
+              <InputText :modelValue="formData.cnpj" :name="field" :invalid="invalid" maxlength="18"
+                class="flex-1 min-w-0" @update:modelValue="onCnpjChange" @blur="consultarCnpj()" />
+              <Button type="button" icon="pi pi-search" aria-label="Consultar CNPJ"
+                :loading="loadingCnpj" @click="consultarCnpj(true)" />
+            </div>
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="telefone" label="Telefone *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.telefone" :name="field" :invalid="invalid" fluid type="tel" placeholder="(00) 00000-0000" />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="email" label="E-mail *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.email" :name="field" :invalid="invalid" fluid type="email" placeholder="email@exemplo.com" />
+          </FieldForm>
+          <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="telefone" label="Telefone *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.telefone" :name="field" :invalid="invalid" fluid type="tel" placeholder="(00) 00000-0000" />
+          </FieldForm>
+        </div>
+      </Fieldset>
+      <Fieldset legend="Endereço">
+        <div class="grid grid-cols-12 gap-x-4">
+          <Message v-if="mensagemCep" severity="warn" class="col-span-12 mb-3">
+            {{ mensagemCep }}
+          </Message>
+          <FieldForm class="col-span-12 sm:col-span-4 lg:col-span-3" name="cep" label="CEP *" v-slot="{ invalid, field }">
+            <div class="flex gap-2">
+              <InputText v-model="formData.cep" :name="field" placeholder="00000-000" maxlength="9"
+                :invalid="invalid" class="flex-1 min-w-0" @blur="consultarCep()" />
+              <Button type="button" icon="pi pi-search" aria-label="Consultar CEP"
+                :loading="loadingCep" @click="consultarCep()" />
+            </div>
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-8 lg:col-span-7" name="logradouro" label="Logradouro *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.logradouro" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-3 lg:col-span-2" name="numero" label="Número *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.numero" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-9 lg:col-span-3" name="complemento" label="Complemento" v-slot="{ invalid, field }">
+            <InputText v-model="formData.complemento" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-5 lg:col-span-4" name="bairro" label="Bairro *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.bairro" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-5 lg:col-span-4" name="cidade" label="Cidade *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.cidade" :name="field" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-2 lg:col-span-1" name="uf" label="UF *" v-slot="{ invalid, field }">
+            <InputText v-model="formData.uf" :name="field" :invalid="invalid" fluid maxlength="2" />
+          </FieldForm>
+        </div>
+      </Fieldset>
+      <Fieldset v-if="isFuncionario" legend="Dados do funcionário">
+        <div class="grid grid-cols-12 gap-x-4">
+          <FieldForm class="col-span-12 sm:col-span-8" name="cargo" label="Cargo" v-slot="{ field }">
+            <InputText v-model="formData.cargo" :name="field" placeholder="Ex.: Mecânico" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-4" name="comissaoPercentual" label="Comissão (%)" v-slot="{ invalid, field }">
+            <InputNumber v-model="formData.comissaoPercentual" :name="field" :min="0" :max="100"
+              :maxFractionDigits="2" locale="pt-BR" :invalid="invalid" fluid />
+          </FieldForm>
+        </div>
+      </Fieldset>
     </FormPage>
-    <template #footer>
-      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
-        <Button type="button" label="Gravar" :disabled="loadingCep || loadingCnpj" @click="formRef?.submit()" />
-      </div>
-    </template>
-  </Dialog>
+  </CadastroDialog>
 </template>
-

@@ -7,6 +7,8 @@ import MainPage from '@/components/pages/MainPage.vue'
 import LoginPage from '@/views/LoginPage.vue'
 import HomePage from '@/views/HomePage.vue'
 import PessoaPage from '@/views/PessoaPage.vue'
+import ProdutoPage from '@/views/ProdutoPage.vue'
+import ServicoPage from '@/views/ServicoPage.vue'
 import UsuarioPage from '@/views/UsuarioPage.vue'
 import PerfilPage from '@/views/PerfilPage.vue'
 
@@ -48,6 +50,22 @@ const router = createRouter({
           component: PessoaPage,
           meta: {
             title: 'Pessoas | AutoGarage',
+          },
+        },
+        {
+          path: 'produto',
+          name: 'produto',
+          component: ProdutoPage,
+          meta: {
+            title: 'Produtos | AutoGarage',
+          },
+        },
+        {
+          path: 'servico',
+          name: 'servico',
+          component: ServicoPage,
+          meta: {
+            title: 'Serviços | AutoGarage',
           },
         },
         {

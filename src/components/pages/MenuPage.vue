@@ -27,7 +27,9 @@ const modules = [
     label: 'Cadastros',
     icon: 'folder',
     items: [
-      { key: 'cadastros:pessoa', label: 'Pessoa', icon: 'users', route: '/pessoa' },
+      { key: 'cadastros:pessoa', label: 'Pessoas', icon: 'users', route: '/pessoa' },
+      { key: 'cadastros:produto', label: 'Produtos', icon: 'box', route: '/produto' },
+      { key: 'cadastros:servico', label: 'Serviços', icon: 'wrench', route: '/servico' },
     ],
   },
   {
