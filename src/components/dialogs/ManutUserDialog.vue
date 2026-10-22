@@ -17,6 +17,7 @@ import { validateEmail } from '@/services/util.service'
 import { createUser, updateUser } from '@/services/user.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
+import DomainField from '../field/DomainField.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -29,8 +30,8 @@ const emit = defineEmits<{
 }>()
 
 const toast = useAppToast()
-const { normalizeError, setLoading } = useUtilStore()
 
+const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -44,7 +45,7 @@ function formDataDefault(): IFormUsuario {
     an_email: '',
     ca_senha: '',
     an_perfil: '',
-    bo_sts_reg: true,
+    bo_sts_reg: true
   }
 }
 
@@ -60,6 +61,7 @@ async function onSubmit(values: IFormUsuario) {
 
   if (!isEditing.value && !values.an_email?.trim()) 
     errors.an_email = 'Campo obrigatório.'
+  
   else if (!isEditing.value && !validateEmail(values.an_email.trim()))
     errors.an_email = 'Informe um e-mail válido.'
 
@@ -145,8 +147,13 @@ watch([() => props.visible, () => props.user], ([visible]) => {
       <FieldForm class="col-span-12" name="an_email" label="E-mail" v-slot="{ invalid, field }">
         <InputText :name="field" type="email" placeholder="Digite o e-mail" :invalid="invalid" fluid :readonly="isEditing"/>
       </FieldForm>
-      <FieldForm class="col-span-12" name="an_perfil" label="Perfil" v-slot="{ invalid, field }">
-        <InputText :name="field" placeholder="Informe o perfil" :invalid="invalid" fluid :readonly="isEditing" />
+      <FieldForm class="col-span-12" name="cn_perfil" label="Perfil" v-slot="{ invalid, field }">
+        <DomainField
+          :name="field"
+          endpoint="/paramPerfil"
+          optionsPath="dados.perfil"
+          :invalid="invalid"
+        />
       </FieldForm>
       <FieldForm v-if="!isEditing" class="col-span-12" name="ca_senha" :label="isEditing ? 'Nova senha (opcional)' : 'Senha'" v-slot="{ invalid, field }">
         <Password :name="field" placeholder="Digite a senha" :feedback="false" toggleMask fluid

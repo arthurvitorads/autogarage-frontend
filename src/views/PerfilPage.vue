@@ -7,7 +7,8 @@ import Button from 'primevue/button'
 import DataTable, { DataTablePageEvent } from 'primevue/datatable'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
-import ManutUserDialog from '@/components/dialogs/ManutUserDialog.vue'
+
+import ManutPerfilDialog from '@/components/dialogs/ManutPerfilDialog.vue'
 
 import { IAdmPerfil } from '@/interface/interface-pages/PerfilPage'
 
@@ -33,8 +34,8 @@ const colunasSkeleton = ['Ações', 'Descrição', 'Status', 'Dt. inclusão', 'D
 const loadingGrid = ref(false)
 
 // form
-const manutUserVisible = ref(false)
-const selectUser = ref<IAdmPerfil | null>(null)
+const manutPerfilVisible = ref(false)
+const selectedPerfil = ref<IAdmPerfil | null>(null)
 
 const perfil = ref<IAdmPerfil[]>([])
 
@@ -54,15 +55,15 @@ function changePage(event: DataTablePageEvent) {
 	loadPerfil()
 }
 
-// function newUser() {
-//   selectUser.value = null
-//   manutUserVisible.value = true
-// }
+function newPerfil() {
+  selectedPerfil.value = null
+  manutPerfilVisible.value = true
+}
 
-// function editUser(user: IAdmPerfil) {
-//   selectUser.value = user
-//   manutUserVisible.value = true
-// }
+function editPerfil(perfil: IAdmPerfil) {
+  selectedPerfil.value = perfil
+  manutPerfilVisible.value = true
+}
 
 async function loadPerfil() {
   loadingGrid.value = true
@@ -117,6 +118,7 @@ onMounted(async () => {
 					<Button
 						label="Novo"
 						icon="pi pi-plus"
+						@click="newPerfil"
 					/>
 				</div>
 			</div>
@@ -154,7 +156,7 @@ onMounted(async () => {
 						<Column header="Ações" class="w-5">
 							<template #body="{ data }">
 								<Button icon="pi pi-pencil" severity="secondary" text rounded
-									v-tooltip.top="'Editar'" />
+									v-tooltip.top="'Editar'" @click="editPerfil(data)" />
 							</template>
 						</Column>
 						<Column class="w-30" field="cn_perfil" header="Código" />
@@ -179,5 +181,5 @@ onMounted(async () => {
 			</div>
     </div>
   </div>
-  <ManutUserDialog v-model:visible="manutUserVisible" :user="selectUser" @saved="loadPerfil" />
+  <ManutPerfilDialog v-model:visible="manutPerfilVisible" :perfil="selectedPerfil" @saved="loadPerfil" />
 </template>
