@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import Dialog from 'primevue/dialog'
+import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 
+import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
@@ -35,6 +36,7 @@ const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
+const formRef = ref<{ submit: () => void } | null>(null)
 const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.user)
@@ -122,47 +124,31 @@ watch([() => props.visible, () => props.user], ([visible]) => {
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar usuário' : 'Novo usuário'"
-    modal
-    class="w-170"
-  >
-    <FormPage
-      class="grid gap-x-2 grid-cols-12"
-      :key="formKey"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      @submit="onSubmit"
-      @input="isValidated = false"
-      @change="isValidated = false"
-    >
-      <FieldForm class="col-span-11" name="an_nome" label="Nome" v-slot="{ invalid, field }">
-        <InputText :name="field" placeholder="Digite o nome" :invalid="invalid" fluid />
-      </FieldForm>
-      <FieldForm class="flex justify-center ml-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
-        <ToggleSwitch :name="field"/>
-      </FieldForm>
-      <FieldForm class="col-span-12" name="an_email" label="E-mail" v-slot="{ invalid, field }">
-        <InputText :name="field" type="email" placeholder="Digite o e-mail" :invalid="invalid" fluid :readonly="isEditing"/>
-      </FieldForm>
-      <FieldForm class="col-span-12" name="cn_perfil" label="Perfil" v-slot="{ invalid, field }">
-        <DomainField
-          :name="field"
-          endpoint="/paramPerfil"
-          optionsPath="dados.perfil"
-          :invalid="invalid"
-        />
-      </FieldForm>
-      <FieldForm v-if="!isEditing" class="col-span-12" name="ca_senha" :label="isEditing ? 'Nova senha (opcional)' : 'Senha'" v-slot="{ invalid, field }">
-        <Password :name="field" placeholder="Digite a senha" :feedback="false" toggleMask fluid
-          autocomplete="new-password" :invalid="invalid" />
-      </FieldForm>
-      <div class="col-span-12 flex justify-end gap-2 mt-4">
-        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
-        <Button type="submit" label="Gravar" />
-      </div>
+  <CadastroDialog :visible="visible" @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar usuário' : 'Novo usuário'" width="64rem" @submit="formRef?.submit()">
+    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4"
+      v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit"
+      @input="isValidated = false" @change="isValidated = false">
+      <Fieldset legend="Usuário">
+        <div class="grid grid-cols-12 gap-x-4">
+          <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome" v-slot="{ invalid, field }">
+            <InputText :name="field" placeholder="Digite o nome" :invalid="invalid" fluid />
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
+            <ToggleSwitch :name="field"/>
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-6" name="an_email" label="E-mail" v-slot="{ invalid, field }">
+            <InputText :name="field" type="email" placeholder="Digite o e-mail" :invalid="invalid" fluid :readonly="isEditing"/>
+          </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-6" name="an_perfil" label="Perfil" v-slot="{ invalid, field }">
+            <InputText :name="field" placeholder="Informe o perfil" :invalid="invalid" fluid :readonly="isEditing" />
+          </FieldForm>
+          <FieldForm v-if="!isEditing" class="col-span-12" name="ca_senha" :label="isEditing ? 'Nova senha (opcional)' : 'Senha'" v-slot="{ invalid, field }">
+            <Password :name="field" placeholder="Digite a senha" :feedback="false" toggleMask fluid
+              autocomplete="new-password" :invalid="invalid" />
+          </FieldForm>
+        </div>
+      </Fieldset>
     </FormPage>
-  </Dialog>
+  </CadastroDialog>
 </template>

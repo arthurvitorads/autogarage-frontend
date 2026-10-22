@@ -27,7 +27,18 @@ const modules = [
     label: 'Cadastros',
     icon: 'folder',
     items: [
-      { key: 'cadastros:pessoa', label: 'Pessoa', icon: 'users', route: '/pessoa' },
+      { key: 'cadastros:pessoa', label: 'Pessoas', icon: 'users', route: '/pessoa' },
+      { key: 'cadastros:produto', label: 'Produtos', icon: 'box', route: '/produto' },
+      { key: 'cadastros:servico', label: 'Serviços', icon: 'wrench', route: '/servico' },
+    ],
+  },
+  {
+    key: 'ordem-servico',
+    label: 'Ordem de Serviço',
+    icon: 'file-edit',
+    items: [
+      { key: 'ordem-servico:cadastro', label: 'Cadastro', icon: 'file-plus', route: '/ordem-servico/cadastro' },
+      { key: 'ordem-servico:painel', label: 'Painel', icon: 'th-large', route: '/ordem-servico/painel' },
     ],
   },
   {
@@ -86,7 +97,7 @@ onMounted(openCurrentModule)
               <a 
                 v-ripple 
                 class="menu-link" 
-                :class="{ 'menu-link--active': isActive }" 
+                :class="{ 'menu-link--active': isActive || (item.route !== '/' && route.path.startsWith(item.route + '/')) }"
                 :href="href" 
                 @click="navigate"
               >
