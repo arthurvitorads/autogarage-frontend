@@ -11,6 +11,9 @@ import ProdutoPage from '@/views/ProdutoPage.vue'
 import ServicoPage from '@/views/ServicoPage.vue'
 import UsuarioPage from '@/views/UsuarioPage.vue'
 import PerfilPage from '@/views/PerfilPage.vue'
+import OrdemServicoPage from '@/views/OrdemServicoPage.vue'
+import OrdemServicoPainelPage from '@/views/OrdemServicoPainelPage.vue'
+import OrdemServicoDetalhePage from '@/views/OrdemServicoDetalhePage.vue'
 
 import { auth } from '@/services/firebase.service'
 import { isFirstLogin } from '@/services/auth.service'
@@ -67,6 +70,24 @@ const router = createRouter({
           meta: {
             title: 'Serviços | AutoGarage',
           },
+        },
+        {
+          path: 'ordem-servico/cadastro',
+          name: 'ordem-servico-cadastro',
+          component: OrdemServicoPage,
+          meta: { title: 'Cadastro de O.S. | AutoGarage' },
+        },
+        {
+          path: 'ordem-servico/painel',
+          name: 'ordem-servico-painel',
+          component: OrdemServicoPainelPage,
+          meta: { title: 'Painel de O.S. | AutoGarage' },
+        },
+        {
+          path: 'ordem-servico/painel/:id',
+          name: 'ordem-servico-detalhe',
+          component: OrdemServicoDetalhePage,
+          meta: { title: 'Ordem de Serviço | AutoGarage' },
         },
         {
           path: 'usuario',

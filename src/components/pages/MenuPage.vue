@@ -33,6 +33,15 @@ const modules = [
     ],
   },
   {
+    key: 'ordem-servico',
+    label: 'Ordem de Serviço',
+    icon: 'file-edit',
+    items: [
+      { key: 'ordem-servico:cadastro', label: 'Cadastro', icon: 'file-plus', route: '/ordem-servico/cadastro' },
+      { key: 'ordem-servico:painel', label: 'Painel', icon: 'th-large', route: '/ordem-servico/painel' },
+    ],
+  },
+  {
     key: 'admin',
     label: 'Administração',
     icon: 'database',
@@ -88,7 +97,7 @@ onMounted(openCurrentModule)
               <a 
                 v-ripple 
                 class="menu-link" 
-                :class="{ 'menu-link--active': isActive }" 
+                :class="{ 'menu-link--active': isActive || (item.route !== '/' && route.path.startsWith(item.route + '/')) }"
                 :href="href" 
                 @click="navigate"
               >
