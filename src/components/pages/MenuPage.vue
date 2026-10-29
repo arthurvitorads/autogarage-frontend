@@ -37,7 +37,6 @@ const modules = [
     label: 'Ordem de Serviço',
     icon: 'file-edit',
     items: [
-      { key: 'ordem-servico:cadastro', label: 'Cadastro', icon: 'file-plus', route: '/ordem-servico/cadastro' },
       { key: 'ordem-servico:painel', label: 'Painel', icon: 'th-large', route: '/ordem-servico/painel' },
     ],
   },

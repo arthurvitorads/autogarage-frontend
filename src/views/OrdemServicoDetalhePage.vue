@@ -116,7 +116,7 @@ function formatQuantidade(value: number): string {
       </div>
       <DataTable :pt="{ emptyMessage: { class: 'hidden' } }" :value="ordem.itens" dataKey="cn_item"
         size="small" stripedRows scrollable tableStyle="min-width: 55rem">
-        <Column header="Ações" class="w-24">
+        <Column header="Ações" class="min-w-24">
           <template #body="{ data }">
             <div class="flex">
               <Button icon="pi pi-pencil" severity="secondary" text rounded aria-label="Editar item" @click="editItem(data)" />

@@ -5,7 +5,6 @@ import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import ToggleSwitch from 'primevue/toggleswitch'
-import Button from 'primevue/button'
 
 import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
@@ -141,7 +140,12 @@ watch([() => props.visible, () => props.user], ([visible]) => {
             <InputText :name="field" type="email" placeholder="Digite o e-mail" :invalid="invalid" fluid :readonly="isEditing"/>
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6" name="an_perfil" label="Perfil" v-slot="{ invalid, field }">
-            <InputText :name="field" placeholder="Informe o perfil" :invalid="invalid" fluid :readonly="isEditing" />
+            <DomainField
+              :name="field"
+              endpoint="/paramPerfil"
+              optionsPath="dados.perfil"
+              :invalid="invalid"
+            />
           </FieldForm>
           <FieldForm v-if="!isEditing" class="col-span-12" name="ca_senha" :label="isEditing ? 'Nova senha (opcional)' : 'Senha'" v-slot="{ invalid, field }">
             <Password :name="field" placeholder="Digite a senha" :feedback="false" toggleMask fluid

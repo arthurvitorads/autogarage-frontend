@@ -28,7 +28,7 @@ import { useUtilStore } from '@/stores/util.store'
 const props = defineProps<{
   visible: boolean
   pessoa?: Pessoa | null
-  pessoas: Pessoa[]
+  pessoas?: Pessoa[]
 }>()
 
 const emit = defineEmits<{

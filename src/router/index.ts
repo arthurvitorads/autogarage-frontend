@@ -11,7 +11,6 @@ import ProdutoPage from '@/views/ProdutoPage.vue'
 import ServicoPage from '@/views/ServicoPage.vue'
 import UsuarioPage from '@/views/UsuarioPage.vue'
 import PerfilPage from '@/views/PerfilPage.vue'
-import OrdemServicoPage from '@/views/OrdemServicoPage.vue'
 import OrdemServicoPainelPage from '@/views/OrdemServicoPainelPage.vue'
 import OrdemServicoDetalhePage from '@/views/OrdemServicoDetalhePage.vue'
 
@@ -44,7 +43,7 @@ const router = createRouter({
           name: 'home',
           component: HomePage,
           meta: {
-            title: 'Home | AutoGarage',
+            title: 'Início | AutoGarage',
           },
         },
         {
@@ -70,12 +69,6 @@ const router = createRouter({
           meta: {
             title: 'Serviços | AutoGarage',
           },
-        },
-        {
-          path: 'ordem-servico/cadastro',
-          name: 'ordem-servico-cadastro',
-          component: OrdemServicoPage,
-          meta: { title: 'Cadastro de O.S. | AutoGarage' },
         },
         {
           path: 'ordem-servico/painel',
@@ -173,6 +166,12 @@ router.beforeEach(async (to) => {
   } finally {
 
     utilStore.setLoading(false)
+  }
+})
+
+router.afterEach((to, _from, failure) => {
+  if (!failure) {
+    document.title = String(to.meta.title || 'AutoGarage')
   }
 })
 

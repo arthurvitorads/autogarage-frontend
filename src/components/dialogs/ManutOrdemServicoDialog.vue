@@ -21,6 +21,7 @@ import { dataHoraLocal, normalizarPlaca, validarDadosOrdem } from '@/services/or
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import DomainField from '../field/DomainField.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -158,11 +159,12 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
               emptyMessage="Nenhum cliente disponível." emptyFilterMessage="Nenhum cliente corresponde à pesquisa." />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-3" name="cn_status" label="Status *" v-slot="{ invalid, field }">
-            <div class="flex gap-2">
-              <Select v-model="formData.cn_status" :name="field" :options="status" optionLabel="an_descr"
-                optionValue="cn_status" placeholder="Selecione" :invalid="invalid" class="flex-1 min-w-0" />
-              <Button type="button" icon="pi pi-plus" severity="secondary" aria-label="Cadastrar status" @click="statusVisible = true" />
-            </div>
+            <DomainField
+              :name="field"
+              endpoint="/ordemStatus"
+              optionsPath="dados.order"
+              :invalid="invalid"
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="dt_entrada" label="Entrada *" v-slot="{ invalid, field }">
             <InputText v-model="formData.dt_entrada" :name="field" type="datetime-local" :invalid="invalid" fluid />

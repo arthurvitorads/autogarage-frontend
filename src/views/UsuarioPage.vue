@@ -95,9 +95,9 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="flex flex-col h-full gap-4">
+  <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
 		<!-- filtro -->
-    <div class="flex flex-col flex-1 border border-surface-200 rounded-xl">
+    <div class="flex flex-col flex-1 min-h-0 min-w-0 border border-surface-200 rounded-xl">
     	<div class="flex justify-between m-5">
 				<div class="flex justify-center gap-2 w-140">
 					<InputText
@@ -122,7 +122,7 @@ onMounted(async () => {
 				</div>
 			</div>
 
-			<div class="flex-1 min-h-0" style="margin: 0px 8px 0px 8px;">
+			<div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px;">
 				<DataTable
 					:pt="{
 						emptyMessage: { class: 'hidden' }
@@ -152,7 +152,7 @@ onMounted(async () => {
             </Column>
           </template>
           <template v-else>
-						<Column header="Ações" class="w-5">
+						<Column header="Ações" class="min-w-5">
 							<template #body="{ data }">
 								<Button icon="pi pi-pencil" severity="secondary" text rounded
 									v-tooltip.top="'Editar usuário'" @click="editUser(data)" />
@@ -161,18 +161,18 @@ onMounted(async () => {
 						<Column field="cn_usuario" header="Código" />
 						<Column field="an_nome" header="Nome" />
 						<Column field="an_email" header="E-mail" />
-						<Column class="w-60" field="an_perfil" header="Perfil" />
+						<Column class="min-w-60" field="an_perfil" header="Perfil" />
 						<Column field="bo_sts_reg" header="Status">
 							<template #body="{ data }">
 								<Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg? 'success': 'danger'" />
 							</template>
 						</Column>
-						<Column class="w-50" field="dt_inc" header="Dt. inclusão">
+						<Column class="min-w-50" field="dt_inc" header="Dt. inclusão">
 							<template #body="{ data }">
 								<span>{{ formatDateTime(data.dt_inc) }}</span>
 							</template>
 						</Column>
-						<Column class="w-50" field="dt_alt" header="Dt. alteração">
+						<Column class="min-w-50" field="dt_alt" header="Dt. alteração">
 							<template #body="{ data }">
 								<span>{{ formatDateTime(data.dt_alt) }}</span>
 							</template>

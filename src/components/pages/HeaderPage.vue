@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import Toolbar from 'primevue/toolbar'
 import Avatar from 'primevue/avatar'
 import Button from 'primevue/button'
 import Menu from 'primevue/menu'
-
-import logoEscura from '@/assets/img/logo_escura.png'
 
 import { logout } from '@/services/auth.service'
 
@@ -19,6 +17,8 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const route = useRoute()
+const titulo = computed(() => String(route.meta.title || 'AutoGarage').split(' | ')[0])
 
 const { user } = storeToRefs(useUtilStore())
 
@@ -59,6 +59,7 @@ async function handleSair() {
           aria-label="Abrir ou fechar menu"
           @click="emit('toggle-menu')"
         />
+        <h1 class="page-title">{{ titulo }}</h1>
       </div>
     </template>
 
@@ -91,8 +92,28 @@ async function handleSair() {
   display: flex;
   align-items: center;
   gap: 10px;
+  min-width: 0;
+  flex: 1;
 }
 
+
+.page-title {
+  margin: 0;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--p-text-color);
+  overflow-wrap: anywhere;
+}
+
+.header-start :deep(.p-button) {
+  flex-shrink: 0;
+}
+
+.header-bar :deep(.p-toolbar-start) {
+  flex: 1;
+  min-width: 0;
+}
 
 .profile-avatar {
   background: #fff0e5;
