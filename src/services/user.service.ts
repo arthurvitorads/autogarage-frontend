@@ -12,36 +12,34 @@ import { API_URL } from "@/constants/utils"
 export async function updateUser(id: string | number, values: IUpdateUser): Promise<ICreateUserResponse> {
   const user = auth.currentUser
 
-  if (!user) 
+  if (!user)
     throw new Error('Usuário não autenticado no Firebase.')
-  
+
   const token = await user.getIdToken()
-  
   const response = await fetch(`${API_URL}/usuarios/${encodeURIComponent(String(id))}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      an_nome: values.an_nome.trim(), 
-      bo_sts_reg: values.bo_sts_reg 
+    body: JSON.stringify({
+      an_nome: values.an_nome.trim(),
+      cn_perfil: values.cn_perfil ?? null,
+      bo_sts_reg: values.bo_sts_reg
     }),
   })
-  
   const result = await response.json()
-  
-  if (!response.ok) 
+
+  if (!response.ok)
     throw new Error(result.erro || 'Erro ao atualizar usuário.')
-  
-    return result as ICreateUserResponse
+
+  return result as ICreateUserResponse
 }
 
 export async function createUser(values: IFormUsuario): Promise<ICreateUserResponse> {
   const user = auth.currentUser
 
-  if (!user) 
+  if (!user)
     throw new Error('Usuário não autenticado no Firebase.')
 
   const token = await user.getIdToken()
-
   const response = await fetch(`${API_URL}/usuarios`, {
     method: 'POST',
     headers: {
@@ -52,13 +50,13 @@ export async function createUser(values: IFormUsuario): Promise<ICreateUserRespo
       an_nome: values.an_nome.trim(),
       an_email: values.an_email.trim().toLowerCase(),
       ca_senha: values.ca_senha,
+      cn_perfil: values.cn_perfil ?? null,
       bo_sts_reg: values.bo_sts_reg,
     }),
   })
-
   const result = await response.json()
 
-  if (!response.ok) 
+  if (!response.ok)
     throw new Error(result.erro || 'Erro ao criar usuário.')
 
   return result as ICreateUserResponse
@@ -72,7 +70,6 @@ export async function getInitialMe(): Promise<IMeUser> {
   }
 
   const token = await user.getIdToken()
-
   const response = await fetch(`${API_URL}/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -93,7 +90,6 @@ export async function getInitialMe(): Promise<IMeUser> {
 
   const utilStore = useUtilStore()
   utilStore.setUser(res.dados)
-
   handleFirstLogin()
 
   return res.dados
@@ -111,13 +107,11 @@ export async function getUsers(
   }
 
   const token = await user.getIdToken()
-
   const params = new URLSearchParams({
     page: String(ePage),
     limit: String(eLimit),
     search,
   })
-
   const response = await fetch(
     `${API_URL}/usuarios?${params}`,
     {
@@ -128,7 +122,7 @@ export async function getUsers(
   )
 
   if (!response.ok) {
-    if(response.status === 429) 
+    if (response.status === 429)
       throw new Error('Muitas requisições foram registradas. Aguarde alguns instantes!')
 
     throw new Error('Erro ao carregar usuários.')
@@ -136,4 +130,3 @@ export async function getUsers(
 
   return (await response.json()) as IUsuarioResponse
 }
-

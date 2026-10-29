@@ -15,6 +15,7 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type { Pessoa, TipoPessoa } from '@/models/pessoa'
+import { createPerson, updatePerson, personToRequest } from '@/services/person.service'
 import type { IFormPessoa } from '@/interface/interface-pages/PessoaPage'
 import type { TGenericData } from '@/interface/util'
 
@@ -33,7 +34,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  validated: [pessoa: Pessoa]
+  saved: []
 }>()
 
 const toast = useAppToast()
@@ -41,16 +42,21 @@ const { fetchCep, fetchCnpj, normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{ submit: () => void } | null>(null)
+const formRef = ref<{
+  submit: () => void
+} | null>(null)
 const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.pessoa)
 const isFuncionario = computed(() => formData.value.bo_categ_func)
 
-const tiposPessoa: { label: string; value: TipoPessoa }[] = [
-  { label: 'Pessoa física', value: 'PF' },
-  { label: 'Pessoa jurídica', value: 'PJ' },
-]
+const tiposPessoa: {
+  label: string;
+  value: TipoPessoa
+}[] = [
+    { label: 'Pessoa física', value: 'PF' },
+    { label: 'Pessoa jurídica', value: 'PJ' },
+  ]
 
 const ufs = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO',
@@ -131,11 +137,13 @@ function getCnpjText(value: unknown): string {
 }
 
 async function consultarCnpj(forcarConsulta = false) {
-  if (!props.visible || formData.value.tipo !== 'PJ' || loadingCnpj.value) return
+  if (!props.visible || formData.value.tipo !== 'PJ' || loadingCnpj.value)
+    return
 
   const cnpj = unMaskDocument(formData.value.cnpj).toUpperCase()
 
-  if (!cnpj) return
+  if (!cnpj)
+    return
 
   if (!validateCNPJ(cnpj)) {
     toast.error('O CNPJ informado é inválido.')
@@ -143,7 +151,8 @@ async function consultarCnpj(forcarConsulta = false) {
     return
   }
 
-  if (!forcarConsulta && (cnpjConsultado.value === cnpj || cnpjNaoEncontrado.value === cnpj)) return
+  if (!forcarConsulta && (cnpjConsultado.value === cnpj || cnpjNaoEncontrado.value === cnpj))
+    return
 
   const consultaAtual = ++consultaCnpjId
   const valoresAnteriores = { ...formData.value }
@@ -153,7 +162,8 @@ async function consultarCnpj(forcarConsulta = false) {
   try {
     const empresa = await fetchCnpj(cnpj)
 
-    if (consultaAtual !== consultaCnpjId) return
+    if (consultaAtual !== consultaCnpjId)
+      return
 
     if (!empresa) {
       cnpjNaoEncontrado.value = cnpj
@@ -204,7 +214,8 @@ async function consultarCnpj(forcarConsulta = false) {
     if (dadosCnpjPreenchidos.cep && formData.value.cep === dadosCnpjPreenchidos.cep)
       await consultarCep(true)
   } catch (error) {
-    if (consultaAtual !== consultaCnpjId) return
+    if (consultaAtual !== consultaCnpjId)
+      return
 
     toast.error(normalizeError(error))
   } finally {
@@ -214,7 +225,8 @@ async function consultarCnpj(forcarConsulta = false) {
 }
 
 async function consultarCep(preencherSomenteVazios = false) {
-  if (loadingCep.value) return
+  if (loadingCep.value)
+    return
 
   const cep = onlyNumbers(formData.value.cep)
 
@@ -230,7 +242,8 @@ async function consultarCep(preencherSomenteVazios = false) {
   try {
     const endereco = await fetchCep(cep)
 
-    if (consultaAtual !== consultaCepId) return
+    if (consultaAtual !== consultaCepId)
+      return
 
     if (!preencherSomenteVazios || !formData.value.logradouro) {
       formData.value.logradouro = endereco.logradouro
@@ -263,7 +276,8 @@ async function consultarCep(preencherSomenteVazios = false) {
     for (const campo of ['cep', 'logradouro', 'bairro', 'cidade', 'uf'])
       delete formErrors.value[campo]
   } catch (error) {
-    if (consultaAtual !== consultaCepId) return
+    if (consultaAtual !== consultaCepId)
+      return
 
     mensagemCep.value = normalizeError(error) + ' Preencha o endereço manualmente.'
     toast.warn(mensagemCep.value)
@@ -275,8 +289,9 @@ async function consultarCep(preencherSomenteVazios = false) {
   }
 }
 
-function onSubmit(values: IFormPessoa) {
-  if (loadingCep.value || loadingCnpj.value) return
+async function onSubmit(values: IFormPessoa) {
+  if (loadingCep.value || loadingCnpj.value)
+    return
 
   const errors: TGenericData = {}
 
@@ -341,7 +356,7 @@ function onSubmit(values: IFormPessoa) {
     errors.comissaoPercentual = 'A comissão deve estar entre 0% e 100%.'
 
   const documento = unMaskDocument(values.tipo === 'PF' ? values.cpf : values.cnpj).toUpperCase()
-  const documentoDuplicado = props.pessoas.some(pessoa =>
+  const documentoDuplicado = (props.pessoas ?? []).some(pessoa =>
     pessoa !== props.pessoa &&
     (props.pessoa?.id === undefined || pessoa.id !== props.pessoa.id) &&
     unMaskDocument(pessoa.tipo === 'PF' ? pessoa.cpf : pessoa.cnpj).toUpperCase() === documento
@@ -353,7 +368,8 @@ function onSubmit(values: IFormPessoa) {
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
 
-  if (!isValidated.value) return
+  if (!isValidated.value)
+    return
 
   setLoading(true)
 
@@ -379,7 +395,6 @@ function onSubmit(values: IFormPessoa) {
         comissaoPercentual: values.comissaoPercentual ?? 0,
       } : {}),
     }
-
     const pessoa: Pessoa = values.tipo === 'PF' ? {
       ...dadosPessoa,
       tipo: 'PF',
@@ -393,9 +408,13 @@ function onSubmit(values: IFormPessoa) {
       cnpj: documento,
     }
 
-    console.log(JSON.stringify(pessoa, null, 2))
-    emit('validated', pessoa)
-    toast.success('Dados validados. JSON gerado no console.')
+    if (props.pessoa?.id !== undefined)
+      await updatePerson(props.pessoa.id, personToRequest(pessoa))
+    else
+      await createPerson(personToRequest(pessoa))
+    toast.success('Pessoa gravada com sucesso.')
+    emit('update:visible', false)
+    emit('saved')
   } catch (error) {
     toast.error(normalizeError(error))
   } finally {
@@ -408,7 +427,8 @@ watch([() => props.visible, () => props.pessoa], ([visible]) => {
   consultaCepId++
   loadingCep.value = false
 
-  if (!visible) return
+  if (!visible)
+    return
 
   const pessoa = props.pessoa
 
@@ -429,11 +449,10 @@ watch([() => props.visible, () => props.pessoa], ([visible]) => {
     comissaoPercentual: pessoa.comissaoPercentual ?? 0,
     ...pessoa.endereco,
   } : formDataDefault()
-
   formErrors.value = {}
   isValidated.value = false
   mensagemCep.value = ''
-  cepConsultado.value = ''
+  cepConsultado.value = pessoa ? onlyNumbers(pessoa.endereco.cep) : ''
   formKey.value++
 }, { immediate: true })
 
@@ -468,21 +487,38 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
     delete formErrors.value.comissaoPercentual
   }
 })
-
 </script>
 
 <template>
-  <CadastroDialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'" width="96rem"
-    :disabled="loadingCep || loadingCnpj" @submit="formRef?.submit()">
-    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4"
-      v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit(formData)"
-      @input="isValidated = false" @change="isValidated = false">
+  <CadastroDialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'"
+    width="96rem"
+    :disabled="loadingCep || loadingCnpj"
+    @submit="formRef?.submit()"
+  >
+    <FormPage
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      class="flex flex-col gap-4"
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit(formData)"
+      @input="isValidated = false"
+      @change="isValidated = false"
+    >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-10 sm:col-span-6 lg:col-span-5" name="tipo" label="Tipo de pessoa">
-            <SelectButton v-model="formData.tipo" :options="tiposPessoa"
-              optionLabel="label" optionValue="value" :allowEmpty="false" />
+            <SelectButton
+              v-model="formData.tipo"
+              :options="tiposPessoa"
+              optionLabel="label"
+              optionValue="value"
+              :allowEmpty="false"
+            />
           </FieldForm>
           <FieldForm class="col-span-2 col-start-11 row-start-1 lg:col-span-1 lg:col-start-12 flex items-end" name="bo_sts_reg" label="Status" v-slot="{ field }">
             <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Pessoa ativa" />
@@ -490,59 +526,167 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
           <FieldForm class="col-span-12 sm:col-span-4 lg:col-span-6" name="bo_categ_cliente" label="Categorias *" v-slot="{ invalid }">
             <div class="flex items-center flex-wrap gap-5 min-h-9">
               <div class="flex items-center gap-2">
-                <Checkbox v-model="formData.bo_categ_cliente" name="bo_categ_cliente"
-                  inputId="pessoa-cliente" binary :invalid="invalid" />
+                <Checkbox
+                  v-model="formData.bo_categ_cliente"
+                  name="bo_categ_cliente"
+                  inputId="pessoa-cliente"
+                  binary
+                  :invalid="invalid"
+                />
                 <label for="pessoa-cliente">Cliente</label>
               </div>
               <div class="flex items-center gap-2">
-                <Checkbox v-model="formData.bo_categ_func" name="bo_categ_func"
-                  inputId="pessoa-funcionario" binary :invalid="invalid" />
+                <Checkbox
+                  v-model="formData.bo_categ_func"
+                  name="bo_categ_func"
+                  inputId="pessoa-funcionario"
+                  binary
+                  :invalid="invalid"
+                />
                 <label for="pessoa-funcionario">Funcionário</label>
               </div>
             </div>
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-8" name="nome" label="Nome completo *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.nome" :name="field" :invalid="invalid" fluid placeholder="Digite o nome completo" />
+          <FieldForm
+            v-if="formData.tipo === 'PF'"
+            class="col-span-12 sm:col-span-8"
+            name="nome"
+            label="Nome completo *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              v-model="formData.nome"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              placeholder="Digite o nome completo"
+            />
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-4" name="cpf" label="CPF *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.cpf" :name="field" :invalid="invalid" fluid maxlength="14" @update:modelValue="formData.cpf = maskCpf($event ?? '')" />
+          <FieldForm
+            v-if="formData.tipo === 'PF'"
+            class="col-span-12 sm:col-span-4"
+            name="cpf"
+            label="CPF *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              v-model="formData.cpf"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              maxlength="14"
+              @update:modelValue="formData.cpf = maskCpf($event ?? '')"
+            />
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="razaoSocial" label="Razão social *" v-slot="{ invalid, field }">
+          <FieldForm
+            v-if="formData.tipo === 'PJ'"
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="razaoSocial"
+            label="Razão social *"
+            v-slot="{ invalid, field }"
+          >
             <InputText v-model="formData.razaoSocial" :name="field" :invalid="invalid" fluid />
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="nomeFantasia" label="Nome fantasia *" v-slot="{ invalid, field }">
+          <FieldForm
+            v-if="formData.tipo === 'PJ'"
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="nomeFantasia"
+            label="Nome fantasia *"
+            v-slot="{ invalid, field }"
+          >
             <InputText v-model="formData.nomeFantasia" :name="field" :invalid="invalid" fluid />
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="cnpj" label="CNPJ *" v-slot="{ invalid, field }">
+          <FieldForm
+            v-if="formData.tipo === 'PJ'"
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="cnpj"
+            label="CNPJ *"
+            v-slot="{ invalid, field }"
+          >
             <div class="flex gap-2">
-              <InputText :modelValue="formData.cnpj" :name="field" :invalid="invalid" maxlength="18"
-                class="flex-1 min-w-0" @update:modelValue="onCnpjChange" @blur="consultarCnpj()" />
-              <Button type="button" icon="pi pi-search" aria-label="Consultar CNPJ"
-                :loading="loadingCnpj" @click="consultarCnpj(true)" />
+              <InputText
+                :modelValue="formData.cnpj"
+                :name="field"
+                :invalid="invalid"
+                maxlength="18"
+                class="flex-1 min-w-0"
+                @update:modelValue="onCnpjChange"
+                @blur="consultarCnpj()"
+              />
+              <Button
+                type="button"
+                icon="pi pi-search"
+                aria-label="Consultar CNPJ"
+                :loading="loadingCnpj"
+                @click="consultarCnpj(true)"
+              />
             </div>
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PJ'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="telefone" label="Telefone *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.telefone" :name="field" :invalid="invalid" fluid type="tel" placeholder="(00) 00000-0000" />
+          <FieldForm
+            v-if="formData.tipo === 'PJ'"
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="telefone"
+            label="Telefone *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              v-model="formData.telefone"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              type="tel"
+              placeholder="(00) 00000-0000"
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="email" label="E-mail *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.email" :name="field" :invalid="invalid" fluid type="email" placeholder="email@exemplo.com" />
+            <InputText
+              v-model="formData.email"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              type="email"
+              placeholder="email@exemplo.com"
+            />
           </FieldForm>
-          <FieldForm v-if="formData.tipo === 'PF'" class="col-span-12 sm:col-span-6 lg:col-span-4" name="telefone" label="Telefone *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.telefone" :name="field" :invalid="invalid" fluid type="tel" placeholder="(00) 00000-0000" />
+          <FieldForm
+            v-if="formData.tipo === 'PF'"
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="telefone"
+            label="Telefone *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              v-model="formData.telefone"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              type="tel"
+              placeholder="(00) 00000-0000"
+            />
           </FieldForm>
         </div>
       </Fieldset>
       <Fieldset legend="Endereço">
         <div class="grid grid-cols-12 gap-x-4">
-          <Message v-if="mensagemCep" severity="warn" class="col-span-12 mb-3">
-            {{ mensagemCep }}
-          </Message>
+          <Message v-if="mensagemCep" severity="warn" class="col-span-12 mb-3">{{ mensagemCep }}</Message>
           <FieldForm class="col-span-12 sm:col-span-4 lg:col-span-3" name="cep" label="CEP *" v-slot="{ invalid, field }">
             <div class="flex gap-2">
-              <InputText v-model="formData.cep" :name="field" placeholder="00000-000" maxlength="9"
-                :invalid="invalid" class="flex-1 min-w-0" @blur="consultarCep()" />
-              <Button type="button" icon="pi pi-search" aria-label="Consultar CEP"
-                :loading="loadingCep" @click="consultarCep()" />
+              <InputText
+                v-model="formData.cep"
+                :name="field"
+                placeholder="00000-000"
+                maxlength="9"
+                :invalid="invalid"
+                class="flex-1 min-w-0"
+                @blur="consultarCep()"
+              />
+              <Button
+                type="button"
+                icon="pi pi-search"
+                aria-label="Consultar CEP"
+                :loading="loadingCep"
+                @click="consultarCep()"
+              />
             </div>
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-8 lg:col-span-7" name="logradouro" label="Logradouro *" v-slot="{ invalid, field }">
@@ -561,7 +705,13 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             <InputText v-model="formData.cidade" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-2 lg:col-span-1" name="uf" label="UF *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.uf" :name="field" :invalid="invalid" fluid maxlength="2" />
+            <InputText
+              v-model="formData.uf"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              maxlength="2"
+            />
           </FieldForm>
         </div>
       </Fieldset>
@@ -571,8 +721,16 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             <InputText v-model="formData.cargo" :name="field" placeholder="Ex.: Mecânico" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="comissaoPercentual" label="Comissão (%)" v-slot="{ invalid, field }">
-            <InputNumber v-model="formData.comissaoPercentual" :name="field" :min="0" :max="100"
-              :maxFractionDigits="2" locale="pt-BR" :invalid="invalid" fluid />
+            <InputNumber
+              v-model="formData.comissaoPercentual"
+              :name="field"
+              :min="0"
+              :max="100"
+              :maxFractionDigits="2"
+              locale="pt-BR"
+              :invalid="invalid"
+              fluid
+            />
           </FieldForm>
         </div>
       </Fieldset>

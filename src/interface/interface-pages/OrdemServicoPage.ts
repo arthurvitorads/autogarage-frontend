@@ -42,7 +42,7 @@ export interface IFormOrdemServico extends IVeiculoOrdemServico {
   an_obs: string
 }
 
-// Contratos provisórios: referências explícitas para a futura API.
+// Contratos de manutenção e resposta da API de ordens.
 export interface IManutOrdemServico {
   cn_ordem_servico?: TCodigoOrdemServico
   cn_pessoa: string | number
@@ -72,8 +72,14 @@ interface IManutItemOrdemBase {
 }
 
 export type TManutItemOrdemServico = IManutItemOrdemBase & (
-  { ca_tipo: 'PRODUTO'; cn_produto: TCodigoOrdemServico } |
-  { ca_tipo: 'SERVICO'; cn_servico: TCodigoOrdemServico }
+  {
+    ca_tipo: 'PRODUTO';
+    cn_produto: TCodigoOrdemServico
+  } |
+  {
+    ca_tipo: 'SERVICO';
+    cn_servico: TCodigoOrdemServico
+  }
 )
 
 export type TItemOrdemServico = TManutItemOrdemServico & {

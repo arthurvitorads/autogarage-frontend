@@ -8,6 +8,7 @@ export interface Endereco {
   cidade: string
   uf: string
 }
+
 interface PessoaBase {
   id?: string | number
   bo_categ_cliente: boolean
@@ -19,16 +20,19 @@ interface PessoaBase {
   cargo?: string
   comissaoPercentual?: number
 }
+
 export interface PessoaFisica extends PessoaBase {
   tipo: 'PF'
   nome: string
   cpf: string
 }
+
 export interface PessoaJuridica extends PessoaBase {
   tipo: 'PJ'
   cnpj: string
   razaoSocial: string
   nomeFantasia: string
 }
-// Contrato provisório do frontend, a alinhar com a futura API.
+
+// Modelo do formulário; o serviço converte para os campos da API.
 export type Pessoa = PessoaFisica | PessoaJuridica

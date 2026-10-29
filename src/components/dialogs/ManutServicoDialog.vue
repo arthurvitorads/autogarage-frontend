@@ -43,11 +43,14 @@ function selectCategoria(cadastro: IAdmCadastroAuxiliar) {
   formData.value.an_categoria = cadastro.an_descr
   delete formErrors.value.an_categoria
 }
+
 const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{ submit: () => void } | null>(null)
+const formRef = ref<{
+  submit: () => void
+} | null>(null)
 const isValidated = ref(false)
 const isEditing = computed(() => !!props.servico)
 
@@ -64,7 +67,7 @@ function formDataDefault(): IFormServico {
 
 const formData = ref<IFormServico>(formDataDefault())
 
-function onSubmit(values: IFormServico) {
+async function onSubmit(values: IFormServico) {
   const errors: TGenericData = {}
 
   if (!values.an_nome.trim())
@@ -86,7 +89,8 @@ function onSubmit(values: IFormServico) {
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
 
-  if (!isValidated.value) return
+  if (!isValidated.value)
+    return
 
   setLoading(true)
 
@@ -101,10 +105,9 @@ function onSubmit(values: IFormServico) {
       bo_sts_reg: values.bo_sts_reg,
     }
 
-    saveServico(servico)
-    console.log(JSON.stringify(servico, null, 2))
+    await saveServico(servico)
     emit('saved', servico)
-    toast.success('Serviço registrado nesta tela. JSON gerado no console.')
+    toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
     toast.error(normalizeError(error))
@@ -114,7 +117,8 @@ function onSubmit(values: IFormServico) {
 }
 
 watch([() => props.visible, () => props.servico], ([visible]) => {
-  if (!visible) return
+  if (!visible)
+    return
 
   const servico = props.servico
 
@@ -126,7 +130,6 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
     an_obs: servico.an_obs,
     bo_sts_reg: servico.bo_sts_reg,
   } : formDataDefault()
-
   formErrors.value = {}
   isValidated.value = false
   formKey.value++
@@ -134,33 +137,83 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
 </script>
 
 <template>
-  <CadastroDialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar serviço' : 'Novo serviço'" width="72rem" @submit="formRef?.submit()">
-    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4"
-      v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit(formData)"
-      @input="isValidated = false" @change="isValidated = false">
+  <CadastroDialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar serviço' : 'Novo serviço'"
+    width="72rem"
+    @submit="formRef?.submit()"
+  >
+    <FormPage
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      class="flex flex-col gap-4"
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit(formData)"
+      @input="isValidated = false"
+      @change="isValidated = false"
+    >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_nome" :name="field" :invalid="invalid" fluid placeholder="Digite o nome do serviço" />
+            <InputText
+              v-model="formData.an_nome"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              placeholder="Digite o nome do serviço"
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
             <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Serviço ativo" />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="an_categoria" label="Categoria" v-slot="{ invalid, field }">
             <div class="flex gap-2">
-              <Select v-model="formData.an_categoria" :name="field" :options="categoriasServico" :invalid="invalid"
-                class="flex-1 min-w-0" placeholder="Selecione a categoria" showClear />
-              <Button type="button" icon="pi pi-plus" severity="secondary" aria-label="Cadastrar categoria" @click="cadastroCategoriaVisible = true" />
+              <Select
+                v-model="formData.an_categoria"
+                :name="field"
+                :options="categoriasServico"
+                :invalid="invalid"
+                class="flex-1 min-w-0"
+                placeholder="Selecione a categoria"
+                showClear
+              />
+              <Button
+                type="button"
+                icon="pi pi-plus"
+                severity="secondary"
+                aria-label="Cadastrar categoria"
+                @click="cadastroCategoriaVisible = true"
+              />
             </div>
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="vl_preco" label="Preço do serviço *" v-slot="{ invalid, field }">
-            <InputNumber v-model="formData.vl_preco" :name="field" :invalid="invalid" fluid locale="pt-BR"
-              mode="currency" currency="BRL" :max="999999999.99" :min="0" />
+            <InputNumber
+              v-model="formData.vl_preco"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              locale="pt-BR"
+              mode="currency"
+              currency="BRL"
+              :max="999999999.99"
+              :min="0"
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="nu_tempo_estimado" label="Tempo estimado (minutos)" v-slot="{ invalid, field }">
-            <InputNumber v-model="formData.nu_tempo_estimado" :name="field" :invalid="invalid" fluid locale="pt-BR"
-              :max="999999" :min="0" :maxFractionDigits="0" placeholder="Opcional" />
+            <InputNumber
+              v-model="formData.nu_tempo_estimado"
+              :name="field"
+              :invalid="invalid"
+              fluid
+              locale="pt-BR"
+              :max="999999"
+              :min="0"
+              :maxFractionDigits="0"
+              placeholder="Opcional"
+            />
           </FieldForm>
         </div>
       </Fieldset>

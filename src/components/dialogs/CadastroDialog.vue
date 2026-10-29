@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
+import { storeToRefs } from 'pinia'
+import { useUtilStore } from '@/stores/util.store'
+
+const { loading } = storeToRefs(useUtilStore())
 
 // Estrutura padrão das janelas de cadastro: conteúdo em fieldsets e rodapé fixo.
 withDefaults(defineProps<{
@@ -31,7 +35,13 @@ const emit = defineEmits<{
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
         <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
-        <Button type="button" label="Gravar" :disabled="disabled" @click="emit('submit')" />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="disabled || loading"
+          :loading="loading"
+          @click="emit('submit')"
+        />
       </div>
     </template>
   </Dialog>

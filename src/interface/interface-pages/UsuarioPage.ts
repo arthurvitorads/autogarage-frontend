@@ -1,6 +1,7 @@
 export interface IUpdateUser {
   an_nome: string
   bo_sts_reg: boolean
+  cn_perfil?: string | number | null
 }
 
 export interface ICreateUserResponse {
@@ -12,7 +13,7 @@ export interface IFormUsuario {
   an_nome: string
   an_email: string
   ca_senha: string
-  an_perfil: string
+  cn_perfil: string | number | null
   bo_sts_reg: boolean
 }
 
@@ -27,9 +28,10 @@ export interface IAdmUsuario {
   an_email?: string
   an_nome?: string
   an_perfil?: string
+  cn_perfil?: string | number | null
   bo_sts_reg?: boolean
-	dt_inc: Date
-	dt_alt: Date
+  dt_inc: Date
+  dt_alt: Date
 }
 
 export interface IUsuarioResponse {

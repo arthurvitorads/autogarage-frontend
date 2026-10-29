@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePageLoad } from '@/composables/usePageLoad'
 import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
@@ -51,8 +52,9 @@ function editItem(item: TItemOrdemServico) {
   itemVisible.value = true
 }
 
-function excluirItem(item: TItemOrdemServico) {
-  if (!ordem.value) return
+async function excluirItem(item: TItemOrdemServico) {
+  if (!ordem.value)
+    return
 
   try {
     const dados = {
@@ -61,9 +63,8 @@ function excluirItem(item: TItemOrdemServico) {
       cn_item: item.cn_item,
     }
 
-    removeItem(dados.cn_ordem_servico, dados.cn_item)
-    console.log(JSON.stringify(dados, null, 2))
-    toast.success('Item removido desta ordem. JSON gerado no console.')
+    await removeItem(dados.cn_ordem_servico, dados.cn_item)
+    toast.success('Item removido com sucesso.')
   } catch (error) {
     toast.error(normalizeError(error))
   }
@@ -72,75 +73,156 @@ function excluirItem(item: TItemOrdemServico) {
 function formatQuantidade(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 }
+
+usePageLoad(() => useOrdemServicoStore().load())
 </script>
 
 <template>
   <div v-if="ordem" class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <Button icon="pi pi-arrow-left" severity="secondary" text aria-label="Voltar ao painel" @click="voltarPainel" />
+        <Button
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          text
+          aria-label="Voltar ao painel"
+          @click="voltarPainel"
+        />
         <div>
           <h1 class="text-xl font-semibold">O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }}</h1>
           <p class="text-surface-500 mt-1">{{ ordem.an_cliente }}</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <span class="rounded-full px-3 py-1 font-semibold"
-          :style="{ backgroundColor: statusOrdem?.ca_cor ?? '#64748b', color: corTextoStatus(statusOrdem?.ca_cor ?? '#64748b') }">
-          {{ statusOrdem?.an_descr ?? 'Status indisponível' }}
-        </span>
+        <span class="rounded-full px-3 py-1 font-semibold" :style="{ backgroundColor: statusOrdem?.ca_cor ?? '#64748b', color: corTextoStatus(statusOrdem?.ca_cor ?? '#64748b') }">{{ statusOrdem?.an_descr ?? 'Status indisponível' }}</span>
         <Button label="Editar O.S." icon="pi pi-pencil" severity="secondary" @click="manutOrdemVisible = true" />
       </div>
     </div>
     <Fieldset legend="Dados gerais">
       <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div><dt class="text-surface-500">Cliente</dt><dd class="font-semibold mt-1">{{ ordem.an_cliente }}</dd></div>
-        <div><dt class="text-surface-500">Entrada</dt><dd class="mt-1">{{ formatDateTime(ordem.dt_entrada) }}</dd></div>
-        <div><dt class="text-surface-500">Previsão de entrega</dt><dd class="mt-1">{{ formatDateTime(ordem.dt_previsao) }}</dd></div>
-        <div><dt class="text-surface-500">Responsável</dt><dd class="mt-1">{{ ordem.an_responsavel || '—' }}</dd></div>
+        <div>
+          <dt class="text-surface-500">Cliente</dt>
+          <dd class="font-semibold mt-1">{{ ordem.an_cliente }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Entrada</dt>
+          <dd class="mt-1">{{ formatDateTime(ordem.dt_entrada) }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Previsão de entrega</dt>
+          <dd class="mt-1">{{ formatDateTime(ordem.dt_previsao) }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Responsável</dt>
+          <dd class="mt-1">{{ ordem.an_responsavel || '—' }}</dd>
+        </div>
       </dl>
     </Fieldset>
     <Fieldset legend="Dados do veículo">
       <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <div><dt class="text-surface-500">Placa</dt><dd class="font-bold mt-1">{{ ordem.veiculo.an_placa }}</dd></div>
-        <div><dt class="text-surface-500">Marca</dt><dd class="mt-1">{{ ordem.veiculo.an_marca }}</dd></div>
-        <div><dt class="text-surface-500">Modelo</dt><dd class="mt-1">{{ ordem.veiculo.an_modelo }}</dd></div>
-        <div><dt class="text-surface-500">Ano</dt><dd class="mt-1">{{ ordem.veiculo.nu_ano ?? '—' }}</dd></div>
-        <div><dt class="text-surface-500">Cor</dt><dd class="mt-1">{{ ordem.veiculo.an_cor || '—' }}</dd></div>
-        <div><dt class="text-surface-500">Quilometragem</dt><dd class="mt-1">{{ ordem.veiculo.qt_quilometragem === null ? '—' : formatQuantidade(ordem.veiculo.qt_quilometragem) + ' km' }}</dd></div>
+        <div>
+          <dt class="text-surface-500">Placa</dt>
+          <dd class="font-bold mt-1">{{ ordem.veiculo.an_placa }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Marca</dt>
+          <dd class="mt-1">{{ ordem.veiculo.an_marca }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Modelo</dt>
+          <dd class="mt-1">{{ ordem.veiculo.an_modelo }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Ano</dt>
+          <dd class="mt-1">{{ ordem.veiculo.nu_ano ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Cor</dt>
+          <dd class="mt-1">{{ ordem.veiculo.an_cor || '—' }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Quilometragem</dt>
+          <dd class="mt-1">{{ ordem.veiculo.qt_quilometragem === null ? '—' : formatQuantidade(ordem.veiculo.qt_quilometragem) + ' km' }}</dd>
+        </div>
       </dl>
     </Fieldset>
     <Fieldset legend="Produtos e serviços">
       <div class="flex justify-end mb-4">
         <Button label="Adicionar item" icon="pi pi-plus" @click="newItem" />
       </div>
-      <DataTable :pt="{ emptyMessage: { class: 'hidden' } }" :value="ordem.itens" dataKey="cn_item"
-        size="small" stripedRows scrollable tableStyle="min-width: 55rem">
+      <DataTable
+        :pt="{ emptyMessage: { class: 'hidden' } }"
+        :value="ordem.itens"
+        dataKey="cn_item"
+        size="small"
+        stripedRows
+        scrollable
+        tableStyle="min-width: 55rem"
+      >
         <Column header="Ações" class="min-w-24">
           <template #body="{ data }">
             <div class="flex">
-              <Button icon="pi pi-pencil" severity="secondary" text rounded aria-label="Editar item" @click="editItem(data)" />
-              <Button icon="pi pi-trash" severity="danger" text rounded aria-label="Remover item" @click="excluirItem(data)" />
+              <Button
+                icon="pi pi-pencil"
+                severity="secondary"
+                text
+                rounded
+                aria-label="Editar item"
+                @click="editItem(data)"
+              />
+              <Button
+                icon="pi pi-trash"
+                severity="danger"
+                text
+                rounded
+                aria-label="Remover item"
+                @click="excluirItem(data)"
+              />
             </div>
           </template>
         </Column>
-        <Column header="Tipo"><template #body="{ data }"><Tag :value="data.ca_tipo === 'PRODUTO' ? 'Produto' : 'Serviço'" severity="secondary" /></template></Column>
+        <Column header="Tipo">
+          <template #body="{ data }">
+            <Tag :value="data.ca_tipo === 'PRODUTO' ? 'Produto' : 'Serviço'" severity="secondary" />
+          </template>
+        </Column>
         <Column field="an_descr" header="Descrição" />
         <Column field="ca_unidade" header="Unidade" />
-        <Column header="Quantidade"><template #body="{ data }">{{ formatQuantidade(data.qt_quantidade) }}</template></Column>
-        <Column header="Preço unitário"><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_unitario) }}</template></Column>
-        <Column header="Total"><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template></Column>
+        <Column header="Quantidade">
+          <template #body="{ data }">{{ formatQuantidade(data.qt_quantidade) }}</template>
+        </Column>
+        <Column header="Preço unitário">
+          <template #body="{ data }">{{ formatCurrencyOrdem(data.vl_unitario) }}</template>
+        </Column>
+        <Column header="Total">
+          <template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template>
+        </Column>
       </DataTable>
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 border-t border-surface-200 pt-4">
-        <div><p class="text-surface-500">Produtos</p><p class="text-lg font-semibold mt-1">{{ formatCurrencyOrdem(totalProdutos) }}</p></div>
-        <div><p class="text-surface-500">Serviços</p><p class="text-lg font-semibold mt-1">{{ formatCurrencyOrdem(totalServicos) }}</p></div>
-        <div><p class="text-surface-500">Total da ordem</p><p class="text-xl font-bold mt-1">{{ formatCurrencyOrdem(totalOrdem) }}</p></div>
+        <div>
+          <p class="text-surface-500">Produtos</p>
+          <p class="text-lg font-semibold mt-1">{{ formatCurrencyOrdem(totalProdutos) }}</p>
+        </div>
+        <div>
+          <p class="text-surface-500">Serviços</p>
+          <p class="text-lg font-semibold mt-1">{{ formatCurrencyOrdem(totalServicos) }}</p>
+        </div>
+        <div>
+          <p class="text-surface-500">Total da ordem</p>
+          <p class="text-xl font-bold mt-1">{{ formatCurrencyOrdem(totalOrdem) }}</p>
+        </div>
       </div>
     </Fieldset>
     <Fieldset legend="Observações">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div><p class="text-surface-500 mb-2">Solicitação do cliente</p><p class="whitespace-pre-wrap break-words">{{ ordem.an_solicitacao || '—' }}</p></div>
-        <div><p class="text-surface-500 mb-2">Observações internas</p><p class="whitespace-pre-wrap break-words">{{ ordem.an_obs || '—' }}</p></div>
+        <div>
+          <p class="text-surface-500 mb-2">Solicitação do cliente</p>
+          <p class="whitespace-pre-wrap break-words">{{ ordem.an_solicitacao || '—' }}</p>
+        </div>
+        <div>
+          <p class="text-surface-500 mb-2">Observações internas</p>
+          <p class="whitespace-pre-wrap break-words">{{ ordem.an_obs || '—' }}</p>
+        </div>
       </div>
     </Fieldset>
     <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="ordem" />

@@ -20,7 +20,9 @@ import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
 
-const props = defineProps<{ visible: boolean }>()
+const props = defineProps<{
+  visible: boolean
+}>()
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
   saved: [status: IStatusOrdemServico]
@@ -35,7 +37,9 @@ const selectStatus = ref<TCodigoOrdemServico | null>(null)
 const isEditing = computed(() => selectStatus.value !== null)
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{ submit: () => void } | null>(null)
+const formRef = ref<{
+  submit: () => void
+} | null>(null)
 
 function formDataDefault(): IFormStatusOrdemServico {
   return {
@@ -55,7 +59,6 @@ function loadStatus() {
     ca_cor: selecionado.ca_cor,
     bo_padrao: selecionado.bo_padrao,
   } : formDataDefault()
-
   formErrors.value = {}
   formKey.value++
 }
@@ -65,14 +68,17 @@ function newStatus() {
   loadStatus()
 }
 
-function onSubmit(values: IFormStatusOrdemServico) {
+async function onSubmit(values: IFormStatusOrdemServico) {
   const errors: TGenericData = {}
 
-  if (!values.an_descr.trim()) errors.an_descr = 'Campo obrigatório.'
-  if (!/^#[a-fA-F0-9]{6}$/.test(values.ca_cor)) errors.ca_cor = 'Selecione uma cor válida.'
+  if (!values.an_descr.trim())
+    errors.an_descr = 'Campo obrigatório.'
+  if (!/^#[a-fA-F0-9]{6}$/.test(values.ca_cor))
+    errors.ca_cor = 'Selecione uma cor válida.'
 
   formErrors.value = errors
-  if (Object.keys(errors).length) return
+  if (Object.keys(errors).length)
+    return
 
   setLoading(true)
 
@@ -83,11 +89,9 @@ function onSubmit(values: IFormStatusOrdemServico) {
       ca_cor: values.ca_cor,
       bo_padrao: values.bo_padrao,
     }
-    const resultado = saveStatus(dados)
-
-    console.log(JSON.stringify(dados, null, 2))
+    const resultado = await saveStatus(dados)
     emit('saved', resultado)
-    toast.success('Status registrado nesta sessão. JSON gerado no console.')
+    toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
     toast.error(normalizeError(error))
@@ -98,35 +102,67 @@ function onSubmit(values: IFormStatusOrdemServico) {
 
 watch(selectStatus, loadStatus)
 watch(() => props.visible, visible => {
-  if (visible) newStatus()
+  if (visible)
+    newStatus()
 }, { immediate: true })
 </script>
 
 <template>
-  <CadastroDialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar status da O.S.' : 'Novo status da O.S.'" width="48rem" @submit="formRef?.submit()">
+  <CadastroDialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar status da O.S.' : 'Novo status da O.S.'"
+    width="48rem"
+    @submit="formRef?.submit()"
+  >
     <div class="flex gap-2 mb-4">
-      <Select v-model="selectStatus" :options="status" optionLabel="an_descr" optionValue="cn_status"
-        placeholder="Selecionar um status para editar" aria-label="Selecionar status para editar" class="flex-1 min-w-0" showClear />
-      <Button type="button" label="Novo" icon="pi pi-plus" severity="secondary" @click="newStatus" />
+      <Select
+        v-model="selectStatus"
+        :options="status"
+        optionLabel="an_descr"
+        optionValue="cn_status"
+        placeholder="Selecionar um status para editar"
+        aria-label="Selecionar status para editar"
+        class="flex-1 min-w-0"
+        showClear
+      />
+      <Button
+        type="button"
+        label="Novo"
+        icon="pi pi-plus"
+        severity="secondary"
+        @click="newStatus"
+      />
     </div>
-    <FormPage ref="formRef" :key="formKey" novalidate v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit(formData)">
+    <FormPage
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit(formData)"
+    >
       <Fieldset legend="Dados do status">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-9" name="an_descr" label="Nome *" v-slot="{ invalid, field }">
             <InputText v-model="formData.an_descr" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-3" name="ca_cor" label="Cor *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.ca_cor" :name="field" type="color" :invalid="invalid" fluid class="h-10" aria-label="Cor do status" />
+            <InputText
+              v-model="formData.ca_cor"
+              :name="field"
+              type="color"
+              :invalid="invalid"
+              fluid
+              class="h-10"
+              aria-label="Cor do status"
+            />
           </FieldForm>
           <FieldForm class="col-span-12" name="bo_padrao" label="Padrão para novas ordens" v-slot="{ field }">
             <ToggleSwitch v-model="formData.bo_padrao" :name="field" aria-label="Usar como status padrão em novas ordens" />
           </FieldForm>
           <div class="col-span-12 mt-2">
-            <span class="inline-flex rounded-full px-3 py-1 font-semibold"
-              :style="{ backgroundColor: formData.ca_cor, color: corTextoStatus(formData.ca_cor) }">
-              {{ formData.an_descr || 'Prévia do status' }}
-            </span>
+            <span class="inline-flex rounded-full px-3 py-1 font-semibold" :style="{ backgroundColor: formData.ca_cor, color: corTextoStatus(formData.ca_cor) }">{{ formData.an_descr || 'Prévia do status' }}</span>
           </div>
         </div>
       </Fieldset>

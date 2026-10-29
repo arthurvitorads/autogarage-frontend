@@ -21,7 +21,6 @@ import { dataHoraLocal, normalizarPlaca, validarDadosOrdem } from '@/services/or
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
-import DomainField from '../field/DomainField.vue'
 
 const props = defineProps<{
   visible: boolean
@@ -40,7 +39,9 @@ const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{ submit: () => void } | null>(null)
+const formRef = ref<{
+  submit: () => void
+} | null>(null)
 const statusVisible = ref(false)
 const isEditing = computed(() => !!props.ordem)
 const anoMaximo = new Date().getFullYear() + 1
@@ -74,7 +75,7 @@ function selectStatus(item: IStatusOrdemServico) {
   delete formErrors.value.cn_status
 }
 
-function onSubmit(values: IFormOrdemServico) {
+async function onSubmit(values: IFormOrdemServico) {
   const errors = validarDadosOrdem(values)
 
   if (!clientes.value.some(cliente => String(cliente.cn_pessoa) === String(values.cn_pessoa)))
@@ -84,12 +85,14 @@ function onSubmit(values: IFormOrdemServico) {
     errors.cn_status = 'Selecione um status válido.'
 
   formErrors.value = errors
-  if (Object.keys(errors).length) return
+  if (Object.keys(errors).length)
+    return
 
   setLoading(true)
 
   try {
-    if (values.cn_pessoa === null || values.cn_status === null) return
+    if (values.cn_pessoa === null || values.cn_status === null)
+      return
 
     const dados: IManutOrdemServico = {
       ...(props.ordem ? { cn_ordem_servico: props.ordem.cn_ordem_servico } : {}),
@@ -109,11 +112,9 @@ function onSubmit(values: IFormOrdemServico) {
       an_solicitacao: values.an_solicitacao.trim(),
       an_obs: values.an_obs.trim(),
     }
-    const resultado = saveOrdem(dados)
-
-    console.log(JSON.stringify(dados, null, 2))
+    const resultado = await saveOrdem(dados)
     emit('saved', resultado)
-    toast.success('Ordem registrada nesta sessão. JSON gerado no console.')
+    toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
     toast.error(normalizeError(error))
@@ -123,7 +124,8 @@ function onSubmit(values: IFormOrdemServico) {
 }
 
 watch([() => props.visible, () => props.ordem], ([visible]) => {
-  if (!visible) return
+  if (!visible)
+    return
 
   const ordem = props.ordem
 
@@ -137,40 +139,81 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
     an_solicitacao: ordem.an_solicitacao,
     an_obs: ordem.an_obs,
   } : formDataDefault()
-
   formErrors.value = {}
   formKey.value++
 }, { immediate: true })
 </script>
 
 <template>
-  <CadastroDialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço'" width="96rem" @submit="formRef?.submit()">
-    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4"
-      v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit(formData)">
+  <CadastroDialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço'"
+    width="96rem"
+    @submit="formRef?.submit()"
+  >
+    <FormPage
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      class="flex flex-col gap-4"
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit(formData)"
+    >
       <Fieldset legend="Dados gerais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-3" name="nu_numero" label="Número">
             <InputText :modelValue="ordem ? String(ordem.nu_numero).padStart(6, '0') : 'Automático'" readonly fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6" name="cn_pessoa" label="Cliente *" v-slot="{ invalid, field }">
-            <Select v-model="formData.cn_pessoa" :name="field" :options="clientesOptions" optionLabel="an_label"
-              optionValue="cn_pessoa" placeholder="Selecione o cliente PF ou PJ" :invalid="invalid" filter fluid
-              emptyMessage="Nenhum cliente disponível." emptyFilterMessage="Nenhum cliente corresponde à pesquisa." />
-          </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-3" name="cn_status" label="Status *" v-slot="{ invalid, field }">
-            <DomainField
+            <Select
+              v-model="formData.cn_pessoa"
               :name="field"
-              endpoint="/ordemStatus"
-              optionsPath="dados.order"
+              :options="clientesOptions"
+              optionLabel="an_label"
+              optionValue="cn_pessoa"
+              placeholder="Selecione o cliente PF ou PJ"
               :invalid="invalid"
+              filter
+              fluid
+              emptyMessage="Nenhum cliente disponível."
+              emptyFilterMessage="Nenhum cliente corresponde à pesquisa."
             />
           </FieldForm>
+          <FieldForm class="col-span-12 sm:col-span-3" name="cn_status" label="Status *" v-slot="{ invalid, field }">
+            <div class="flex gap-2">
+              <Select
+                v-model="formData.cn_status"
+                :name="field"
+                :options="status"
+                optionLabel="an_descr"
+                optionValue="cn_status"
+                :invalid="invalid"
+                fluid
+                class="flex-1 min-w-0"
+                placeholder="Selecione o status"
+              />
+              <Button type="button" icon="pi pi-plus" aria-label="Cadastrar status" @click="statusVisible = true" />
+            </div>
+          </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="dt_entrada" label="Entrada *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.dt_entrada" :name="field" type="datetime-local" :invalid="invalid" fluid />
+            <InputText
+              v-model="formData.dt_entrada"
+              :name="field"
+              type="datetime-local"
+              :invalid="invalid"
+              fluid
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="dt_previsao" label="Previsão de entrega" v-slot="{ invalid, field }">
-            <InputText v-model="formData.dt_previsao" :name="field" type="datetime-local" :invalid="invalid" fluid />
+            <InputText
+              v-model="formData.dt_previsao"
+              :name="field"
+              type="datetime-local"
+              :invalid="invalid"
+              fluid
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="an_responsavel" label="Responsável" v-slot="{ field }">
             <InputText v-model="formData.an_responsavel" :name="field" fluid />
@@ -180,8 +223,14 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
       <Fieldset legend="Dados do veículo">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-3" name="an_placa" label="Placa *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_placa" :name="field" :invalid="invalid" maxlength="8" fluid
-              @update:modelValue="formData.an_placa = ($event ?? '').toUpperCase()" />
+            <InputText
+              v-model="formData.an_placa"
+              :name="field"
+              :invalid="invalid"
+              maxlength="8"
+              fluid
+              @update:modelValue="formData.an_placa = ($event ?? '').toUpperCase()"
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="an_marca" label="Marca *" v-slot="{ invalid, field }">
             <InputText v-model="formData.an_marca" :name="field" :invalid="invalid" fluid />
@@ -190,13 +239,29 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
             <InputText v-model="formData.an_modelo" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="nu_ano" label="Ano" v-slot="{ invalid, field }">
-            <InputNumber v-model="formData.nu_ano" :name="field" :invalid="invalid" :min="1900" :max="anoMaximo" :useGrouping="false" fluid />
+            <InputNumber
+              v-model="formData.nu_ano"
+              :name="field"
+              :invalid="invalid"
+              :min="1900"
+              :max="anoMaximo"
+              :useGrouping="false"
+              fluid
+            />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="an_cor" label="Cor" v-slot="{ field }">
             <InputText v-model="formData.an_cor" :name="field" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="qt_quilometragem" label="Quilometragem" v-slot="{ invalid, field }">
-            <InputNumber v-model="formData.qt_quilometragem" :name="field" :invalid="invalid" :min="0" :max="9999999" locale="pt-BR" fluid />
+            <InputNumber
+              v-model="formData.qt_quilometragem"
+              :name="field"
+              :invalid="invalid"
+              :min="0"
+              :max="9999999"
+              locale="pt-BR"
+              fluid
+            />
           </FieldForm>
         </div>
       </Fieldset>

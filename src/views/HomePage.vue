@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePageLoad } from '@/composables/usePageLoad'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
@@ -20,8 +21,10 @@ const periodos = [
 const ordensPeriodo = computed(() => {
   const inicio = new Date(agora.value)
   inicio.setHours(0, 0, 0, 0)
-  if (periodo.value === 'semana') inicio.setDate(inicio.getDate() - 6)
-  else if (periodo.value === 'trinta-dias') inicio.setDate(inicio.getDate() - 29)
+  if (periodo.value === 'semana')
+    inicio.setDate(inicio.getDate() - 6)
+  else if (periodo.value === 'trinta-dias')
+    inicio.setDate(inicio.getDate() - 29)
   else if (periodo.value === 'tres-meses' || periodo.value === 'seis-meses') {
     const dia = inicio.getDate()
     inicio.setDate(1)
@@ -35,22 +38,41 @@ const ordensPeriodo = computed(() => {
   })
 })
 let relogio: ReturnType<typeof setInterval> | undefined
-onMounted(() => { relogio = setInterval(() => { agora.value = Date.now() }, 30_000) })
-onUnmounted(() => { if (relogio) clearInterval(relogio) })
+onMounted(() => {
+  relogio = setInterval(() => {
+    agora.value = Date.now()
+  }, 30_000)
+})
+onUnmounted(() => {
+  if (relogio)
+    clearInterval(relogio)
+})
 
 const resumo = computed(() => {
-  const totais = { abertas: 0, andamento: 0, finalizadas: 0, atrasadas: 0, canceladas: 0, outros: 0 }
+  const totais = {
+    abertas: 0,
+    andamento: 0,
+    finalizadas: 0,
+    atrasadas: 0,
+    canceladas: 0,
+    outros: 0
+  }
   const situacoes = new Map(status.value.map(item => [String(item.cn_status), item]))
   for (const ordem of ordensPeriodo.value) {
     const situacao = situacoes.get(String(ordem.cn_status))
     const nome = normalizeString(situacao?.an_descr ?? '')
     const cancelada = /\bcancelad[ao]s?\b/.test(nome)
     const finalizada = !cancelada && /\b(finalizad[ao]s?|concluid[ao]s?|encerrad[ao]s?|entregue[s]?)\b/.test(nome)
-    if (cancelada) totais.canceladas++
-    else if (finalizada) totais.finalizadas++
-    else if (/\b(andamento|execucao)\b/.test(nome)) totais.andamento++
-    else if (/\babert[ao]s?\b/.test(nome) || situacao?.bo_padrao) totais.abertas++
-    else totais.outros++
+    if (cancelada)
+      totais.canceladas++
+    else if (finalizada)
+      totais.finalizadas++
+    else if (/\b(andamento|execucao)\b/.test(nome))
+      totais.andamento++
+    else if (/\babert[ao]s?\b/.test(nome) || situacao?.bo_padrao)
+      totais.abertas++
+    else
+      totais.outros++
 
     if (!cancelada && !finalizada && ordem.dt_previsao && new Date(ordem.dt_previsao).getTime() < agora.value) {
       totais.atrasadas++
@@ -60,19 +82,70 @@ const resumo = computed(() => {
 })
 
 const indicadores = computed(() => [
-  { titulo: 'O.S. abertas', valor: resumo.value.abertas, legenda: 'Aguardando início', icone: 'pi-folder-open', cor: 'blue' },
-  { titulo: 'O.S. em andamento', valor: resumo.value.andamento, legenda: 'Serviços em execução', icone: 'pi-wrench', cor: 'orange' },
-  { titulo: 'O.S. finalizadas', valor: resumo.value.finalizadas, legenda: 'Serviços concluídos', icone: 'pi-check-circle', cor: 'green' },
-  { titulo: 'O.S. atrasadas', valor: resumo.value.atrasadas, legenda: 'Previsão de entrega vencida', icone: 'pi-clock', cor: 'red' },
-  { titulo: 'O.S. canceladas', valor: resumo.value.canceladas, legenda: 'Ordens canceladas', icone: 'pi-ban', cor: 'slate' },
+  {
+    titulo: 'O.S. abertas',
+    valor: resumo.value.abertas,
+    legenda: 'Aguardando início',
+    icone: 'pi-folder-open',
+    cor: 'blue'
+  },
+  {
+    titulo: 'O.S. em andamento',
+    valor: resumo.value.andamento,
+    legenda: 'Serviços em execução',
+    icone: 'pi-wrench',
+    cor: 'orange'
+  },
+  {
+    titulo: 'O.S. finalizadas',
+    valor: resumo.value.finalizadas,
+    legenda: 'Serviços concluídos',
+    icone: 'pi-check-circle',
+    cor: 'green'
+  },
+  {
+    titulo: 'O.S. atrasadas',
+    valor: resumo.value.atrasadas,
+    legenda: 'Previsão de entrega vencida',
+    icone: 'pi-clock',
+    cor: 'red'
+  },
+  {
+    titulo: 'O.S. canceladas',
+    valor: resumo.value.canceladas,
+    legenda: 'Ordens canceladas',
+    icone: 'pi-ban',
+    cor: 'slate'
+  },
 ])
 
 const atalhos = [
-  { titulo: 'Painel de O.S.', descricao: 'Acompanhe os serviços da oficina', icone: 'pi-th-large', rota: 'ordem-servico-painel' },
-  { titulo: 'Pessoas', descricao: 'Consulte clientes e fornecedores', icone: 'pi-users', rota: 'pessoa' },
-  { titulo: 'Produtos', descricao: 'Acesse o catálogo de produtos', icone: 'pi-box', rota: 'produto' },
-  { titulo: 'Serviços', descricao: 'Consulte os serviços disponíveis', icone: 'pi-wrench', rota: 'servico' },
+  {
+    titulo: 'Painel de O.S.',
+    descricao: 'Acompanhe os serviços da oficina',
+    icone: 'pi-th-large',
+    rota: 'ordem-servico-painel'
+  },
+  {
+    titulo: 'Pessoas',
+    descricao: 'Consulte clientes e fornecedores',
+    icone: 'pi-users',
+    rota: 'pessoa'
+  },
+  {
+    titulo: 'Produtos',
+    descricao: 'Acesse o catálogo de produtos',
+    icone: 'pi-box',
+    rota: 'produto'
+  },
+  {
+    titulo: 'Serviços',
+    descricao: 'Consulte os serviços disponíveis',
+    icone: 'pi-wrench',
+    rota: 'servico'
+  },
 ]
+usePageLoad(() => useOrdemServicoStore().load())
 </script>
 
 <template>
@@ -85,14 +158,23 @@ const atalhos = [
         </div>
         <div class="period-filter">
           <label for="periodo-os">Período:</label>
-          <Select v-model="periodo" inputId="periodo-os" :options="periodos" optionLabel="label" optionValue="value" class="period-select" />
+          <Select
+            v-model="periodo"
+            inputId="periodo-os"
+            :options="periodos"
+            optionLabel="label"
+            optionValue="value"
+            class="period-select"
+          />
         </div>
       </div>
       <div class="indicators">
         <article v-for="indicador in indicadores" :key="indicador.titulo" class="indicator" :class="indicador.cor">
           <div class="indicator-heading">
             <h3>{{ indicador.titulo }}</h3>
-            <span class="indicator-icon"><i class="pi" :class="indicador.icone" aria-hidden="true"></i></span>
+            <span class="indicator-icon">
+              <i class="pi" :class="indicador.icone" aria-hidden="true"></i>
+            </span>
           </div>
           <strong class="indicator-value">{{ indicador.valor }}</strong>
           <p>{{ indicador.legenda }}</p>
@@ -100,15 +182,21 @@ const atalhos = [
       </div>
       <p v-if="resumo.outros" class="summary-note">{{ resumo.outros }} O.S. em outros status personalizados.</p>
     </section>
-
     <section class="shortcuts-container" aria-labelledby="atalhos-titulo">
       <div class="section-heading">
-        <div><h2 id="atalhos-titulo">Atalhos</h2></div>
+        <div>
+          <h2 id="atalhos-titulo">Atalhos</h2>
+        </div>
       </div>
       <div class="shortcuts">
         <RouterLink v-for="atalho in atalhos" :key="atalho.rota" :to="{ name: atalho.rota }" class="shortcut">
-          <span class="shortcut-icon"><i class="pi" :class="atalho.icone" aria-hidden="true"></i></span>
-          <div><h3>{{ atalho.titulo }}</h3><p>{{ atalho.descricao }}</p></div>
+          <span class="shortcut-icon">
+            <i class="pi" :class="atalho.icone" aria-hidden="true"></i>
+          </span>
+          <div>
+            <h3>{{ atalho.titulo }}</h3>
+            <p>{{ atalho.descricao }}</p>
+          </div>
           <i class="pi pi-angle-right shortcut-arrow" aria-hidden="true"></i>
         </RouterLink>
       </div>
