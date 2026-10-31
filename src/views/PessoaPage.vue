@@ -18,7 +18,7 @@ import { useUtilStore } from '@/stores/util.store'
 
 import { getPerson, personToForm } from '@/services/person.service'
 import { useAppToast } from '@/services/toast.service'
-import { formatDateTime } from '@/services/util.service'
+import { formatDateTime, maskCpf, maskCnpj, maskTelefone } from '@/services/util.service'
 
 const { normalizeError, setLoading } = useUtilStore()
 
@@ -194,8 +194,8 @@ onMounted(async () => {
             <Column field="ca_tipo" header="Tipo">
               <template #body="{ data }">{{ data.ca_tipo === 'PF' ? 'Física' : 'Juridica' }}</template>
             </Column>
-            <Column header="Documento">
-              <template #body="{ data }">{{ data.ca_tipo === 'PF' ? data.ca_cpf : data.ca_cnpj }}</template>
+            <Column header="Documento" class="min-w-40">
+              <template #body="{ data }">{{ data.ca_tipo === 'PF' ? maskCpf(data.ca_cpf ?? '') : maskCnpj(data.ca_cnpj ?? '') }}</template>
             </Column>
             <Column header="Categorias">
               <template #body="{ data }">
@@ -205,7 +205,9 @@ onMounted(async () => {
                 </div>
               </template>
             </Column>
-            <Column field="an_telefone" header="Telefone" />
+            <Column header="Telefone" class="min-w-40">
+              <template #body="{ data }">{{ maskTelefone(data.an_telefone ?? '') }}</template>
+            </Column>
             <Column field="an_email" header="E-mail" />
             <Column header="Status">
               <template #body="{ data }">

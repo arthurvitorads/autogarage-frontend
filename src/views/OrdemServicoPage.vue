@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { usePesquisa } from '@/composables/usePesquisa'
+import { getOrdensPagina } from '@/services/ordem-api.service'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 
@@ -10,29 +12,23 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
-import StatusOrdemServicoDialog from '@/components/dialogs/StatusOrdemServicoDialog.vue'
+import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
 import type { IAdmOrdemServico, TCodigoOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 
-import { calcularTotalOrdem, corTextoStatus, filtrarOrdensServico, formatCurrencyOrdem } from '@/services/ordem-servico.service'
+import { calcularTotalOrdem, corTextoStatus, formatCurrencyOrdem, getStatusOrdem, ordemEncerrada } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
 
 const router = useRouter()
-const { ordens, status } = storeToRefs(useOrdemServicoStore())
-const limite = ref(20)
-const primeiroRegistro = ref(0)
-const filtro = ref('')
-const pesquisa = ref('')
+const { classificacoes } = storeToRefs(useOrdemServicoStore())
+const { registros: ordens, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmOrdemServico>(getOrdensPagina)
+
 const manutOrdemVisible = ref(false)
 const statusVisible = ref(false)
 const selectOrdem = ref<IAdmOrdemServico | null>(null)
-const ordensFiltradas = computed(() => filtrarOrdensServico(ordens.value, pesquisa.value))
 
-function search() {
-  pesquisa.value = filtro.value.trim()
-  primeiroRegistro.value = 0
-}
+
 
 function newOrdem() {
   selectOrdem.value = null
@@ -49,10 +45,13 @@ function abrirOrdem(ordem: IAdmOrdemServico) {
 }
 
 function getStatus(codigo: TCodigoOrdemServico) {
-  return status.value.find(item => item.cn_status === codigo)
+  return classificacoes.value.find(item => item.cn_classificacao === codigo)
 }
 
-usePageLoad(() => useOrdemServicoStore().load())
+usePageLoad(async () => {
+  await useOrdemServicoStore().loadParametros()
+  await load()
+})
 </script>
 
 <template>
@@ -67,23 +66,27 @@ usePageLoad(() => useOrdemServicoStore().load())
             class="flex-1 min-w-0"
             @keyup.enter="search"
           />
-          <Button icon="pi pi-search" aria-label="Pesquisar" @click="search" />
+          <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex gap-2">
-          <Button label="Status" icon="pi pi-cog" severity="secondary" @click="statusVisible = true" />
+          <Button label="Classificações" icon="pi pi-cog" severity="secondary" @click="statusVisible = true" />
           <Button label="Novo" icon="pi pi-plus" @click="newOrdem" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <DataTable
           :pt="{ emptyMessage: { class: 'hidden' } }"
-          :value="ordensFiltradas"
+          :value="ordens"
           dataKey="cn_ordem_servico"
           size="small"
           stripedRows
           scrollable
           scrollHeight="flex"
           tableStyle="min-width: 65rem"
+          lazy
+          :loading="loadingGrid"
+          :totalRecords="total"
+          @page="changePage"
           paginator
           v-model:first="primeiroRegistro"
           :rows="limite"
@@ -98,6 +101,7 @@ usePageLoad(() => useOrdemServicoStore().load())
                   severity="secondary"
                   text
                   rounded
+                  v-if="!ordemEncerrada(data)"
                   aria-label="Editar ordem de serviço"
                   v-tooltip.top="'Editar ordem'"
                   @click="editOrdem(data)"
@@ -126,7 +130,7 @@ usePageLoad(() => useOrdemServicoStore().load())
           </Column>
           <Column header="Status">
             <template #body="{ data }">
-              <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :style="{ backgroundColor: getStatus(data.cn_status)?.ca_cor ?? '#64748b', color: corTextoStatus(getStatus(data.cn_status)?.ca_cor ?? '#64748b') }">{{ getStatus(data.cn_status)?.an_descr ?? 'Status indisponível' }}</span>
+              <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :style="{ backgroundColor: getStatusOrdem(data.ca_status).cor ?? '#64748b', color: corTextoStatus(getStatusOrdem(data.ca_status).cor ?? '#64748b') }">{{ getStatusOrdem(data.ca_status).label }}</span>
             </template>
           </Column>
           <Column header="Entrada">
@@ -142,6 +146,6 @@ usePageLoad(() => useOrdemServicoStore().load())
       </div>
     </div>
   </div>
-  <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="selectOrdem" />
-  <StatusOrdemServicoDialog v-model:visible="statusVisible" />
+  <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="selectOrdem" @saved="load" />
+  <ClassificacaoOrdemServicoDialog v-model:visible="statusVisible" />
 </template>

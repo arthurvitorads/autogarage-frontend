@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmacao } from '@/composables/useConfirmacao'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -26,6 +27,7 @@ const props = defineProps<{
   visible: boolean
   codigoOrdem: TCodigoOrdemServico
   item?: TItemOrdemServico | null
+  tipo?: 'PRODUTO' | 'SERVICO'
 }>()
 
 const emit = defineEmits<{
@@ -37,6 +39,7 @@ const { produtos, servicos } = storeToRefs(useCatalogoStore())
 const { saveItem } = useOrdemServicoStore()
 const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
+const confirmar = useConfirmacao()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<{
@@ -49,7 +52,7 @@ const tiposItem = [
 
 function formDataDefault(): IFormItemOrdemServico {
   return {
-    ca_tipo: 'PRODUTO',
+    ca_tipo: props.tipo ?? 'PRODUTO',
     cn_referencia: null,
     qt_quantidade: 1,
     vl_unitario: 0,
@@ -116,6 +119,9 @@ async function onSubmit(values: IFormItemOrdemServico) {
 
   formErrors.value = errors
   if (Object.keys(errors).length)
+    return
+
+  if (!await confirmar())
     return
 
   setLoading(true)
@@ -213,7 +219,7 @@ watch([() => props.visible, () => props.item], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-3" name="ca_unidade" label="Unidade">
-            <InputText :modelValue="selectReferencia?.ca_unidade || '—'" readonly fluid />
+            <InputText maxlength="10" :modelValue="selectReferencia?.ca_unidade || '—'" readonly fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="qt_quantidade" label="Quantidade *" v-slot="{ invalid, field }">
             <InputNumber
@@ -241,7 +247,7 @@ watch([() => props.visible, () => props.item], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="vl_total" label="Total do item">
-            <InputText :modelValue="totalItem === null ? '—' : formatCurrencyOrdem(totalItem)" readonly fluid />
+            <InputText maxlength="4000" :modelValue="totalItem === null ? '—' : formatCurrencyOrdem(totalItem)" readonly fluid />
           </FieldForm>
         </div>
       </Fieldset>

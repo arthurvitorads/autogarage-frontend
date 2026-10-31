@@ -554,7 +554,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             label="Nome completo *"
             v-slot="{ invalid, field }"
           >
-            <InputText
+            <InputText maxlength="4000"
               v-model="formData.nome"
               :name="field"
               :invalid="invalid"
@@ -585,7 +585,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             label="Razão social *"
             v-slot="{ invalid, field }"
           >
-            <InputText v-model="formData.razaoSocial" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.razaoSocial" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm
             v-if="formData.tipo === 'PJ'"
@@ -594,7 +594,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             label="Nome fantasia *"
             v-slot="{ invalid, field }"
           >
-            <InputText v-model="formData.nomeFantasia" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.nomeFantasia" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm
             v-if="formData.tipo === 'PJ'"
@@ -629,7 +629,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             label="Telefone *"
             v-slot="{ invalid, field }"
           >
-            <InputText
+            <InputText maxlength="15"
               v-model="formData.telefone"
               :name="field"
               :invalid="invalid"
@@ -639,7 +639,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="email" label="E-mail *" v-slot="{ invalid, field }">
-            <InputText
+            <InputText maxlength="4000"
               v-model="formData.email"
               :name="field"
               :invalid="invalid"
@@ -655,7 +655,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             label="Telefone *"
             v-slot="{ invalid, field }"
           >
-            <InputText
+            <InputText maxlength="15"
               v-model="formData.telefone"
               :name="field"
               :invalid="invalid"
@@ -690,19 +690,19 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
             </div>
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-8 lg:col-span-7" name="logradouro" label="Logradouro *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.logradouro" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.logradouro" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-3 lg:col-span-2" name="numero" label="Número *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.numero" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.numero" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-9 lg:col-span-3" name="complemento" label="Complemento" v-slot="{ invalid, field }">
-            <InputText v-model="formData.complemento" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.complemento" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-5 lg:col-span-4" name="bairro" label="Bairro *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.bairro" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.bairro" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-5 lg:col-span-4" name="cidade" label="Cidade *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.cidade" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.cidade" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-2 lg:col-span-1" name="uf" label="UF *" v-slot="{ invalid, field }">
             <InputText
@@ -718,7 +718,7 @@ watch(() => [formData.value.bo_categ_cliente, formData.value.bo_categ_func], () 
       <Fieldset v-if="isFuncionario" legend="Dados do funcionário">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-8" name="cargo" label="Cargo" v-slot="{ field }">
-            <InputText v-model="formData.cargo" :name="field" placeholder="Ex.: Mecânico" fluid />
+            <InputText maxlength="4000" v-model="formData.cargo" :name="field" placeholder="Ex.: Mecânico" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="comissaoPercentual" label="Comissão (%)" v-slot="{ invalid, field }">
             <InputNumber

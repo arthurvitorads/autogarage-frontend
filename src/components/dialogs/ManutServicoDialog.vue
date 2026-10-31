@@ -158,7 +158,7 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome *" v-slot="{ invalid, field }">
-            <InputText
+            <InputText maxlength="4000"
               v-model="formData.an_nome"
               :name="field"
               :invalid="invalid"
@@ -219,7 +219,7 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
       </Fieldset>
       <Fieldset legend="Observações">
         <FieldForm name="an_obs" v-slot="{ field }">
-          <Textarea v-model="formData.an_obs" :name="field" rows="2" fluid />
+          <Textarea maxlength="4000" v-model="formData.an_obs" :name="field" rows="2" fluid />
         </FieldForm>
       </Fieldset>
     </FormPage>

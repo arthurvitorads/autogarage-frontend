@@ -46,3 +46,9 @@ export async function apiList<T>(endpoint: string, key: string): Promise<T[]> {
   } while (hasNextPage)
   return registros
 }
+
+export function apiPage<T>(endpoint: string, key: string, page: number, limit: number, search: string, filters: Record<string, string> = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit), search, ...filters })
+  return apiRequest<Record<string, T[]> & { pagination: IPagination }>(endpoint + '?' + query)
+    .then(resultado => ({ registros: resultado.dados[key]!, total: resultado.dados.pagination.total }))
+}

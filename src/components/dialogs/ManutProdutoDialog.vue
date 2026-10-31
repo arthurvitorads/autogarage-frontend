@@ -209,7 +209,7 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome *" v-slot="{ invalid, field }">
-            <InputText
+            <InputText maxlength="4000"
               v-model="formData.an_nome"
               :name="field"
               :invalid="invalid"
@@ -221,7 +221,7 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
             <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Produto ativo" />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="an_referencia" label="Referência / código interno" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_referencia" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.an_referencia" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="an_categoria" label="Categoria" v-slot="{ invalid, field }">
             <div class="flex gap-2">
@@ -311,7 +311,7 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 lg:col-span-6" name="an_obs" label="Observações" v-slot="{ field }">
-            <Textarea v-model="formData.an_obs" :name="field" rows="2" fluid />
+            <Textarea maxlength="4000" v-model="formData.an_obs" :name="field" rows="2" fluid />
           </FieldForm>
         </div>
       </Fieldset>

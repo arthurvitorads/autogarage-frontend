@@ -1,5 +1,8 @@
 import type { TipoPessoa } from '@/models/pessoa'
 
+export type TStatusOrdemServico = 'ABERTO' | 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO'
+export type TAcaoOrdemServico = 'INICIAR' | 'FINALIZAR' | 'CANCELAR'
+
 export type TCodigoOrdemServico = string | number
 
 export interface IClienteOrdemServico {
@@ -9,18 +12,18 @@ export interface IClienteOrdemServico {
   tipo: TipoPessoa
 }
 
-export interface IFormStatusOrdemServico {
+export interface IFormClassificacaoOrdemServico {
   an_descr: string
   ca_cor: string
   bo_padrao: boolean
 }
 
-export interface IManutStatusOrdemServico extends IFormStatusOrdemServico {
-  cn_status?: TCodigoOrdemServico
+export interface IManutClassificacaoOrdemServico extends IFormClassificacaoOrdemServico {
+  cn_classificacao?: TCodigoOrdemServico
 }
 
-export interface IStatusOrdemServico extends IManutStatusOrdemServico {
-  cn_status: TCodigoOrdemServico
+export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServico {
+  cn_classificacao: TCodigoOrdemServico
 }
 
 export interface IVeiculoOrdemServico {
@@ -34,7 +37,7 @@ export interface IVeiculoOrdemServico {
 
 export interface IFormOrdemServico extends IVeiculoOrdemServico {
   cn_pessoa: string | number | null
-  cn_status: TCodigoOrdemServico | null
+  cn_classificacao: TCodigoOrdemServico | null
   dt_entrada: string
   dt_previsao: string
   an_responsavel: string
@@ -46,7 +49,7 @@ export interface IFormOrdemServico extends IVeiculoOrdemServico {
 export interface IManutOrdemServico {
   cn_ordem_servico?: TCodigoOrdemServico
   cn_pessoa: string | number
-  cn_status: TCodigoOrdemServico
+  cn_classificacao: TCodigoOrdemServico
   dt_entrada: string
   dt_previsao: string | null
   an_responsavel: string
@@ -90,6 +93,11 @@ export type TItemOrdemServico = TManutItemOrdemServico & {
 }
 
 export interface IAdmOrdemServico extends IManutOrdemServico {
+  ca_status: TStatusOrdemServico
+  an_motivo_cancelamento: string
+  dt_inicio: string | null
+  dt_finalizacao: string | null
+  dt_cancelamento: string | null
   cn_ordem_servico: TCodigoOrdemServico
   nu_numero: number
   an_cliente: string

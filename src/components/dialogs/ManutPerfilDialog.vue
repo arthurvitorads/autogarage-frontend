@@ -114,7 +114,7 @@ watch([() => props.visible, () => props.perfil], ([visible]) => {
       @change="isValidated = false"
     >
       <FieldForm class="col-span-10" name="an_descr" label="Descrição" v-slot="{ invalid, field }">
-        <InputText :name="field" placeholder="Digite a descrição" :invalid="invalid" fluid />
+        <InputText maxlength="4000" :name="field" placeholder="Digite a descrição" :invalid="invalid" fluid />
       </FieldForm>
       <FieldForm class="flex justify-center ml-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
         <ToggleSwitch :name="field"/>

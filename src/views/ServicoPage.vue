@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { usePesquisa } from '@/composables/usePesquisa'
+import { getServicosPagina } from '@/services/catalogo.service'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import InputText from 'primevue/inputtext'
@@ -12,32 +14,21 @@ import ManutServicoDialog from '@/components/dialogs/ManutServicoDialog.vue'
 
 import type { IAdmServico } from '@/interface/interface-pages/ServicoPage'
 
-import { normalizeString } from '@/services/util.service'
+
 import { useCatalogoStore } from '@/stores/catalogo.store'
 
-const { servicos } = storeToRefs(useCatalogoStore())
+
 
 // paginação e filtros
-const limite = ref(20)
-const primeiroRegistro = ref(0)
-const filtro = ref('')
-const pesquisa = ref('')
 
 // form
+const { registros: servicos, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmServico>(getServicosPagina)
+
 const manutServicoVisible = ref(false)
 const selectServico = ref<IAdmServico | null>(null)
 
-const servicosFiltrados = computed(() => servicos.value.filter(servico => {
-  const termo = normalizeString(pesquisa.value)
 
-  return !termo || [String(servico.cn_servico), servico.an_nome]
-    .some(valor => normalizeString(valor).includes(termo))
-}))
 
-function search() {
-  pesquisa.value = filtro.value.trim()
-  primeiroRegistro.value = 0
-}
 
 function newServico() {
   selectServico.value = null
@@ -53,7 +44,10 @@ function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-usePageLoad(() => useCatalogoStore().load())
+usePageLoad(async () => {
+  await useCatalogoStore().loadCadastros()
+  await load()
+})
 </script>
 
 <template>
@@ -69,7 +63,7 @@ usePageLoad(() => useCatalogoStore().load())
               class="flex-1 min-w-0"
               @keyup.enter="search"
             />
-            <Button icon="pi pi-search" aria-label="Pesquisar" @click="search" />
+            <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
           </div>
           <Button label="Novo" icon="pi pi-plus" @click="newServico" />
         </div>
@@ -77,13 +71,17 @@ usePageLoad(() => useCatalogoStore().load())
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <DataTable
           :pt="{ emptyMessage: { class: 'hidden' } }"
-          :value="servicosFiltrados"
+          :value="servicos"
           dataKey="cn_servico"
           size="small"
           stripedRows
           scrollable
           scrollHeight="flex"
           tableStyle="min-width: 50rem"
+          lazy
+          :loading="loadingGrid"
+          :totalRecords="total"
+          @page="changePage"
           paginator
           v-model:first="primeiroRegistro"
           :rows="limite"
@@ -121,5 +119,5 @@ usePageLoad(() => useCatalogoStore().load())
       </div>
     </div>
   </div>
-  <ManutServicoDialog v-model:visible="manutServicoVisible" :servico="selectServico" />
+  <ManutServicoDialog v-model:visible="manutServicoVisible" :servico="selectServico" @saved="load" />
 </template>

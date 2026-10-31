@@ -145,13 +145,13 @@ watch([() => props.visible, () => props.user], ([visible]) => {
       <Fieldset legend="Usuário">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome" v-slot="{ invalid, field }">
-            <InputText :name="field" placeholder="Digite o nome" :invalid="invalid" fluid />
+            <InputText maxlength="4000" :name="field" placeholder="Digite o nome" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
             <ToggleSwitch :name="field" />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6" name="an_email" label="E-mail" v-slot="{ invalid, field }">
-            <InputText
+            <InputText maxlength="4000"
               :name="field"
               type="email"
               placeholder="Digite o e-mail"
@@ -176,7 +176,7 @@ watch([() => props.visible, () => props.user], ([visible]) => {
             :label="isEditing ? 'Nova senha (opcional)' : 'Senha'"
             v-slot="{ invalid, field }"
           >
-            <Password
+            <Password :inputProps="{ maxlength: 128 }"
               :name="field"
               placeholder="Digite a senha"
               :feedback="false"

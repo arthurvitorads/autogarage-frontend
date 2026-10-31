@@ -61,7 +61,7 @@ export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
   const errors: TGenericData = {}
 
   if (values.cn_pessoa === null || values.cn_pessoa === '') errors.cn_pessoa = 'Selecione o cliente.'
-  if (values.cn_status === null) errors.cn_status = 'Selecione o status.'
+  if (values.cn_classificacao === null) errors.cn_classificacao = 'Selecione a classificação.'
 
   if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(normalizarPlaca(values.an_placa)))
     errors.an_placa = 'Informe uma placa válida.'
@@ -98,4 +98,19 @@ export function corTextoStatus(cor: string): string {
 
 export function formatCurrencyOrdem(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+export const statusOrdens = [
+  { value: 'ABERTO', label: 'Aberto', cor: '#2563eb' },
+  { value: 'EM_ANDAMENTO', label: 'Em andamento', cor: '#a855f7' },
+  { value: 'FINALIZADO', label: 'Finalizado', cor: '#15803d' },
+  { value: 'CANCELADO', label: 'Cancelado', cor: '#64748b' },
+]
+
+export function getStatusOrdem(codigo: string) {
+  return statusOrdens.find(item => item.value === codigo)!
+}
+
+export function ordemEncerrada(ordem: IAdmOrdemServico) {
+  return ordem.ca_status === 'FINALIZADO' || ordem.ca_status === 'CANCELADO'
 }

@@ -18,6 +18,13 @@ export const useCatalogoStore = defineStore('catalogo', () => {
   const unidadesProduto = computed(() => cadastrosAuxiliares.value.filter(item => item.ca_tipo === 'UNIDADE')
     .map(item => ({ label: item.an_descr + ' (' + item.ca_sigla + ')', value: item.ca_sigla })))
 
+  async function loadCadastros() {
+    const versao = versaoSessao
+    const resultado = await catalogoService.getCadastrosAuxiliares()
+    if (versao === versaoSessao)
+      cadastrosAuxiliares.value = resultado.dados.cadastros
+  }
+
   async function load() {
     const versao = versaoSessao
     const [listaProdutos, listaServicos, listaCadastros] = await Promise.all([
@@ -49,7 +56,11 @@ export const useCatalogoStore = defineStore('catalogo', () => {
   }
   async function saveCadastroAuxiliar(values: IManutCadastroAuxiliar): Promise<IAdmCadastroAuxiliar> {
     const { dados } = await catalogoService.saveCadastroAuxiliar(values)
-    cadastrosAuxiliares.value.push(dados)
+    const index = cadastrosAuxiliares.value.findIndex(item => item.cn_cadastro === dados.cn_cadastro)
+    if (index < 0)
+      cadastrosAuxiliares.value.push(dados)
+    else
+      cadastrosAuxiliares.value[index] = dados
     return dados
   }
   watch(() => utilStore.user?.cn_usuario, () => {
@@ -67,6 +78,7 @@ export const useCatalogoStore = defineStore('catalogo', () => {
     marcasProduto,
     unidadesProduto,
     load,
+    loadCadastros,
     saveProduto,
     saveServico,
     saveCadastroAuxiliar

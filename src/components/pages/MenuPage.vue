@@ -4,6 +4,21 @@ import logoClara from '@/assets/img/logo_clara.png'
 
 import { ref, watch, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
+import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
+import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
+import type { TTipoCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
+
+const cadastroVisible = ref(false)
+const classificacaoVisible = ref(false)
+const tipoCadastro = ref<TTipoCadastroAuxiliar>('MARCA')
+function abrirCadastro(tipo: TTipoCadastroAuxiliar | 'CLASSIFICACAO') {
+  if (tipo === 'CLASSIFICACAO')
+    classificacaoVisible.value = true
+  else {
+    tipoCadastro.value = tipo
+    cadastroVisible.value = true
+  }
+}
 
 import PanelMenu, { type PanelMenuPanelOpenEvent } from 'primevue/panelmenu'
 
@@ -30,6 +45,11 @@ const modules = [
       { key: 'cadastros:pessoa', label: 'Pessoas', icon: 'users', route: '/pessoa' },
       { key: 'cadastros:produto', label: 'Produtos', icon: 'box', route: '/produto' },
       { key: 'cadastros:servico', label: 'Serviços', icon: 'wrench', route: '/servico' },
+      { key: 'cadastros:classificacao', label: 'Classificações de O.S.', icon: 'tags', route: '', cadastro: 'CLASSIFICACAO' },
+      { key: 'cadastros:categoria-produto', label: 'Categorias de produtos', icon: 'list', route: '', cadastro: 'CATEGORIA_PRODUTO' },
+      { key: 'cadastros:categoria-servico', label: 'Categorias de serviços', icon: 'list', route: '', cadastro: 'CATEGORIA_SERVICO' },
+      { key: 'cadastros:marca', label: 'Marcas', icon: 'tag', route: '', cadastro: 'MARCA' },
+      { key: 'cadastros:unidade', label: 'Unidades', icon: 'box', route: '', cadastro: 'UNIDADE' },
     ],
   },
   {
@@ -58,9 +78,9 @@ function onPanelOpen(event: PanelMenuPanelOpenEvent) {
 function openCurrentModule() {
   const current = modules.find((m) =>
     m.items.some((i) =>
-      i.route === '/'
+      !!i.route && (i.route === '/'
         ? route.path === '/'
-        : route.path === i.route || route.path.startsWith(i.route + '/')
+        : route.path === i.route || route.path.startsWith(i.route + '/'))
     )
   )
 
@@ -105,6 +125,10 @@ onMounted(openCurrentModule)
               </a>
             </RouterLink>
 
+            <button v-else-if="item.cadastro" type="button" class="menu-link w-full" @click="abrirCadastro(item.cadastro)">
+              <i :class="'pi pi-' + item.icon"></i>
+              <span>{{ item.label }}</span>
+            </button>
             <a v-else v-ripple class="menu-link menu-link--module">
               <i :class="`pi pi-${item.icon}`"></i>
               <span class="menu-link-label">{{ item.label }}</span>
@@ -115,6 +139,8 @@ onMounted(openCurrentModule)
       </nav>
     </div>
   </aside>
+  <CadastroAuxiliarDialog v-model:visible="cadastroVisible" :tipo="tipoCadastro" />
+  <ClassificacaoOrdemServicoDialog v-model:visible="classificacaoVisible" />
 </template>
 
 <style scoped>
@@ -184,8 +210,8 @@ onMounted(openCurrentModule)
 }
 
 .menu-link--active {
-  background: rgba(255, 115, 0, 0.13);
-  color: #ff7300;
+  background: rgba(168, 85, 247, 0.13);
+  color: #c084fc;
 }
 
 .menu-link--module {

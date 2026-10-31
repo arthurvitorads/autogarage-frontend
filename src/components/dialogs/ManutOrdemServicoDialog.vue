@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useConfirmacao } from '@/composables/useConfirmacao'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -12,9 +13,9 @@ import Button from 'primevue/button'
 import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
-import StatusOrdemServicoDialog from '@/components/dialogs/StatusOrdemServicoDialog.vue'
+import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
-import type { IAdmOrdemServico, IFormOrdemServico, IManutOrdemServico, IStatusOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IAdmOrdemServico, IFormOrdemServico, IManutOrdemServico, IClassificacaoOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import { dataHoraLocal, normalizarPlaca, validarDadosOrdem } from '@/services/ordem-servico.service'
@@ -33,16 +34,17 @@ const emit = defineEmits<{
 }>()
 
 const ordemStore = useOrdemServicoStore()
-const { clientes, status, statusPadrao } = storeToRefs(ordemStore)
+const { clientes, classificacoes, classificacaoPadrao } = storeToRefs(ordemStore)
 const { saveOrdem } = ordemStore
 const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
+const confirmar = useConfirmacao()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<{
   submit: () => void
 } | null>(null)
-const statusVisible = ref(false)
+const classificacaoVisible = ref(false)
 const isEditing = computed(() => !!props.ordem)
 const anoMaximo = new Date().getFullYear() + 1
 const clientesOptions = computed(() => clientes.value.map(cliente => ({
@@ -53,7 +55,7 @@ const clientesOptions = computed(() => clientes.value.map(cliente => ({
 function formDataDefault(): IFormOrdemServico {
   return {
     cn_pessoa: null,
-    cn_status: statusPadrao.value?.cn_status ?? null,
+    cn_classificacao: classificacaoPadrao.value?.cn_classificacao ?? null,
     dt_entrada: dataHoraLocal(),
     dt_previsao: '',
     an_responsavel: '',
@@ -70,9 +72,9 @@ function formDataDefault(): IFormOrdemServico {
 
 const formData = ref<IFormOrdemServico>(formDataDefault())
 
-function selectStatus(item: IStatusOrdemServico) {
-  formData.value.cn_status = item.cn_status
-  delete formErrors.value.cn_status
+function selectClassificacao(item: IClassificacaoOrdemServico) {
+  formData.value.cn_classificacao = item.cn_classificacao
+  delete formErrors.value.cn_classificacao
 }
 
 async function onSubmit(values: IFormOrdemServico) {
@@ -81,23 +83,26 @@ async function onSubmit(values: IFormOrdemServico) {
   if (!clientes.value.some(cliente => String(cliente.cn_pessoa) === String(values.cn_pessoa)))
     errors.cn_pessoa = 'Selecione um cliente ativo disponível.'
 
-  if (!status.value.some(item => item.cn_status === values.cn_status))
-    errors.cn_status = 'Selecione um status válido.'
+  if (!classificacoes.value.some(item => item.cn_classificacao === values.cn_classificacao))
+    errors.cn_classificacao = 'Selecione uma classificação válida.'
 
   formErrors.value = errors
   if (Object.keys(errors).length)
     return
 
+  if (!await confirmar())
+    return
+
   setLoading(true)
 
   try {
-    if (values.cn_pessoa === null || values.cn_status === null)
+    if (values.cn_pessoa === null || values.cn_classificacao === null)
       return
 
     const dados: IManutOrdemServico = {
       ...(props.ordem ? { cn_ordem_servico: props.ordem.cn_ordem_servico } : {}),
       cn_pessoa: values.cn_pessoa,
-      cn_status: values.cn_status,
+      cn_classificacao: values.cn_classificacao,
       dt_entrada: new Date(values.dt_entrada).toISOString(),
       dt_previsao: values.dt_previsao ? new Date(values.dt_previsao).toISOString() : null,
       an_responsavel: values.an_responsavel.trim(),
@@ -131,7 +136,7 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
 
   formData.value = ordem ? {
     cn_pessoa: ordem.cn_pessoa,
-    cn_status: ordem.cn_status,
+    cn_classificacao: ordem.cn_classificacao,
     dt_entrada: dataHoraLocal(ordem.dt_entrada),
     dt_previsao: ordem.dt_previsao ? dataHoraLocal(ordem.dt_previsao) : '',
     an_responsavel: ordem.an_responsavel,
@@ -164,7 +169,7 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
       <Fieldset legend="Dados gerais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-3" name="nu_numero" label="Número">
-            <InputText :modelValue="ordem ? String(ordem.nu_numero).padStart(6, '0') : 'Automático'" readonly fluid />
+            <InputText maxlength="4000" :modelValue="ordem ? String(ordem.nu_numero).padStart(6, '0') : 'Automático'" readonly fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6" name="cn_pessoa" label="Cliente *" v-slot="{ invalid, field }">
             <Select
@@ -181,24 +186,24 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
               emptyFilterMessage="Nenhum cliente corresponde à pesquisa."
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-3" name="cn_status" label="Status *" v-slot="{ invalid, field }">
+          <FieldForm class="col-span-12 sm:col-span-3" name="cn_classificacao" label="Classificação *" v-slot="{ invalid, field }">
             <div class="flex gap-2">
               <Select
-                v-model="formData.cn_status"
+                v-model="formData.cn_classificacao"
                 :name="field"
-                :options="status"
+                :options="classificacoes"
                 optionLabel="an_descr"
-                optionValue="cn_status"
+                optionValue="cn_classificacao"
                 :invalid="invalid"
                 fluid
                 class="flex-1 min-w-0"
-                placeholder="Selecione o status"
+                placeholder="Selecione a classificação"
               />
-              <Button type="button" icon="pi pi-plus" aria-label="Cadastrar status" @click="statusVisible = true" />
+              <Button type="button" icon="pi pi-plus" aria-label="Cadastrar classificação" @click="classificacaoVisible = true" />
             </div>
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="dt_entrada" label="Entrada *" v-slot="{ invalid, field }">
-            <InputText
+            <InputText maxlength="4000"
               v-model="formData.dt_entrada"
               :name="field"
               type="datetime-local"
@@ -207,7 +212,7 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="dt_previsao" label="Previsão de entrega" v-slot="{ invalid, field }">
-            <InputText
+            <InputText maxlength="4000"
               v-model="formData.dt_previsao"
               :name="field"
               type="datetime-local"
@@ -216,7 +221,7 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="an_responsavel" label="Responsável" v-slot="{ field }">
-            <InputText v-model="formData.an_responsavel" :name="field" fluid />
+            <InputText maxlength="4000" v-model="formData.an_responsavel" :name="field" fluid />
           </FieldForm>
         </div>
       </Fieldset>
@@ -233,10 +238,10 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="an_marca" label="Marca *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_marca" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.an_marca" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-5" name="an_modelo" label="Modelo *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_modelo" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.an_modelo" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="nu_ano" label="Ano" v-slot="{ invalid, field }">
             <InputNumber
@@ -250,7 +255,7 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="an_cor" label="Cor" v-slot="{ field }">
-            <InputText v-model="formData.an_cor" :name="field" fluid />
+            <InputText maxlength="4000" v-model="formData.an_cor" :name="field" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="qt_quilometragem" label="Quilometragem" v-slot="{ invalid, field }">
             <InputNumber
@@ -268,14 +273,14 @@ watch([() => props.visible, () => props.ordem], ([visible]) => {
       <Fieldset legend="Observações">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="col-span-12 sm:col-span-6" name="an_solicitacao" label="Solicitação do cliente" v-slot="{ field }">
-            <Textarea v-model="formData.an_solicitacao" :name="field" rows="2" fluid />
+            <Textarea maxlength="4000" v-model="formData.an_solicitacao" :name="field" rows="2" fluid />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-6" name="an_obs" label="Observações internas" v-slot="{ field }">
-            <Textarea v-model="formData.an_obs" :name="field" rows="2" fluid />
+            <Textarea maxlength="4000" v-model="formData.an_obs" :name="field" rows="2" fluid />
           </FieldForm>
         </div>
       </Fieldset>
     </FormPage>
   </CadastroDialog>
-  <StatusOrdemServicoDialog v-model:visible="statusVisible" @saved="selectStatus" />
+  <ClassificacaoOrdemServicoDialog v-model:visible="classificacaoVisible" @saved="selectClassificacao" />
 </template>

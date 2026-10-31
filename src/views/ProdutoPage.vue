@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { usePesquisa } from '@/composables/usePesquisa'
+import { getProdutosPagina } from '@/services/catalogo.service'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import InputText from 'primevue/inputtext'
@@ -12,32 +14,21 @@ import ManutProdutoDialog from '@/components/dialogs/ManutProdutoDialog.vue'
 
 import type { IAdmProduto } from '@/interface/interface-pages/ProdutoPage'
 
-import { normalizeString } from '@/services/util.service'
+
 import { useCatalogoStore } from '@/stores/catalogo.store'
 
-const { produtos } = storeToRefs(useCatalogoStore())
+
 
 // paginação e filtros
-const limite = ref(20)
-const primeiroRegistro = ref(0)
-const filtro = ref('')
-const pesquisa = ref('')
 
 // form
+const { registros: produtos, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmProduto>(getProdutosPagina)
+
 const manutProdutoVisible = ref(false)
 const selectProduto = ref<IAdmProduto | null>(null)
 
-const produtosFiltrados = computed(() => produtos.value.filter(produto => {
-  const termo = normalizeString(pesquisa.value)
 
-  return !termo || [String(produto.cn_produto), produto.an_nome, produto.an_referencia]
-    .some(valor => normalizeString(valor).includes(termo))
-}))
 
-function search() {
-  pesquisa.value = filtro.value.trim()
-  primeiroRegistro.value = 0
-}
 
 function newProduto() {
   selectProduto.value = null
@@ -57,7 +48,10 @@ function formatQuantidade(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 }
 
-usePageLoad(() => useCatalogoStore().load())
+usePageLoad(async () => {
+  await useCatalogoStore().loadCadastros()
+  await load()
+})
 </script>
 
 <template>
@@ -73,7 +67,7 @@ usePageLoad(() => useCatalogoStore().load())
               class="flex-1 min-w-0"
               @keyup.enter="search"
             />
-            <Button icon="pi pi-search" aria-label="Pesquisar" @click="search" />
+            <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
           </div>
           <Button label="Novo" icon="pi pi-plus" @click="newProduto" />
         </div>
@@ -81,13 +75,17 @@ usePageLoad(() => useCatalogoStore().load())
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <DataTable
           :pt="{ emptyMessage: { class: 'hidden' } }"
-          :value="produtosFiltrados"
+          :value="produtos"
           dataKey="cn_produto"
           size="small"
           stripedRows
           scrollable
           scrollHeight="flex"
           tableStyle="min-width: 75rem"
+          lazy
+          :loading="loadingGrid"
+          :totalRecords="total"
+          @page="changePage"
           paginator
           v-model:first="primeiroRegistro"
           :rows="limite"
@@ -142,5 +140,5 @@ usePageLoad(() => useCatalogoStore().load())
       </div>
     </div>
   </div>
-  <ManutProdutoDialog v-model:visible="manutProdutoVisible" :produto="selectProduto" :produtos="produtos" />
+  <ManutProdutoDialog v-model:visible="manutProdutoVisible" :produto="selectProduto" :produtos="produtos" @saved="load" />
 </template>

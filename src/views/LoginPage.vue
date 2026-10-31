@@ -67,7 +67,7 @@ async function onSubmit(values: IFormLogin) {
       <img class="w-150" :src="logoClara" alt="Logo do AutoGarage">
     </div>
 
-    <div class="w-1/2 flex flex-col items-center justify-center bg-orange-50">
+    <div class="w-1/2 flex flex-col items-center justify-center bg-purple-50">
       <Panel>
         <template #header>
           <div class="flex flex-col">

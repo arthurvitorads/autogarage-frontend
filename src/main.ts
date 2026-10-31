@@ -9,6 +9,7 @@ import App from './App.vue'
 import router from './router'
 
 import ToastService from 'primevue/toastservice'
+import ConfirmationService from 'primevue/confirmationservice'
 
 import Ripple from 'primevue/ripple'
 import Tooltip from 'primevue/tooltip'
@@ -31,17 +32,17 @@ app.use(router)
 const MainTheme = definePreset(Aura, {
   semantic: {
     primary: {
-      50: '{orange.50}',
-      100: '{orange.100}',
-      200: '{orange.200}',
-      300: '{orange.300}',
-      400: '{orange.400}',
-      500: '{orange.500}',
-      600: '{orange.600}',
-      700: '{orange.700}',
-      800: '{orange.800}',
-      900: '{orange.900}',
-      950: '{orange.950}',
+      50: '{purple.50}',
+      100: '{purple.100}',
+      200: '{purple.200}',
+      300: '{purple.300}',
+      400: '{purple.400}',
+      500: '{purple.500}',
+      600: '{purple.600}',
+      700: '{purple.700}',
+      800: '{purple.800}',
+      900: '{purple.900}',
+      950: '{purple.950}',
     },
     colorScheme: {
       light: {
@@ -74,5 +75,6 @@ app.directive('focustrap', FocusTrap)
 
 // plugins
 app.use(ToastService)
+app.use(ConfirmationService)
 
 app.mount('#app')

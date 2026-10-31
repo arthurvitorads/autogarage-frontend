@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Button from 'primevue/button'
 
 import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
@@ -25,7 +29,12 @@ const emit = defineEmits<{
   saved: [cadastro: IAdmCadastroAuxiliar]
 }>()
 
-const { saveCadastroAuxiliar } = useCatalogoStore()
+const catalogoStore = useCatalogoStore()
+const { saveCadastroAuxiliar } = catalogoStore
+const { cadastrosAuxiliares } = storeToRefs(catalogoStore)
+const registros = computed(() => cadastrosAuxiliares.value.filter(item => item.ca_tipo === props.tipo))
+const selected = ref<IAdmCadastroAuxiliar | null>(null)
+const loadingGrid = ref(false)
 const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
 const formErrors = ref<TGenericData>({})
@@ -33,8 +42,15 @@ const formKey = ref(0)
 const formRef = ref<{
   submit: () => void
 } | null>(null)
-const header = computed(() => props.tipo === 'MARCA' ? 'Nova marca'
-  : props.tipo === 'UNIDADE' ? 'Nova unidade' : 'Nova categoria')
+const header = computed(() => props.tipo === 'MARCA' ? 'Marcas'
+  : props.tipo === 'UNIDADE' ? 'Unidades' : props.tipo === 'CATEGORIA_PRODUTO' ? 'Categorias de produtos' : 'Categorias de serviços')
+
+function editar(cadastro: IAdmCadastroAuxiliar | null) {
+  selected.value = cadastro
+  formData.value = cadastro ? { an_descr: cadastro.an_descr, ca_sigla: cadastro.ca_sigla } : formDataDefault()
+  formErrors.value = {}
+  formKey.value++
+}
 
 function formDataDefault(): IFormCadastroAuxiliar {
   return {
@@ -63,6 +79,7 @@ async function onSubmit(values: IFormCadastroAuxiliar) {
 
   try {
     const dados = {
+      ...(selected.value ? { cn_cadastro: selected.value.cn_cadastro } : {}),
       ca_tipo: props.tipo,
       an_descr: values.an_descr.trim(),
       ca_sigla: props.tipo === 'UNIDADE' ? values.ca_sigla.trim().toUpperCase() : '',
@@ -78,13 +95,19 @@ async function onSubmit(values: IFormCadastroAuxiliar) {
   }
 }
 
-watch([() => props.visible, () => props.tipo], ([visible]) => {
+watch([() => props.visible, () => props.tipo], async ([visible]) => {
   if (!visible)
     return
 
-  formData.value = formDataDefault()
-  formErrors.value = {}
-  formKey.value++
+  editar(null)
+  loadingGrid.value = true
+  try {
+    await catalogoStore.loadCadastros()
+  } catch (error) {
+    toast.error(normalizeError(error))
+  } finally {
+    loadingGrid.value = false
+  }
 }, { immediate: true })
 </script>
 
@@ -96,6 +119,14 @@ watch([() => props.visible, () => props.tipo], ([visible]) => {
     width="42rem"
     @submit="formRef?.submit()"
   >
+    <div class="flex justify-end mb-3"><Button label="Novo" icon="pi pi-plus" @click="editar(null)" /></div>
+    <DataTable :value="registros" :loading="loadingGrid" size="small" scrollable scrollHeight="14rem" class="mb-4">
+      <Column header="Ações"><template #body="{ data }"><Button icon="pi pi-pencil" severity="secondary" text aria-label="Editar cadastro" @click="editar(data)" /></template></Column>
+      <Column field="an_descr" header="Descrição" />
+      <Column v-if="tipo === 'UNIDADE'" field="ca_sigla" header="Sigla" />
+      <template #empty>Nenhum cadastro disponível.</template>
+    </DataTable>
+    <p class="font-semibold mb-3">{{ selected ? 'Editar cadastro' : 'Novo cadastro' }}</p>
     <FormPage
       ref="formRef"
       :key="formKey"
@@ -108,7 +139,7 @@ watch([() => props.visible, () => props.tipo], ([visible]) => {
       <Fieldset :legend="tipo === 'UNIDADE' ? 'Dados da unidade' : tipo === 'MARCA' ? 'Dados da marca' : 'Dados da categoria'">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm :class="tipo === 'UNIDADE' ? 'col-span-12 sm:col-span-8' : 'col-span-12'" name="an_descr" label="Descrição *" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_descr" :name="field" :invalid="invalid" fluid />
+            <InputText maxlength="4000" v-model="formData.an_descr" :name="field" :invalid="invalid" fluid />
           </FieldForm>
           <FieldForm
             v-if="tipo === 'UNIDADE'"

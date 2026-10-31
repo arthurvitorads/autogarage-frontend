@@ -6,6 +6,7 @@ export interface IFormCadastroAuxiliar {
 }
 
 export interface IManutCadastroAuxiliar extends IFormCadastroAuxiliar {
+  cn_cadastro?: number
   ca_tipo: TTipoCadastroAuxiliar
 }
 

@@ -116,8 +116,8 @@ async function handleSair() {
 }
 
 .profile-avatar {
-  background: #fff0e5;
-  color: #ff7300;
+  background: #f3e8ff;
+  color: #a855f7;
 }
 
 .profile-info {

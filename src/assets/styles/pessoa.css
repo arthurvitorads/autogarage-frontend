@@ -62,11 +62,11 @@
 }
 
 .person-type-selector button.active {
-  border-color: #ff7300;
+  border-color: #a855f7;
 
-  background: #fff4eb;
+  background: #faf5ff;
 
-  color: #ff7300;
+  color: #a855f7;
 
   font-weight: 600;
 }
@@ -117,10 +117,10 @@
 .field select:focus {
   outline: none;
 
-  border-color: #ff7300;
+  border-color: #a855f7;
 
   box-shadow:
-    0 0 0 3px rgba(255, 115, 0, 0.1);
+    0 0 0 3px rgba(168, 85, 247, 0.1);
 }
 
 .input-action {
@@ -157,7 +157,7 @@
   border: 0;
   border-radius: 8px;
 
-  background: #ff7300;
+  background: #a855f7;
   color: #ffffff;
 
   padding: 12px 24px;
@@ -168,7 +168,7 @@
 }
 
 .save-button:hover {
-  background: #e96800;
+  background: #9333ea;
 }
 
 .form-message {
@@ -224,13 +224,13 @@
 }
 
 .category-option input {
-  accent-color: #ff7300;
+  accent-color: #a855f7;
 }
 
 .category-option:has(input:checked) {
-  border-color: #ff7300;
+  border-color: #a855f7;
 
-  background: #fff4eb;
+  background: #faf5ff;
 
-  color: #ff7300;
+  color: #a855f7;
 }

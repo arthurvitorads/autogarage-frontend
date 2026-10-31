@@ -210,3 +210,12 @@ export function unMaskDocument(document: string): string {
 export function onlyNumbers(valor: string): string {
   return valor.replace(/\D/g, '')
 }
+
+export function maskTelefone(value: string) {
+  const telefone = value.replace(/\D/g, '')
+  if (telefone.length === 11)
+    return telefone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
+  if (telefone.length === 10)
+    return telefone.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3')
+  return value
+}
