@@ -10,6 +10,8 @@ import PessoaPage from '@/views/PessoaPage.vue'
 import ProdutoPage from '@/views/ProdutoPage.vue'
 import ServicoPage from '@/views/ServicoPage.vue'
 import UsuarioPage from '@/views/UsuarioPage.vue'
+import VendaPage from '@/views/VendaPage.vue'
+import RelatorioPage from '@/views/RelatorioPage.vue'
 import PerfilPage from '@/views/PerfilPage.vue'
 import OrdemServicoPainelPage from '@/views/OrdemServicoPainelPage.vue'
 import OrdemServicoDetalhePage from '@/views/OrdemServicoDetalhePage.vue'
@@ -81,6 +83,26 @@ const router = createRouter({
           name: 'ordem-servico-detalhe',
           component: OrdemServicoDetalhePage,
           meta: { title: 'Ordem de Serviço | AutoGarage' },
+        },
+        {
+          path: 'faturamento/vendas',
+          name: 'faturamento-vendas',
+          component: VendaPage,
+          meta: { title: 'Vendas | AutoGarage' },
+        },
+        {
+          path: 'relatorios/tempos',
+          name: 'relatorio-tempos',
+          component: RelatorioPage,
+          props: { tipo: 'tempos' },
+          meta: { title: 'Tempo dos serviços | AutoGarage' },
+        },
+        {
+          path: 'relatorios/vendas',
+          name: 'relatorio-vendas',
+          component: RelatorioPage,
+          props: { tipo: 'vendas' },
+          meta: { title: 'Relatório de vendas | AutoGarage' },
         },
         {
           path: 'usuario',

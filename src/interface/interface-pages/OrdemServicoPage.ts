@@ -86,6 +86,10 @@ export type TManutItemOrdemServico = IManutItemOrdemBase & (
 )
 
 export type TItemOrdemServico = TManutItemOrdemServico & {
+  ca_status_servico: 'PENDENTE' | 'EM_ANDAMENTO' | 'PAUSADO' | 'FINALIZADO' | 'CANCELADO'
+  qt_tempo_segundos: number
+  dt_inicio_tempo: string | null
+  dt_servidor: string
   cn_item: TCodigoOrdemServico
   an_descr: string
   ca_unidade: string
@@ -93,6 +97,7 @@ export type TItemOrdemServico = TManutItemOrdemServico & {
 }
 
 export interface IAdmOrdemServico extends IManutOrdemServico {
+  cn_venda: string | null
   ca_status: TStatusOrdemServico
   an_motivo_cancelamento: string
   dt_inicio: string | null

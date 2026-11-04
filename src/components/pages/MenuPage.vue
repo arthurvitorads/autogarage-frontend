@@ -38,6 +38,21 @@ const modules = [
     items: [{ key: 'geral:home', label: 'Home', icon: 'home', route: '/' }],
   },
   {
+    key: 'faturamento',
+    label: 'Faturamento',
+    icon: 'wallet',
+    items: [{ key: 'faturamento:vendas', label: 'Vendas', icon: 'shopping-cart', route: '/faturamento/vendas' }],
+  },
+  {
+    key: 'relatorios',
+    label: 'Relatórios',
+    icon: 'chart-bar',
+    items: [
+      { key: 'relatorios:tempos', label: 'Tempo dos serviços', icon: 'clock', route: '/relatorios/tempos' },
+      { key: 'relatorios:vendas', label: 'Vendas por período', icon: 'chart-line', route: '/relatorios/vendas' },
+    ],
+  },
+  {
     key: 'cadastros',
     label: 'Cadastros',
     icon: 'folder',

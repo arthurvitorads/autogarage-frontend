@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import ManutVendaDialog from '@/components/dialogs/ManutVendaDialog.vue'
+import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
+import type { IAdmVenda } from '@/interface/interface-pages/VendaPage'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
 import Fieldset from 'primevue/fieldset'
@@ -12,7 +16,19 @@ import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
 
 const props = defineProps<{ visible: boolean; ordem: IAdmOrdemServico | null }>()
-const emit = defineEmits<{ 'update:visible': [value: boolean] }>()
+const emit = defineEmits<{ 'update:visible': [value: boolean]; faturada: [venda: IAdmVenda] }>()
+const router = useRouter()
+const vendaVisible = ref(false)
+const vendaRegistrada = ref<string | null>(null)
+watch(() => [props.visible, props.ordem?.cn_ordem_servico], () => { vendaRegistrada.value = props.ordem?.cn_venda ?? null })
+function vendaSalva(venda: IAdmVenda) {
+  vendaRegistrada.value = venda.cn_venda
+  emit('faturada', venda)
+}
+function consultarVenda() {
+  emit('update:visible', false)
+  router.push({ name: 'faturamento-vendas', query: { venda: vendaRegistrada.value! } })
+}
 const { classificacoes } = storeToRefs(useOrdemServicoStore())
 const classificacao = computed(() => classificacoes.value.find(item => String(item.cn_classificacao) === String(props.ordem?.cn_classificacao)))
 </script>
@@ -50,6 +66,7 @@ const classificacao = computed(() => classificacoes.value.find(item => String(it
         <DataTable :value="ordem.itens" rowGroupMode="subheader" groupRowsBy="ca_tipo" sortField="ca_tipo" :sortOrder="1" size="small" scrollable>
           <template #groupheader="{ data }"><strong>{{ data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços' }}</strong></template>
           <Column field="an_descr" header="Descrição" />
+          <Column header="Tempo de serviço"><template #body="{ data }"><TempoServicoItem :item="data" /></template></Column>
           <Column field="ca_unidade" header="Unidade" />
           <Column header="Quantidade"><template #body="{ data }">{{ data.qt_quantidade.toLocaleString('pt-BR') }}</template></Column>
           <Column header="Unitário"><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_unitario) }}</template></Column>
@@ -66,8 +83,11 @@ const classificacao = computed(() => classificacoes.value.find(item => String(it
       </Fieldset>
     </div>
     <template #footer>
+      <Button v-if="ordem?.ca_status === 'FINALIZADO' && ordem.itens.length && !vendaRegistrada" label="Gerar venda" icon="pi pi-shopping-cart" @click="vendaVisible = true" />
+      <Button v-if="vendaRegistrada" label="Consultar venda" icon="pi pi-eye" severity="secondary" @click="consultarVenda" />
       <Button v-if="ordem?.ca_status === 'CANCELADO'" label="Reabrir O.S." icon="pi pi-replay" disabled severity="secondary" title="Disponível em uma próxima etapa" />
       <Button label="Fechar" @click="emit('update:visible', false)" />
     </template>
   </Dialog>
+  <ManutVendaDialog v-model:visible="vendaVisible" :ordem="ordem" @saved="vendaSalva" />
 </template>

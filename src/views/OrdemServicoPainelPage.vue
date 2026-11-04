@@ -91,6 +91,9 @@ usePageLoad(async () => {
   await useOrdemServicoStore().loadParametros()
   await load()
 })
+function atualizarVenda(venda: { cn_venda: string }) {
+  if (detalheOrdem.value) detalheOrdem.value.cn_venda = venda.cn_venda
+}
 </script>
 
 <template>
@@ -174,5 +177,5 @@ usePageLoad(async () => {
   <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="selectOrdem" @saved="load" />
   <ClassificacaoOrdemServicoDialog v-model:visible="statusVisible" />
   <MovimentarOrdemServicoDialog v-model:visible="movimentoVisible" :ordem="movimentoOrdem" acao="INICIAR" @saved="load" />
-  <DetalhesOrdemServicoDialog v-model:visible="detalheVisible" :ordem="detalheOrdem" />
+  <DetalhesOrdemServicoDialog v-model:visible="detalheVisible" :ordem="detalheOrdem" @faturada="atualizarVenda" />
 </template>

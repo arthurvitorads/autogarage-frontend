@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
 import { useConfirmacao } from '@/composables/useConfirmacao'
 import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
 import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServicoDialog.vue'
@@ -81,11 +82,19 @@ async function excluirItem(item: TItemOrdemServico) {
   }
 }
 
+function atualizarTempo(item: TItemOrdemServico) {
+  const index = ordem.value?.itens.findIndex(atual => String(atual.cn_item) === String(item.cn_item)) ?? -1
+  if (ordem.value && index >= 0) ordem.value.itens[index] = item
+}
+
 function formatQuantidade(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 }
 
 usePageLoad(() => useOrdemServicoStore().load())
+function atualizarVenda(venda: { cn_venda: string }) {
+  if (ordem.value) ordem.value.cn_venda = venda.cn_venda
+}
 </script>
 
 <template>
@@ -196,6 +205,7 @@ usePageLoad(() => useOrdemServicoStore().load())
                 severity="danger"
                 text
                 rounded
+                :disabled="data.ca_tipo === 'SERVICO' && data.ca_status_servico !== 'PENDENTE'"
                 aria-label="Remover item"
                 @click="excluirItem(data)"
               />
@@ -208,6 +218,9 @@ usePageLoad(() => useOrdemServicoStore().load())
           </template>
         </Column>
         <Column field="an_descr" header="Descrição" />
+        <Column header="Tempo de serviço">
+          <template #body="{ data }"><TempoServicoItem :item="data" :editable="ordem.ca_status === 'EM_ANDAMENTO'" @saved="atualizarTempo" /></template>
+        </Column>
         <Column field="ca_unidade" header="Unidade" />
         <Column header="Quantidade">
           <template #body="{ data }">{{ formatQuantidade(data.qt_quantidade) }}</template>
@@ -256,5 +269,5 @@ usePageLoad(() => useOrdemServicoStore().load())
     <Button label="Voltar ao painel" icon="pi pi-arrow-left" severity="secondary" @click="voltarPainel" />
   </div>
   <MovimentarOrdemServicoDialog v-model:visible="movimentoVisible" :ordem="ordem ?? null" :acao="acao" />
-  <DetalhesOrdemServicoDialog :visible="!!ordem && ordemEncerrada(ordem)" :ordem="ordem ?? null" @update:visible="voltarPainel" />
+  <DetalhesOrdemServicoDialog :visible="!!ordem && ordemEncerrada(ordem)" :ordem="ordem ?? null" @faturada="atualizarVenda" @update:visible="voltarPainel" />
 </template>
