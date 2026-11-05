@@ -189,7 +189,7 @@ usePageLoad(() => load())
               aria-label="Detalhar venda"
               @click="
                 vendaSelecionada = data
-                vendaVisible = true
+                ,vendaVisible = true
               " /></template
         ></Column>
         <Column field="nu_numero" header="Venda" /><Column field="an_cliente" header="Cliente" />
@@ -214,7 +214,7 @@ usePageLoad(() => load())
       :disabled="loading"
       @page="
         primeiro = $event.first
-        load()
+        ,load()
       "
     />
   </div>
