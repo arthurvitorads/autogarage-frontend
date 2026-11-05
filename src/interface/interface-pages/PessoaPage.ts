@@ -69,7 +69,7 @@ export interface IFormPessoa {
 export interface IPessoaResponse {
   sucesso: boolean
   dados: {
-    pessoa: ICadPessoa[];
+    pessoa: ICadPessoa[]
     pagination: IPagination
   }
 }

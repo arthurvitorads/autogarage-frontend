@@ -12,7 +12,11 @@ import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IAdmCadastroAuxiliar, IFormCadastroAuxiliar, TTipoCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
+import type {
+  IAdmCadastroAuxiliar,
+  IFormCadastroAuxiliar,
+  TTipoCadastroAuxiliar,
+} from '@/interface/interface-pages/CadastroAuxiliar'
 import type { TGenericData } from '@/interface/util'
 
 import { useCatalogoStore } from '@/stores/catalogo.store'
@@ -32,7 +36,9 @@ const emit = defineEmits<{
 const catalogoStore = useCatalogoStore()
 const { saveCadastroAuxiliar } = catalogoStore
 const { cadastrosAuxiliares } = storeToRefs(catalogoStore)
-const registros = computed(() => cadastrosAuxiliares.value.filter(item => item.ca_tipo === props.tipo))
+const registros = computed(() =>
+  cadastrosAuxiliares.value.filter((item) => item.ca_tipo === props.tipo),
+)
 const selected = ref<IAdmCadastroAuxiliar | null>(null)
 const loadingGrid = ref(false)
 const { normalizeError, setLoading } = useUtilStore()
@@ -42,12 +48,21 @@ const formKey = ref(0)
 const formRef = ref<{
   submit: () => void
 } | null>(null)
-const header = computed(() => props.tipo === 'MARCA' ? 'Marcas'
-  : props.tipo === 'UNIDADE' ? 'Unidades' : props.tipo === 'CATEGORIA_PRODUTO' ? 'Categorias de produtos' : 'Categorias de serviços')
+const header = computed(() =>
+  props.tipo === 'MARCA'
+    ? 'Marcas'
+    : props.tipo === 'UNIDADE'
+      ? 'Unidades'
+      : props.tipo === 'CATEGORIA_PRODUTO'
+        ? 'Categorias de produtos'
+        : 'Categorias de serviços',
+)
 
 function editar(cadastro: IAdmCadastroAuxiliar | null) {
   selected.value = cadastro
-  formData.value = cadastro ? { an_descr: cadastro.an_descr, ca_sigla: cadastro.ca_sigla } : formDataDefault()
+  formData.value = cadastro
+    ? { an_descr: cadastro.an_descr, ca_sigla: cadastro.ca_sigla }
+    : formDataDefault()
   formErrors.value = {}
   formKey.value++
 }
@@ -64,16 +79,14 @@ const formData = ref<IFormCadastroAuxiliar>(formDataDefault())
 async function onSubmit(values: IFormCadastroAuxiliar) {
   const errors: TGenericData = {}
 
-  if (!values.an_descr.trim())
-    errors.an_descr = 'Campo obrigatório.'
+  if (!values.an_descr.trim()) errors.an_descr = 'Campo obrigatório.'
 
   if (props.tipo === 'UNIDADE' && !/^[A-Z0-9]{1,10}$/.test(values.ca_sigla.trim().toUpperCase()))
     errors.ca_sigla = 'Informe uma sigla com até 10 letras ou números.'
 
   formErrors.value = errors
 
-  if (Object.keys(errors).length)
-    return
+  if (Object.keys(errors).length) return
 
   setLoading(true)
 
@@ -95,20 +108,23 @@ async function onSubmit(values: IFormCadastroAuxiliar) {
   }
 }
 
-watch([() => props.visible, () => props.tipo], async ([visible]) => {
-  if (!visible)
-    return
+watch(
+  [() => props.visible, () => props.tipo],
+  async ([visible]) => {
+    if (!visible) return
 
-  editar(null)
-  loadingGrid.value = true
-  try {
-    await catalogoStore.loadCadastros()
-  } catch (error) {
-    toast.error(normalizeError(error))
-  } finally {
-    loadingGrid.value = false
-  }
-}, { immediate: true })
+    editar(null)
+    loadingGrid.value = true
+    try {
+      await catalogoStore.loadCadastros()
+    } catch (error) {
+      toast.error(normalizeError(error))
+    } finally {
+      loadingGrid.value = false
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -119,9 +135,26 @@ watch([() => props.visible, () => props.tipo], async ([visible]) => {
     width="42rem"
     @submit="formRef?.submit()"
   >
-    <div class="flex justify-end mb-3"><Button label="Novo" icon="pi pi-plus" @click="editar(null)" /></div>
-    <DataTable :value="registros" :loading="loadingGrid" size="small" scrollable scrollHeight="14rem" class="mb-4">
-      <Column header="Ações"><template #body="{ data }"><Button icon="pi pi-pencil" severity="secondary" text aria-label="Editar cadastro" @click="editar(data)" /></template></Column>
+    <div class="flex justify-end mb-3">
+      <Button label="Novo" icon="pi pi-plus" @click="editar(null)" />
+    </div>
+    <DataTable
+      :value="registros"
+      :loading="loadingGrid"
+      size="small"
+      scrollable
+      scrollHeight="14rem"
+      class="mb-4"
+    >
+      <Column header="Ações"
+        ><template #body="{ data }"
+          ><Button
+            icon="pi pi-pencil"
+            severity="secondary"
+            text
+            aria-label="Editar cadastro"
+            @click="editar(data)" /></template
+      ></Column>
       <Column field="an_descr" header="Descrição" />
       <Column v-if="tipo === 'UNIDADE'" field="ca_sigla" header="Sigla" />
       <template #empty>Nenhum cadastro disponível.</template>
@@ -136,10 +169,29 @@ watch([() => props.visible, () => props.tipo], async ([visible]) => {
       :initialValues="formData"
       @submit="onSubmit(formData)"
     >
-      <Fieldset :legend="tipo === 'UNIDADE' ? 'Dados da unidade' : tipo === 'MARCA' ? 'Dados da marca' : 'Dados da categoria'">
+      <Fieldset
+        :legend="
+          tipo === 'UNIDADE'
+            ? 'Dados da unidade'
+            : tipo === 'MARCA'
+              ? 'Dados da marca'
+              : 'Dados da categoria'
+        "
+      >
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm :class="tipo === 'UNIDADE' ? 'col-span-12 sm:col-span-8' : 'col-span-12'" name="an_descr" label="Descrição *" v-slot="{ invalid, field }">
-            <InputText maxlength="4000" v-model="formData.an_descr" :name="field" :invalid="invalid" fluid />
+          <FieldForm
+            :class="tipo === 'UNIDADE' ? 'col-span-12 sm:col-span-8' : 'col-span-12'"
+            name="an_descr"
+            label="Descrição *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              maxlength="4000"
+              v-model="formData.an_descr"
+              :name="field"
+              :invalid="invalid"
+              fluid
+            />
           </FieldForm>
           <FieldForm
             v-if="tipo === 'UNIDADE'"

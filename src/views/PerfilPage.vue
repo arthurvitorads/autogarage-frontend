@@ -20,7 +20,7 @@ import { getPerfil } from '@/services/perfil.service'
 
 const { normalizeError, setLoading } = useUtilStore()
 
-const toastService = useAppToast();
+const toastService = useAppToast()
 
 // paginacao
 const limite = ref(20)
@@ -49,10 +49,10 @@ function search() {
 function changePage(event: DataTablePageEvent) {
   if (loadingGrid.value) return
 
-	pagina.value = event.page + 1
-	limite.value = event.rows
+  pagina.value = event.page + 1
+  limite.value = event.rows
 
-	loadPerfil()
+  loadPerfil()
 }
 
 function newPerfil() {
@@ -73,13 +73,11 @@ async function loadPerfil() {
 
     perfil.value = resultado.dados.perfil
     total.value = resultado.dados.pagination.total
-
   } catch (error) {
-		toastService.error(normalizeError(error))
+    toastService.error(normalizeError(error))
 
     perfil.value = []
     total.value = 0
-
   } finally {
     loadingGrid.value = false
   }
@@ -87,7 +85,7 @@ async function loadPerfil() {
 
 onMounted(async () => {
   setLoading(true)
-	
+
   try {
     await loadPerfil()
   } finally {
@@ -97,54 +95,46 @@ onMounted(async () => {
 </script>
 <template>
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
-		<!-- filtro -->
+    <!-- filtro -->
     <div class="flex flex-col flex-1 min-h-0 min-w-0 border border-surface-200 rounded-xl">
-    	<div class="flex justify-between m-5">
-				<div class="flex justify-center gap-2 w-140">
-					<InputText
-						v-model="filtro"
-						placeholder="Digite o que deseja pesquisar..."
-						class="flex-1 min-w-0"
-						:disabled="loadingGrid"
-						@keyup.enter="search"
-					/>
-					<Button
-						icon="pi pi-search"
-						:disabled="loadingGrid"
-						@click="search"
-					/>
-				</div>
-				<div class="flex">
-					<Button
-						label="Novo"
-						icon="pi pi-plus"
-						@click="newPerfil"
-					/>
-				</div>
-			</div>
+      <div class="flex justify-between m-5">
+        <div class="flex justify-center gap-2 w-140">
+          <InputText
+            v-model="filtro"
+            placeholder="Digite o que deseja pesquisar..."
+            class="flex-1 min-w-0"
+            :disabled="loadingGrid"
+            @keyup.enter="search"
+          />
+          <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
+        </div>
+        <div class="flex">
+          <Button label="Novo" icon="pi pi-plus" @click="newPerfil" />
+        </div>
+      </div>
 
-			<div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px;">
-				<DataTable
-					:pt="{
-						emptyMessage: { class: 'hidden' }
-					}"
-					:value="perfil"
-					:aria-busy="loadingGrid"
-					dataKey="cn_perfil"
-					size="small"
-					stripedRows
-					scrollable
-					scrollHeight="flex"
-					tableStyle="min-width: 50rem"
-					lazy
-					paginator
-					:first="(pagina - 1) * limite"
-					:rows="limite"
-					:totalRecords="total"
-					paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-					currentPageReportTemplate="Total: {totalRecords}"
-					@page="changePage"
-				>
+      <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
+        <DataTable
+          :pt="{
+            emptyMessage: { class: 'hidden' },
+          }"
+          :value="perfil"
+          :aria-busy="loadingGrid"
+          dataKey="cn_perfil"
+          size="small"
+          stripedRows
+          scrollable
+          scrollHeight="flex"
+          tableStyle="min-width: 50rem"
+          lazy
+          paginator
+          :first="(pagina - 1) * limite"
+          :rows="limite"
+          :totalRecords="total"
+          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
+          currentPageReportTemplate="Total: {totalRecords}"
+          @page="changePage"
+        >
           <template v-if="loadingGrid">
             <Column v-for="header in colunasSkeleton" :key="header" :header="header">
               <template #body>
@@ -153,33 +143,46 @@ onMounted(async () => {
             </Column>
           </template>
           <template v-else>
-						<Column header="Ações" class="min-w-5">
-							<template #body="{ data }">
-								<Button icon="pi pi-pencil" severity="secondary" text rounded
-									v-tooltip.top="'Editar'" @click="editPerfil(data)" />
-							</template>
-						</Column>
-						<Column class="min-w-30" field="cn_perfil" header="Código" />
-						<Column field="an_descr" header="Nome" />
-						<Column class="min-w-30" field="bo_sts_reg" header="Status">
-							<template #body="{ data }">
-								<Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg? 'success': 'danger'" />
-							</template>
-						</Column>
-						<Column class="min-w-50" field="dt_inc" header="Dt. inclusão">
-							<template #body="{ data }">
-								<span>{{ formatDateTime(data.dt_inc) }}</span>
-							</template>
-						</Column>
-						<Column class="min-w-50" field="dt_alt" header="Dt. alteração">
-							<template #body="{ data }">
-								<span>{{ formatDateTime(data.dt_alt) }}</span>
-							</template>
-						</Column>
+            <Column header="Ações" class="min-w-5">
+              <template #body="{ data }">
+                <Button
+                  icon="pi pi-pencil"
+                  severity="secondary"
+                  text
+                  rounded
+                  v-tooltip.top="'Editar'"
+                  @click="editPerfil(data)"
+                />
+              </template>
+            </Column>
+            <Column class="min-w-30" field="cn_perfil" header="Código" />
+            <Column field="an_descr" header="Nome" />
+            <Column class="min-w-30" field="bo_sts_reg" header="Status">
+              <template #body="{ data }">
+                <Tag
+                  :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+                  :severity="data.bo_sts_reg ? 'success' : 'danger'"
+                />
+              </template>
+            </Column>
+            <Column class="min-w-50" field="dt_inc" header="Dt. inclusão">
+              <template #body="{ data }">
+                <span>{{ formatDateTime(data.dt_inc) }}</span>
+              </template>
+            </Column>
+            <Column class="min-w-50" field="dt_alt" header="Dt. alteração">
+              <template #body="{ data }">
+                <span>{{ formatDateTime(data.dt_alt) }}</span>
+              </template>
+            </Column>
           </template>
-				</DataTable>
-			</div>
+        </DataTable>
+      </div>
     </div>
   </div>
-  <ManutPerfilDialog v-model:visible="manutPerfilVisible" :perfil="selectedPerfil" @saved="loadPerfil" />
+  <ManutPerfilDialog
+    v-model:visible="manutPerfilVisible"
+    :perfil="selectedPerfil"
+    @saved="loadPerfil"
+  />
 </template>

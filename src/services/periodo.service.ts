@@ -15,10 +15,8 @@ export function filtroPeriodo(periodo: string, agora = Date.now()) {
     const fim = new Date(inicio.getFullYear(), inicio.getMonth() + 1, 0, 23, 59, 59, 999)
     return { inicio: inicio.toISOString(), fim: fim.toISOString() }
   }
-  if (periodo === 'semana')
-    inicio.setDate(inicio.getDate() - 6)
-  else if (periodo === 'trinta-dias')
-    inicio.setDate(inicio.getDate() - 29)
+  if (periodo === 'semana') inicio.setDate(inicio.getDate() - 6)
+  else if (periodo === 'trinta-dias') inicio.setDate(inicio.getDate() - 29)
   else if (periodo === 'tres-meses' || periodo === 'seis-meses') {
     const dia = inicio.getDate()
     inicio.setDate(1)
@@ -35,13 +33,11 @@ export function datasMesAtual() {
 }
 
 export function intervaloDatas(datas: (Date | null)[]) {
-  if (!datas[0] || !datas[1])
-    return null
+  if (!datas[0] || !datas[1]) return null
   const inicio = new Date(datas[0])
   const fim = new Date(datas[1])
   inicio.setHours(0, 0, 0, 0)
   fim.setHours(23, 59, 59, 999)
-  if (inicio > fim)
-    return null
+  if (inicio > fim) return null
   return { inicio: inicio.toISOString(), fim: fim.toISOString() }
 }

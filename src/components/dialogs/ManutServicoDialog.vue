@@ -15,7 +15,11 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
 
-import type { IAdmServico, IFormServico, IManutServico } from '@/interface/interface-pages/ServicoPage'
+import type {
+  IAdmServico,
+  IFormServico,
+  IManutServico,
+} from '@/interface/interface-pages/ServicoPage'
 import type { IAdmCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
 import type { TGenericData } from '@/interface/util'
 
@@ -70,27 +74,32 @@ const formData = ref<IFormServico>(formDataDefault())
 async function onSubmit(values: IFormServico) {
   const errors: TGenericData = {}
 
-  if (!values.an_nome.trim())
-    errors.an_nome = 'Campo obrigatório.'
+  if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
 
   if (values.an_categoria && !categoriasServico.value.includes(values.an_categoria))
     errors.an_categoria = 'Selecione uma categoria.'
 
-  if (values.vl_preco === null || !Number.isFinite(values.vl_preco) || values.vl_preco < 0 ||
-    values.vl_preco > 999_999_999.99 || Math.abs(values.vl_preco * 100 - Math.round(values.vl_preco * 100)) > 0.000001)
+  if (
+    values.vl_preco === null ||
+    !Number.isFinite(values.vl_preco) ||
+    values.vl_preco < 0 ||
+    values.vl_preco > 999_999_999.99 ||
+    Math.abs(values.vl_preco * 100 - Math.round(values.vl_preco * 100)) > 0.000001
+  )
     errors.vl_preco = 'Informe um preço válido, com até duas casas decimais.'
 
-  if (values.nu_tempo_estimado !== null && (
-    !Number.isSafeInteger(values.nu_tempo_estimado) ||
-    values.nu_tempo_estimado < 1 || values.nu_tempo_estimado > 999999
-  ))
+  if (
+    values.nu_tempo_estimado !== null &&
+    (!Number.isSafeInteger(values.nu_tempo_estimado) ||
+      values.nu_tempo_estimado < 1 ||
+      values.nu_tempo_estimado > 999999)
+  )
     errors.nu_tempo_estimado = 'Informe o tempo em minutos inteiros, maior que zero.'
 
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
 
-  if (!isValidated.value)
-    return
+  if (!isValidated.value) return
 
   setLoading(true)
 
@@ -116,24 +125,29 @@ async function onSubmit(values: IFormServico) {
   }
 }
 
-watch([() => props.visible, () => props.servico], ([visible]) => {
-  if (!visible)
-    return
+watch(
+  [() => props.visible, () => props.servico],
+  ([visible]) => {
+    if (!visible) return
 
-  const servico = props.servico
+    const servico = props.servico
 
-  formData.value = servico ? {
-    an_nome: servico.an_nome,
-    an_categoria: servico.an_categoria,
-    vl_preco: servico.vl_preco,
-    nu_tempo_estimado: servico.nu_tempo_estimado ?? null,
-    an_obs: servico.an_obs,
-    bo_sts_reg: servico.bo_sts_reg,
-  } : formDataDefault()
-  formErrors.value = {}
-  isValidated.value = false
-  formKey.value++
-}, { immediate: true })
+    formData.value = servico
+      ? {
+          an_nome: servico.an_nome,
+          an_categoria: servico.an_categoria,
+          vl_preco: servico.vl_preco,
+          nu_tempo_estimado: servico.nu_tempo_estimado ?? null,
+          an_obs: servico.an_obs,
+          bo_sts_reg: servico.bo_sts_reg,
+        }
+      : formDataDefault()
+    formErrors.value = {}
+    isValidated.value = false
+    formKey.value++
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -157,8 +171,14 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome *" v-slot="{ invalid, field }">
-            <InputText maxlength="4000"
+          <FieldForm
+            class="col-span-12 sm:col-span-10"
+            name="an_nome"
+            label="Nome *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              maxlength="4000"
               v-model="formData.an_nome"
               :name="field"
               :invalid="invalid"
@@ -166,10 +186,20 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
               placeholder="Digite o nome do serviço"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-2"
+            name="bo_sts_reg"
+            label="Status"
+            v-slot="{ field }"
+          >
             <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Serviço ativo" />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="an_categoria" label="Categoria" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="an_categoria"
+            label="Categoria"
+            v-slot="{ invalid, field }"
+          >
             <div class="flex gap-2">
               <Select
                 v-model="formData.an_categoria"
@@ -189,7 +219,12 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
               />
             </div>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="vl_preco" label="Preço do serviço *" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="vl_preco"
+            label="Preço do serviço *"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.vl_preco"
               :name="field"
@@ -202,7 +237,12 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
               :min="0"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-4" name="nu_tempo_estimado" label="Tempo estimado (minutos)" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            name="nu_tempo_estimado"
+            label="Tempo estimado (minutos)"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.nu_tempo_estimado"
               :name="field"
@@ -224,5 +264,9 @@ watch([() => props.visible, () => props.servico], ([visible]) => {
       </Fieldset>
     </FormPage>
   </CadastroDialog>
-  <CadastroAuxiliarDialog v-model:visible="cadastroCategoriaVisible" tipo="CATEGORIA_SERVICO" @saved="selectCategoria" />
+  <CadastroAuxiliarDialog
+    v-model:visible="cadastroCategoriaVisible"
+    tipo="CATEGORIA_SERVICO"
+    @saved="selectCategoria"
+  />
 </template>

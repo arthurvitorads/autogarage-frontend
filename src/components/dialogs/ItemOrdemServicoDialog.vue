@@ -13,10 +13,19 @@ import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IFormItemOrdemServico, TItemOrdemServico, TManutItemOrdemServico, TCodigoOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type {
+  IFormItemOrdemServico,
+  TItemOrdemServico,
+  TManutItemOrdemServico,
+  TCodigoOrdemServico,
+} from '@/interface/interface-pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
-import { calcularTotalItemOrdem, formatCurrencyOrdem, isPrecoOrdemValido } from '@/services/ordem-servico.service'
+import {
+  calcularTotalItemOrdem,
+  formatCurrencyOrdem,
+  isPrecoOrdemValido,
+} from '@/services/ordem-servico.service'
 import { isQuantidadeValida } from '@/services/estoque.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
@@ -60,23 +69,30 @@ function formDataDefault(): IFormItemOrdemServico {
 }
 
 const formData = ref<IFormItemOrdemServico>(formDataDefault())
-const options = computed(() => formData.value.ca_tipo === 'PRODUTO'
-  ? produtos.value.filter(produto => produto.bo_sts_reg).map(produto => ({
-    cn_referencia: produto.cn_produto,
-    an_nome: produto.an_nome,
-    ca_unidade: produto.ca_unidade,
-    vl_preco: produto.vl_venda,
-  }))
-  : servicos.value.filter(servico => servico.bo_sts_reg).map(servico => ({
-    cn_referencia: servico.cn_servico,
-    an_nome: servico.an_nome,
-    ca_unidade: '',
-    vl_preco: servico.vl_preco,
-  })))
-const selectReferencia = computed(() => options.value.find(item => item.cn_referencia === formData.value.cn_referencia))
+const options = computed(() =>
+  formData.value.ca_tipo === 'PRODUTO'
+    ? produtos.value
+        .filter((produto) => produto.bo_sts_reg)
+        .map((produto) => ({
+          cn_referencia: produto.cn_produto,
+          an_nome: produto.an_nome,
+          ca_unidade: produto.ca_unidade,
+          vl_preco: produto.vl_venda,
+        }))
+    : servicos.value
+        .filter((servico) => servico.bo_sts_reg)
+        .map((servico) => ({
+          cn_referencia: servico.cn_servico,
+          an_nome: servico.an_nome,
+          ca_unidade: '',
+          vl_preco: servico.vl_preco,
+        })),
+)
+const selectReferencia = computed(() =>
+  options.value.find((item) => item.cn_referencia === formData.value.cn_referencia),
+)
 const totalItem = computed(() => {
-  if (formData.value.qt_quantidade === null || formData.value.vl_unitario === null)
-    return null
+  if (formData.value.qt_quantidade === null || formData.value.vl_unitario === null) return null
 
   try {
     return calcularTotalItemOrdem(formData.value.qt_quantidade, formData.value.vl_unitario)
@@ -100,8 +116,7 @@ function loadPreco() {
 async function onSubmit(values: IFormItemOrdemServico) {
   const errors: TGenericData = {}
 
-  if (!selectReferencia.value)
-    errors.cn_referencia = 'Selecione um produto ou serviço ativo.'
+  if (!selectReferencia.value) errors.cn_referencia = 'Selecione um produto ou serviço ativo.'
 
   if (!isQuantidadeValida(values.qt_quantidade) || values.qt_quantidade === 0)
     errors.qt_quantidade = 'Informe uma quantidade maior que zero, com até três casas decimais.'
@@ -109,7 +124,12 @@ async function onSubmit(values: IFormItemOrdemServico) {
   if (!isPrecoOrdemValido(values.vl_unitario))
     errors.vl_unitario = 'Informe um preço válido, com até duas casas decimais.'
 
-  if (!errors.qt_quantidade && !errors.vl_unitario && values.qt_quantidade !== null && values.vl_unitario !== null) {
+  if (
+    !errors.qt_quantidade &&
+    !errors.vl_unitario &&
+    values.qt_quantidade !== null &&
+    values.vl_unitario !== null
+  ) {
     try {
       calcularTotalItemOrdem(values.qt_quantidade, values.vl_unitario)
     } catch (error) {
@@ -118,16 +138,18 @@ async function onSubmit(values: IFormItemOrdemServico) {
   }
 
   formErrors.value = errors
-  if (Object.keys(errors).length)
-    return
+  if (Object.keys(errors).length) return
 
-  if (!await confirmar())
-    return
+  if (!(await confirmar())) return
 
   setLoading(true)
 
   try {
-    if (values.cn_referencia === null || values.qt_quantidade === null || values.vl_unitario === null)
+    if (
+      values.cn_referencia === null ||
+      values.qt_quantidade === null ||
+      values.vl_unitario === null
+    )
       return
 
     const dadosBase = {
@@ -136,17 +158,18 @@ async function onSubmit(values: IFormItemOrdemServico) {
       qt_quantidade: values.qt_quantidade,
       vl_unitario: values.vl_unitario,
     }
-    const dados: TManutItemOrdemServico = values.ca_tipo === 'PRODUTO'
-      ? {
-        ...dadosBase,
-        ca_tipo: 'PRODUTO',
-        cn_produto: values.cn_referencia
-      }
-      : {
-        ...dadosBase,
-        ca_tipo: 'SERVICO',
-        cn_servico: values.cn_referencia
-      }
+    const dados: TManutItemOrdemServico =
+      values.ca_tipo === 'PRODUTO'
+        ? {
+            ...dadosBase,
+            ca_tipo: 'PRODUTO',
+            cn_produto: values.cn_referencia,
+          }
+        : {
+            ...dadosBase,
+            ca_tipo: 'SERVICO',
+            cn_servico: values.cn_referencia,
+          }
 
     await saveItem(dados)
     emit('saved')
@@ -159,21 +182,26 @@ async function onSubmit(values: IFormItemOrdemServico) {
   }
 }
 
-watch([() => props.visible, () => props.item], ([visible]) => {
-  if (!visible)
-    return
+watch(
+  [() => props.visible, () => props.item],
+  ([visible]) => {
+    if (!visible) return
 
-  const item = props.item
+    const item = props.item
 
-  formData.value = item ? {
-    ca_tipo: item.ca_tipo,
-    cn_referencia: item.ca_tipo === 'PRODUTO' ? item.cn_produto : item.cn_servico,
-    qt_quantidade: item.qt_quantidade,
-    vl_unitario: item.vl_unitario,
-  } : formDataDefault()
-  formErrors.value = {}
-  formKey.value++
-}, { immediate: true })
+    formData.value = item
+      ? {
+          ca_tipo: item.ca_tipo,
+          cn_referencia: item.ca_tipo === 'PRODUTO' ? item.cn_produto : item.cn_servico,
+          qt_quantidade: item.qt_quantidade,
+          vl_unitario: item.vl_unitario,
+        }
+      : formDataDefault()
+    formErrors.value = {}
+    formKey.value++
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -204,7 +232,12 @@ watch([() => props.visible, () => props.item], ([visible]) => {
               @change="changeTipo"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-9" name="cn_referencia" :label="formData.ca_tipo === 'PRODUTO' ? 'Produto *' : 'Serviço *'" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-9"
+            name="cn_referencia"
+            :label="formData.ca_tipo === 'PRODUTO' ? 'Produto *' : 'Serviço *'"
+            v-slot="{ invalid, field }"
+          >
             <Select
               v-model="formData.cn_referencia"
               :name="field"
@@ -219,9 +252,19 @@ watch([() => props.visible, () => props.item], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-3" name="ca_unidade" label="Unidade">
-            <InputText maxlength="10" :modelValue="selectReferencia?.ca_unidade || '—'" readonly fluid />
+            <InputText
+              maxlength="10"
+              :modelValue="selectReferencia?.ca_unidade || '—'"
+              readonly
+              fluid
+            />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-4" name="qt_quantidade" label="Quantidade *" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-4"
+            name="qt_quantidade"
+            label="Quantidade *"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.qt_quantidade"
               :name="field"
@@ -233,7 +276,12 @@ watch([() => props.visible, () => props.item], ([visible]) => {
               fluid
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-4" name="vl_unitario" label="Preço unitário *" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-4"
+            name="vl_unitario"
+            label="Preço unitário *"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.vl_unitario"
               :name="field"
@@ -247,7 +295,12 @@ watch([() => props.visible, () => props.item], ([visible]) => {
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-4" name="vl_total" label="Total do item">
-            <InputText maxlength="4000" :modelValue="totalItem === null ? '—' : formatCurrencyOrdem(totalItem)" readonly fluid />
+            <InputText
+              maxlength="4000"
+              :modelValue="totalItem === null ? '—' : formatCurrencyOrdem(totalItem)"
+              readonly
+              fluid
+            />
           </FieldForm>
         </div>
       </Fieldset>

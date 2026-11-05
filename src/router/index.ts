@@ -1,4 +1,3 @@
-
 import { createRouter, createWebHistory } from 'vue-router'
 import { signOut } from 'firebase/auth'
 
@@ -135,9 +134,7 @@ router.beforeEach(async (to) => {
   try {
     await auth.authStateReady()
 
-    const requiresAuth = to.matched.some(
-      (record) => record.meta.requiresAuth
-    )
+    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
     const user = auth.currentUser
 
@@ -186,7 +183,6 @@ router.beforeEach(async (to) => {
     console.error('Erro inexperado:', error)
     return false
   } finally {
-
     utilStore.setLoading(false)
   }
 })

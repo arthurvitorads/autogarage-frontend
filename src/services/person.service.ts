@@ -1,12 +1,16 @@
 import { apiRequest } from '@/services/api.service'
-import type { ICadPessoa, IPessoaResponse, IManutPessoa } from '@/interface/interface-pages/PessoaPage'
+import type {
+  ICadPessoa,
+  IPessoaResponse,
+  IManutPessoa,
+} from '@/interface/interface-pages/PessoaPage'
 import type { Pessoa } from '@/models/pessoa'
 
 export function getPerson(ePage = 1, eLimit = 20, search = ''): Promise<IPessoaResponse> {
   const params = new URLSearchParams({
     page: String(ePage),
     limit: String(eLimit),
-    search
+    search,
   })
   return apiRequest(`/pessoa?${params}`)
 }
@@ -37,22 +41,23 @@ export function personToForm(pessoa: ICadPessoa): Pessoa {
       complemento: endereco?.an_complemento ?? '',
       bairro: endereco?.an_bairro ?? '',
       cidade: endereco?.an_cidade ?? '',
-      uf: endereco?.ca_uf ?? ''
+      uf: endereco?.ca_uf ?? '',
     },
   }
-  return pessoa.ca_tipo === 'PF' ? {
-    ...dados,
-    tipo: 'PF',
-    nome: pessoa.an_nome ?? '',
-    cpf: pessoa.ca_cpf ?? ''
-  }
+  return pessoa.ca_tipo === 'PF'
+    ? {
+        ...dados,
+        tipo: 'PF',
+        nome: pessoa.an_nome ?? '',
+        cpf: pessoa.ca_cpf ?? '',
+      }
     : {
-      ...dados,
-      tipo: 'PJ',
-      razaoSocial: pessoa.an_razao_social ?? '',
-      nomeFantasia: pessoa.an_nome_fantasia ?? '',
-      cnpj: pessoa.ca_cnpj ?? ''
-    }
+        ...dados,
+        tipo: 'PJ',
+        razaoSocial: pessoa.an_razao_social ?? '',
+        nomeFantasia: pessoa.an_nome_fantasia ?? '',
+        cnpj: pessoa.ca_cnpj ?? '',
+      }
 }
 
 export function personToRequest(pessoa: Pessoa): IManutPessoa {
@@ -77,7 +82,7 @@ export function personToRequest(pessoa: Pessoa): IManutPessoa {
       an_complemento: pessoa.endereco.complemento,
       an_bairro: pessoa.endereco.bairro,
       an_cidade: pessoa.endereco.cidade,
-      ca_uf: pessoa.endereco.uf
+      ca_uf: pessoa.endereco.uf,
     },
   }
 }

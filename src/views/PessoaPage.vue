@@ -22,7 +22,7 @@ import { formatDateTime, maskCpf, maskCnpj, maskTelefone } from '@/services/util
 
 const { normalizeError, setLoading } = useUtilStore()
 
-const toastService = useAppToast();
+const toastService = useAppToast()
 
 // paginacao
 const limite = ref(20)
@@ -43,7 +43,7 @@ const colunasSkeleton = [
   'E-mail',
   'Ativo',
   'Dt. inclusão',
-  'Dt. alteração'
+  'Dt. alteração',
 ]
 
 const loadingGrid = ref(false)
@@ -61,16 +61,14 @@ function showEndereco(pessoa: ICadPessoa) {
 const personData = ref<ICadPessoa[]>([])
 
 function search() {
-  if (loadingGrid.value)
-    return
+  if (loadingGrid.value) return
 
   pagina.value = 1
   loadPerson()
 }
 
 function changePage(event: DataTablePageEvent) {
-  if (loadingGrid.value)
-    return
+  if (loadingGrid.value) return
 
   pagina.value = event.page + 1
   limite.value = event.rows
@@ -133,10 +131,10 @@ onMounted(async () => {
           <Button label="Novo" icon="pi pi-plus" @click="newPerson" />
         </div>
       </div>
-      <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px;">
+      <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
         <DataTable
           :pt="{
-          	emptyMessage: { class: 'hidden' }
+            emptyMessage: { class: 'hidden' },
           }"
           :value="personData"
           :aria-busy="loadingGrid"
@@ -189,13 +187,19 @@ onMounted(async () => {
             </Column>
             <Column field="cn_pessoa" header="Código" />
             <Column header="Nome" class="min-w-100">
-              <template #body="{ data }">{{ data.ca_tipo === 'PF' ? data.an_nome : data.an_razao_social }}</template>
+              <template #body="{ data }">{{
+                data.ca_tipo === 'PF' ? data.an_nome : data.an_razao_social
+              }}</template>
             </Column>
             <Column field="ca_tipo" header="Tipo">
-              <template #body="{ data }">{{ data.ca_tipo === 'PF' ? 'Física' : 'Juridica' }}</template>
+              <template #body="{ data }">{{
+                data.ca_tipo === 'PF' ? 'Física' : 'Juridica'
+              }}</template>
             </Column>
             <Column header="Documento" class="min-w-40">
-              <template #body="{ data }">{{ data.ca_tipo === 'PF' ? maskCpf(data.ca_cpf ?? '') : maskCnpj(data.ca_cnpj ?? '') }}</template>
+              <template #body="{ data }">{{
+                data.ca_tipo === 'PF' ? maskCpf(data.ca_cpf ?? '') : maskCnpj(data.ca_cnpj ?? '')
+              }}</template>
             </Column>
             <Column header="Categorias">
               <template #body="{ data }">
@@ -211,7 +215,10 @@ onMounted(async () => {
             <Column field="an_email" header="E-mail" />
             <Column header="Status">
               <template #body="{ data }">
-                <Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg ? 'success' : 'danger'" />
+                <Tag
+                  :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+                  :severity="data.bo_sts_reg ? 'success' : 'danger'"
+                />
               </template>
             </Column>
             <Column class="min-w-50" field="dt_inc" header="Dt. inclusão">
@@ -229,12 +236,23 @@ onMounted(async () => {
       </div>
     </div>
   </div>
-  <ManutPessoaDialog v-model:visible="manutPersonVisible" :pessoa="selectedPerson" @saved="loadPerson" />
-  <Dialog v-model:visible="enderecoVisible" modal header="Endereço da pessoa" :style="{ width: '40rem', maxWidth: '95vw' }">
+  <ManutPessoaDialog
+    v-model:visible="manutPersonVisible"
+    :pessoa="selectedPerson"
+    @saved="loadPerson"
+  />
+  <Dialog
+    v-model:visible="enderecoVisible"
+    modal
+    header="Endereço da pessoa"
+    :style="{ width: '40rem', maxWidth: '95vw' }"
+  >
     <div v-if="pessoaEndereco?.endereco" class="flex flex-col gap-2">
       <p class="font-semibold">{{ pessoaEndereco.an_nome || pessoaEndereco.an_razao_social }}</p>
       <p>{{ pessoaEndereco.endereco.an_logradouro }}, {{ pessoaEndereco.endereco.an_numero }}</p>
-      <p v-if="pessoaEndereco.endereco.an_complemento">{{ pessoaEndereco.endereco.an_complemento }}</p>
+      <p v-if="pessoaEndereco.endereco.an_complemento">
+        {{ pessoaEndereco.endereco.an_complemento }}
+      </p>
       <p>{{ pessoaEndereco.endereco.an_bairro }}</p>
       <p>{{ pessoaEndereco.endereco.an_cidade }} / {{ pessoaEndereco.endereco.ca_uf }}</p>
       <p>CEP: {{ pessoaEndereco.endereco.ca_cep }}</p>

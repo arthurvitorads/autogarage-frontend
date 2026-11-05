@@ -1,5 +1,4 @@
 <script setup lang="ts">
-
 import logoClara from '@/assets/img/logo_clara.png'
 
 import { ref, watch, onMounted } from 'vue'
@@ -12,8 +11,7 @@ const cadastroVisible = ref(false)
 const classificacaoVisible = ref(false)
 const tipoCadastro = ref<TTipoCadastroAuxiliar>('MARCA')
 function abrirCadastro(tipo: TTipoCadastroAuxiliar | 'CLASSIFICACAO') {
-  if (tipo === 'CLASSIFICACAO')
-    classificacaoVisible.value = true
+  if (tipo === 'CLASSIFICACAO') classificacaoVisible.value = true
   else {
     tipoCadastro.value = tipo
     cadastroVisible.value = true
@@ -41,15 +39,32 @@ const modules = [
     key: 'faturamento',
     label: 'Faturamento',
     icon: 'wallet',
-    items: [{ key: 'faturamento:vendas', label: 'Vendas', icon: 'shopping-cart', route: '/faturamento/vendas' }],
+    items: [
+      {
+        key: 'faturamento:vendas',
+        label: 'Vendas',
+        icon: 'shopping-cart',
+        route: '/faturamento/vendas',
+      },
+    ],
   },
   {
     key: 'relatorios',
     label: 'Relatórios',
     icon: 'chart-bar',
     items: [
-      { key: 'relatorios:tempos', label: 'Tempo dos serviços', icon: 'clock', route: '/relatorios/tempos' },
-      { key: 'relatorios:vendas', label: 'Vendas por período', icon: 'chart-line', route: '/relatorios/vendas' },
+      {
+        key: 'relatorios:tempos',
+        label: 'Tempo dos serviços',
+        icon: 'clock',
+        route: '/relatorios/tempos',
+      },
+      {
+        key: 'relatorios:vendas',
+        label: 'Vendas por período',
+        icon: 'chart-line',
+        route: '/relatorios/vendas',
+      },
     ],
   },
   {
@@ -60,9 +75,27 @@ const modules = [
       { key: 'cadastros:pessoa', label: 'Pessoas', icon: 'users', route: '/pessoa' },
       { key: 'cadastros:produto', label: 'Produtos', icon: 'box', route: '/produto' },
       { key: 'cadastros:servico', label: 'Serviços', icon: 'wrench', route: '/servico' },
-      { key: 'cadastros:classificacao', label: 'Classificações de O.S.', icon: 'tags', route: '', cadastro: 'CLASSIFICACAO' },
-      { key: 'cadastros:categoria-produto', label: 'Categorias de produtos', icon: 'list', route: '', cadastro: 'CATEGORIA_PRODUTO' },
-      { key: 'cadastros:categoria-servico', label: 'Categorias de serviços', icon: 'list', route: '', cadastro: 'CATEGORIA_SERVICO' },
+      {
+        key: 'cadastros:classificacao',
+        label: 'Classificações de O.S.',
+        icon: 'tags',
+        route: '',
+        cadastro: 'CLASSIFICACAO',
+      },
+      {
+        key: 'cadastros:categoria-produto',
+        label: 'Categorias de produtos',
+        icon: 'list',
+        route: '',
+        cadastro: 'CATEGORIA_PRODUTO',
+      },
+      {
+        key: 'cadastros:categoria-servico',
+        label: 'Categorias de serviços',
+        icon: 'list',
+        route: '',
+        cadastro: 'CATEGORIA_SERVICO',
+      },
       { key: 'cadastros:marca', label: 'Marcas', icon: 'tag', route: '', cadastro: 'MARCA' },
       { key: 'cadastros:unidade', label: 'Unidades', icon: 'box', route: '', cadastro: 'UNIDADE' },
     ],
@@ -72,7 +105,12 @@ const modules = [
     label: 'Ordem de Serviço',
     icon: 'file-edit',
     items: [
-      { key: 'ordem-servico:painel', label: 'Painel', icon: 'th-large', route: '/ordem-servico/painel' },
+      {
+        key: 'ordem-servico:painel',
+        label: 'Painel',
+        icon: 'th-large',
+        route: '/ordem-servico/painel',
+      },
     ],
   },
   {
@@ -81,7 +119,7 @@ const modules = [
     icon: 'database',
     items: [
       { key: 'admin:usuario', label: 'Usuário', icon: 'user-plus', route: '/usuario' },
-      { key: 'admin:perfil', label: 'Perfil', icon: 'book', route: '/perfil' }
+      { key: 'admin:perfil', label: 'Perfil', icon: 'book', route: '/perfil' },
     ],
   },
 ]
@@ -92,16 +130,16 @@ function onPanelOpen(event: PanelMenuPanelOpenEvent) {
 
 function openCurrentModule() {
   const current = modules.find((m) =>
-    m.items.some((i) =>
-      !!i.route && (i.route === '/'
-        ? route.path === '/'
-        : route.path === i.route || route.path.startsWith(i.route + '/'))
-    )
+    m.items.some(
+      (i) =>
+        !!i.route &&
+        (i.route === '/'
+          ? route.path === '/'
+          : route.path === i.route || route.path.startsWith(i.route + '/')),
+    ),
   )
 
-  expandedKeys.value = current
-    ? { [current.key]: true }
-    : {}
+  expandedKeys.value = current ? { [current.key]: true } : {}
 }
 
 watch(() => route.path, openCurrentModule)
@@ -116,23 +154,22 @@ onMounted(openCurrentModule)
         <img :src="logoClara" alt="autoGarage" class="menu-logo" />
       </div>
       <nav class="menu-nav">
-        <PanelMenu 
-          class="menu-panel" 
-          :model="modules" 
-          v-model:expandedKeys="expandedKeys" 
+        <PanelMenu
+          class="menu-panel"
+          :model="modules"
+          v-model:expandedKeys="expandedKeys"
           @panelOpen="onPanelOpen"
         >
           <template #item="{ item, active }">
-            <RouterLink 
-              v-if="item.route" 
-              :to="item.route" 
-              v-slot="{ href, navigate, isActive }"
-            >
-              <a 
-                v-ripple 
-                class="menu-link" 
-                :class="{ 'menu-link--active': isActive || (item.route !== '/' && route.path.startsWith(item.route + '/')) }"
-                :href="href" 
+            <RouterLink v-if="item.route" :to="item.route" v-slot="{ href, navigate, isActive }">
+              <a
+                v-ripple
+                class="menu-link"
+                :class="{
+                  'menu-link--active':
+                    isActive || (item.route !== '/' && route.path.startsWith(item.route + '/')),
+                }"
+                :href="href"
                 @click="navigate"
               >
                 <i :class="`pi pi-${item.icon}`"></i>
@@ -140,7 +177,12 @@ onMounted(openCurrentModule)
               </a>
             </RouterLink>
 
-            <button v-else-if="item.cadastro" type="button" class="menu-link w-full" @click="abrirCadastro(item.cadastro)">
+            <button
+              v-else-if="item.cadastro"
+              type="button"
+              class="menu-link w-full"
+              @click="abrirCadastro(item.cadastro)"
+            >
               <i :class="'pi pi-' + item.icon"></i>
               <span>{{ item.label }}</span>
             </button>

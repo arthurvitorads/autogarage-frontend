@@ -1,5 +1,10 @@
 import { apiPage, apiRequest } from '@/services/api.service'
-import type { IAdmVenda, IManutVenda, IRelatorioTempoResponse, IRelatorioVendaResponse } from '@/interface/interface-pages/VendaPage'
+import type {
+  IAdmVenda,
+  IManutVenda,
+  IRelatorioTempoResponse,
+  IRelatorioVendaResponse,
+} from '@/interface/interface-pages/VendaPage'
 
 export function getVendasPagina(page: number, limit: number, search: string) {
   return apiPage<IAdmVenda>('/faturamento/vendas', 'vendas', page, limit, search)

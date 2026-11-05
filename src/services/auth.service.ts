@@ -44,7 +44,6 @@ function normalizeError(error: unknown): string {
 }
 
 export async function login(value: IFormLogin): Promise<IMeUser> {
-
   const utilStore = useUtilStore()
 
   try {

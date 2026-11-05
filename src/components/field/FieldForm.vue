@@ -18,7 +18,7 @@ const invalid = computed(() => !!error.value)
     <label v-if="label">{{ label }}</label>
 
     <slot :invalid="invalid" :field="name" />
-    
+
     <div class="min-h-5">
       <Message v-if="error" severity="error" size="small" variant="simple">
         {{ error }}

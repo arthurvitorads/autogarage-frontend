@@ -96,7 +96,6 @@ async function handleSair() {
   flex: 1;
 }
 
-
 .page-title {
   margin: 0;
   font-size: clamp(1rem, 2vw, 1.25rem);

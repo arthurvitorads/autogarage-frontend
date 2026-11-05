@@ -68,7 +68,12 @@ export interface IRelatorioTempo {
 
 export interface IRelatorioTempoResponse {
   servicos: IRelatorioTempo[]
-  resumo: { qt_servicos: number; qt_media_segundos: number; qt_menor_segundos: number; qt_maior_segundos: number }
+  resumo: {
+    qt_servicos: number
+    qt_media_segundos: number
+    qt_menor_segundos: number
+    qt_maior_segundos: number
+  }
   pagination: IPagination
 }
 

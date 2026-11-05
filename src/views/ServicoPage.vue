@@ -14,21 +14,25 @@ import ManutServicoDialog from '@/components/dialogs/ManutServicoDialog.vue'
 
 import type { IAdmServico } from '@/interface/interface-pages/ServicoPage'
 
-
 import { useCatalogoStore } from '@/stores/catalogo.store'
-
-
 
 // paginação e filtros
 
 // form
-const { registros: servicos, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmServico>(getServicosPagina)
+const {
+  registros: servicos,
+  total,
+  primeiroRegistro,
+  limite,
+  filtro,
+  loadingGrid,
+  load,
+  search,
+  changePage,
+} = usePesquisa<IAdmServico>(getServicosPagina)
 
 const manutServicoVisible = ref(false)
 const selectServico = ref<IAdmServico | null>(null)
-
-
-
 
 function newServico() {
   selectServico.value = null
@@ -63,7 +67,12 @@ usePageLoad(async () => {
               class="flex-1 min-w-0"
               @keyup.enter="search"
             />
-            <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
+            <Button
+              icon="pi pi-search"
+              aria-label="Pesquisar"
+              :disabled="loadingGrid"
+              @click="search"
+            />
           </div>
           <Button label="Novo" icon="pi pi-plus" @click="newServico" />
         </div>
@@ -108,16 +117,25 @@ usePageLoad(async () => {
             <template #body="{ data }">{{ formatCurrency(data.vl_preco) }}</template>
           </Column>
           <Column header="Tempo estimado">
-            <template #body="{ data }">{{ data.nu_tempo_estimado ? data.nu_tempo_estimado + ' min' : '—' }}</template>
+            <template #body="{ data }">{{
+              data.nu_tempo_estimado ? data.nu_tempo_estimado + ' min' : '—'
+            }}</template>
           </Column>
           <Column header="Status">
             <template #body="{ data }">
-              <Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg ? 'success' : 'danger'" />
+              <Tag
+                :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+                :severity="data.bo_sts_reg ? 'success' : 'danger'"
+              />
             </template>
           </Column>
         </DataTable>
       </div>
     </div>
   </div>
-  <ManutServicoDialog v-model:visible="manutServicoVisible" :servico="selectServico" @saved="load" />
+  <ManutServicoDialog
+    v-model:visible="manutServicoVisible"
+    :servico="selectServico"
+    @saved="load"
+  />
 </template>

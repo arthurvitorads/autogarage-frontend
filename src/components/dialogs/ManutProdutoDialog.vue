@@ -15,8 +15,15 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
 
-import type { IAdmProduto, IFormProduto, IManutProduto } from '@/interface/interface-pages/ProdutoPage'
-import type { IAdmCadastroAuxiliar, TTipoCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
+import type {
+  IAdmProduto,
+  IFormProduto,
+  IManutProduto,
+} from '@/interface/interface-pages/ProdutoPage'
+import type {
+  IAdmCadastroAuxiliar,
+  TTipoCadastroAuxiliar,
+} from '@/interface/interface-pages/CadastroAuxiliar'
 import type { TGenericData } from '@/interface/util'
 
 import { isQuantidadeValida } from '@/services/estoque.service'
@@ -95,8 +102,7 @@ const formData = ref<IFormProduto>(formDataDefault())
 async function onSubmit(values: IFormProduto) {
   const errors: TGenericData = {}
 
-  if (!values.an_nome.trim())
-    errors.an_nome = 'Campo obrigatório.'
+  if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
 
   if (values.an_categoria && !categoriasProduto.value.includes(values.an_categoria))
     errors.an_categoria = 'Selecione uma categoria.'
@@ -104,14 +110,19 @@ async function onSubmit(values: IFormProduto) {
   if (values.an_marca && !marcasProduto.value.includes(values.an_marca))
     errors.an_marca = 'Selecione uma marca.'
 
-  if (!unidadesProduto.value.some(unidade => unidade.value === values.ca_unidade))
+  if (!unidadesProduto.value.some((unidade) => unidade.value === values.ca_unidade))
     errors.ca_unidade = 'Selecione uma unidade.'
 
   for (const campo of ['vl_custo', 'vl_venda'] as const) {
     const valor = values[campo]
 
-    if (valor === null || !Number.isFinite(valor) || valor < 0 || valor > 999_999_999.99 ||
-      Math.abs(valor * 100 - Math.round(valor * 100)) > 0.000001)
+    if (
+      valor === null ||
+      !Number.isFinite(valor) ||
+      valor < 0 ||
+      valor > 999_999_999.99 ||
+      Math.abs(valor * 100 - Math.round(valor * 100)) > 0.000001
+    )
       errors[campo] = 'Informe um valor válido, com até duas casas decimais.'
   }
 
@@ -121,17 +132,20 @@ async function onSubmit(values: IFormProduto) {
   if (!isQuantidadeValida(values.qt_estoque_min))
     errors.qt_estoque_min = 'Informe um estoque mínimo válido, com até três casas decimais.'
 
-  if (values.an_referencia.trim() && props.produtos.some(produto =>
-    produto.cn_produto !== props.produto?.cn_produto &&
-    normalizeString(produto.an_referencia) === normalizeString(values.an_referencia)
-  ))
+  if (
+    values.an_referencia.trim() &&
+    props.produtos.some(
+      (produto) =>
+        produto.cn_produto !== props.produto?.cn_produto &&
+        normalizeString(produto.an_referencia) === normalizeString(values.an_referencia),
+    )
+  )
     errors.an_referencia = 'Referência já cadastrada.'
 
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
 
-  if (!isValidated.value)
-    return
+  if (!isValidated.value) return
 
   setLoading(true)
 
@@ -162,29 +176,34 @@ async function onSubmit(values: IFormProduto) {
   }
 }
 
-watch([() => props.visible, () => props.produto], ([visible]) => {
-  if (!visible)
-    return
+watch(
+  [() => props.visible, () => props.produto],
+  ([visible]) => {
+    if (!visible) return
 
-  const produto = props.produto
+    const produto = props.produto
 
-  formData.value = produto ? {
-    an_nome: produto.an_nome,
-    an_referencia: produto.an_referencia,
-    an_categoria: produto.an_categoria,
-    an_marca: produto.an_marca,
-    ca_unidade: produto.ca_unidade,
-    vl_custo: produto.vl_custo,
-    vl_venda: produto.vl_venda,
-    qt_estoque: produto.qt_estoque,
-    qt_estoque_min: produto.qt_estoque_min,
-    an_obs: produto.an_obs,
-    bo_sts_reg: produto.bo_sts_reg,
-  } : formDataDefault()
-  formErrors.value = {}
-  isValidated.value = false
-  formKey.value++
-}, { immediate: true })
+    formData.value = produto
+      ? {
+          an_nome: produto.an_nome,
+          an_referencia: produto.an_referencia,
+          an_categoria: produto.an_categoria,
+          an_marca: produto.an_marca,
+          ca_unidade: produto.ca_unidade,
+          vl_custo: produto.vl_custo,
+          vl_venda: produto.vl_venda,
+          qt_estoque: produto.qt_estoque,
+          qt_estoque_min: produto.qt_estoque_min,
+          an_obs: produto.an_obs,
+          bo_sts_reg: produto.bo_sts_reg,
+        }
+      : formDataDefault()
+    formErrors.value = {}
+    isValidated.value = false
+    formKey.value++
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -208,8 +227,14 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome *" v-slot="{ invalid, field }">
-            <InputText maxlength="4000"
+          <FieldForm
+            class="col-span-12 sm:col-span-10"
+            name="an_nome"
+            label="Nome *"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              maxlength="4000"
               v-model="formData.an_nome"
               :name="field"
               :invalid="invalid"
@@ -217,13 +242,34 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               placeholder="Digite o nome do produto"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-2 flex items-start" name="bo_sts_reg" label="Status" v-slot="{ field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-2 flex items-start"
+            name="bo_sts_reg"
+            label="Status"
+            v-slot="{ field }"
+          >
             <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Produto ativo" />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="an_referencia" label="Referência / código interno" v-slot="{ invalid, field }">
-            <InputText maxlength="4000" v-model="formData.an_referencia" :name="field" :invalid="invalid" fluid />
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-3"
+            name="an_referencia"
+            label="Referência / código interno"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              maxlength="4000"
+              v-model="formData.an_referencia"
+              :name="field"
+              :invalid="invalid"
+              fluid
+            />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="an_categoria" label="Categoria" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-3"
+            name="an_categoria"
+            label="Categoria"
+            v-slot="{ invalid, field }"
+          >
             <div class="flex gap-2">
               <Select
                 v-model="formData.an_categoria"
@@ -243,7 +289,12 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               />
             </div>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="an_marca" label="Marca" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-3"
+            name="an_marca"
+            label="Marca"
+            v-slot="{ invalid, field }"
+          >
             <div class="flex gap-2">
               <Select
                 v-model="formData.an_marca"
@@ -263,7 +314,12 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               />
             </div>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="ca_unidade" label="Unidade *" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-3"
+            name="ca_unidade"
+            label="Unidade *"
+            v-slot="{ invalid, field }"
+          >
             <div class="flex gap-2">
               <Select
                 v-model="formData.ca_unidade"
@@ -284,7 +340,12 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               />
             </div>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="vl_custo" label="Preço de custo" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-3"
+            name="vl_custo"
+            label="Preço de custo"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.vl_custo"
               :name="field"
@@ -297,7 +358,12 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               :min="0"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6 lg:col-span-3" name="vl_venda" label="Preço de venda" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6 lg:col-span-3"
+            name="vl_venda"
+            label="Preço de venda"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.vl_venda"
               :name="field"
@@ -310,14 +376,24 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               :min="0"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 lg:col-span-6" name="an_obs" label="Observações" v-slot="{ field }">
+          <FieldForm
+            class="col-span-12 lg:col-span-6"
+            name="an_obs"
+            label="Observações"
+            v-slot="{ field }"
+          >
             <Textarea maxlength="4000" v-model="formData.an_obs" :name="field" rows="2" fluid />
           </FieldForm>
         </div>
       </Fieldset>
       <Fieldset legend="Dados do estoque">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="col-span-12 sm:col-span-6" name="qt_estoque" label="Quantidade em estoque" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6"
+            name="qt_estoque"
+            label="Quantidade em estoque"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.qt_estoque"
               :name="field"
@@ -329,7 +405,12 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
               :maxFractionDigits="3"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6" name="qt_estoque_min" label="Estoque mínimo" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6"
+            name="qt_estoque_min"
+            label="Estoque mínimo"
+            v-slot="{ invalid, field }"
+          >
             <InputNumber
               v-model="formData.qt_estoque_min"
               :name="field"
@@ -345,5 +426,9 @@ watch([() => props.visible, () => props.produto], ([visible]) => {
       </Fieldset>
     </FormPage>
   </CadastroDialog>
-  <CadastroAuxiliarDialog v-model:visible="cadastroAuxiliarVisible" :tipo="tipoCadastroAuxiliar" @saved="selectCadastroAuxiliar" />
+  <CadastroAuxiliarDialog
+    v-model:visible="cadastroAuxiliarVisible"
+    :tipo="tipoCadastroAuxiliar"
+    @saved="selectCadastroAuxiliar"
+  />
 </template>

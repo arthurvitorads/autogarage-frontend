@@ -9,8 +9,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function readPath(value: unknown, path: string): unknown {
-  return path.split('.').filter(Boolean).reduce<unknown>((current, key) =>
-    isRecord(current) ? current[key] : undefined, value)
+  return path
+    .split('.')
+    .filter(Boolean)
+    .reduce<unknown>((current, key) => (isRecord(current) ? current[key] : undefined), value)
 }
 
 export function extractDomainOptions(response: unknown, path: string): DomainOption[] {
@@ -18,20 +20,19 @@ export function extractDomainOptions(response: unknown, path: string): DomainOpt
 
   if (isRecord(data)) {
     const lists = Object.values(data).filter(Array.isArray)
-    if (lists.length === 1)
-      data = lists[0]
+    if (lists.length === 1) data = lists[0]
   }
   if (!Array.isArray(data)) {
     throw new Error('A consulta retornou uma lista de opções inválida.')
   }
 
   return data.filter((option): option is DomainOption => {
-    if (!isRecord(option))
-      return false
+    if (!isRecord(option)) return false
 
-    const validId = typeof option.id === 'string'
-      ? option.id.trim() !== ''
-      : typeof option.id === 'number' && Number.isFinite(option.id)
+    const validId =
+      typeof option.id === 'string'
+        ? option.id.trim() !== ''
+        : typeof option.id === 'number' && Number.isFinite(option.id)
 
     return validId && typeof option.an_descr === 'string' && option.an_descr.trim() !== ''
   })
@@ -43,8 +44,7 @@ export async function getDomainOptions(
   params: Record<string, string | number | boolean> = {},
   signal?: AbortSignal,
 ): Promise<DomainOption[]> {
-  if (!endpoint.trim())
-    return []
+  if (!endpoint.trim()) return []
 
   const base = new URL(`${String(API_URL).replace(/\/$/, '')}/`, window.location.origin)
   const url = new URL(endpoint.replace(/^\//, ''), base)
@@ -58,13 +58,11 @@ export async function getDomainOptions(
 
   const user = auth.currentUser
 
-  if (!user)
-    throw new Error('Usuário não autenticado.')
+  if (!user) throw new Error('Usuário não autenticado.')
 
   const token = await user.getIdToken()
 
-  for (const [key, value] of Object.entries(params))
-    url.searchParams.set(key, String(value))
+  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, String(value))
 
   signal?.throwIfAborted()
 
@@ -78,9 +76,12 @@ export async function getDomainOptions(
   if (!response.ok || (isRecord(body) && body.sucesso === false)) {
     const message = isRecord(body) && typeof body.erro === 'string' ? body.erro : undefined
 
-    throw new Error(message || (response.status === 429
-      ? 'Muitas consultas. Aguarde alguns instantes e tente novamente.'
-      : 'Não foi possível carregar as opções.'))
+    throw new Error(
+      message ||
+        (response.status === 429
+          ? 'Muitas consultas. Aguarde alguns instantes e tente novamente.'
+          : 'Não foi possível carregar as opções.'),
+    )
   }
 
   return extractDomainOptions(body, optionsPath)

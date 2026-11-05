@@ -74,16 +74,17 @@ interface IManutItemOrdemBase {
   vl_unitario: number
 }
 
-export type TManutItemOrdemServico = IManutItemOrdemBase & (
-  {
-    ca_tipo: 'PRODUTO';
-    cn_produto: TCodigoOrdemServico
-  } |
-  {
-    ca_tipo: 'SERVICO';
-    cn_servico: TCodigoOrdemServico
-  }
-)
+export type TManutItemOrdemServico = IManutItemOrdemBase &
+  (
+    | {
+        ca_tipo: 'PRODUTO'
+        cn_produto: TCodigoOrdemServico
+      }
+    | {
+        ca_tipo: 'SERVICO'
+        cn_servico: TCodigoOrdemServico
+      }
+  )
 
 export type TItemOrdemServico = TManutItemOrdemServico & {
   ca_status_servico: 'PENDENTE' | 'EM_ANDAMENTO' | 'PAUSADO' | 'FINALIZADO' | 'CANCELADO'

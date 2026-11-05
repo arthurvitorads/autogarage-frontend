@@ -110,7 +110,6 @@ export function fileToBase64(file: File): Promise<string> {
 
 /* Pega o tipo do arquivo pelo nome */
 
-
 /* Validar CPF */
 export function validateCPF(value: string) {
   value = value.replace(/[^\d]+/g, '') // Remove mask characters
@@ -213,9 +212,7 @@ export function onlyNumbers(valor: string): string {
 
 export function maskTelefone(value: string) {
   const telefone = value.replace(/\D/g, '')
-  if (telefone.length === 11)
-    return telefone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
-  if (telefone.length === 10)
-    return telefone.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3')
+  if (telefone.length === 11) return telefone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')
+  if (telefone.length === 10) return telefone.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3')
   return value
 }

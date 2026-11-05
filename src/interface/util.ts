@@ -37,7 +37,7 @@ export interface IDomainFieldProps {
   showClear?: boolean
   hideWhenEmpty?: boolean
 }
-  export interface ICnpjBrasilApiResponse {
+export interface ICnpjBrasilApiResponse {
   cnpj: string
   razao_social: string
   nome_fantasia?: string | null

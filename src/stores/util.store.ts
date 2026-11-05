@@ -27,7 +27,6 @@ export const useUtilStore = defineStore('util', () => {
   }
 
   async function fetchCep(cep: string): Promise<IEnderecoViaCep> {
-
     const cleanCep = cep.replace(/\D/g, '')
 
     if (cleanCep.length !== 8) {
@@ -37,9 +36,7 @@ export const useUtilStore = defineStore('util', () => {
     const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`)
 
     if (!response.ok) {
-      throw new Error(
-        'Não foi possível consultar o CEP.',
-      )
+      throw new Error('Não foi possível consultar o CEP.')
     }
 
     const data = (await response.json()) as IViaCepResponse
@@ -54,8 +51,7 @@ export const useUtilStore = defineStore('util', () => {
   async function fetchCnpj(cnpj: string): Promise<ICnpjBrasilApiResponse | null> {
     const cleanCnpj = unMaskDocument(cnpj).toUpperCase()
 
-    if (!validateCNPJ(cleanCnpj))
-      throw new Error('Informe um CNPJ válido.')
+    if (!validateCNPJ(cleanCnpj)) throw new Error('Informe um CNPJ válido.')
 
     let response: Response
 
@@ -72,14 +68,17 @@ export const useUtilStore = defineStore('util', () => {
 
     if (response.status === 404) return null
 
-    if (response.status === 400)
-      throw new Error('O serviço de consulta não aceitou este CNPJ.')
+    if (response.status === 400) throw new Error('O serviço de consulta não aceitou este CNPJ.')
 
     if (response.status === 429)
-      throw new Error('Limite de consultas de CNPJ excedido. Aguarde alguns instantes e tente novamente.')
+      throw new Error(
+        'Limite de consultas de CNPJ excedido. Aguarde alguns instantes e tente novamente.',
+      )
 
     if (!response.ok)
-      throw new Error('O serviço de consulta de CNPJ está indisponível. Tente novamente mais tarde.')
+      throw new Error(
+        'O serviço de consulta de CNPJ está indisponível. Tente novamente mais tarde.',
+      )
 
     let data: ICnpjBrasilApiResponse
 
@@ -89,8 +88,13 @@ export const useUtilStore = defineStore('util', () => {
       throw new Error('O serviço retornou uma resposta inválida para este CNPJ. Tente novamente.')
     }
 
-    if (!data || typeof data.cnpj !== 'string' || unMaskDocument(data.cnpj).toUpperCase() !== cleanCnpj ||
-      typeof data.razao_social !== 'string' || !data.razao_social.trim())
+    if (
+      !data ||
+      typeof data.cnpj !== 'string' ||
+      unMaskDocument(data.cnpj).toUpperCase() !== cleanCnpj ||
+      typeof data.razao_social !== 'string' ||
+      !data.razao_social.trim()
+    )
       throw new Error('O serviço retornou dados inválidos para este CNPJ. Tente novamente.')
 
     return data
@@ -116,6 +120,6 @@ export const useUtilStore = defineStore('util', () => {
     fetchCnpj,
     setUser,
     cleanUser,
-    normalizeError
+    normalizeError,
   }
 })

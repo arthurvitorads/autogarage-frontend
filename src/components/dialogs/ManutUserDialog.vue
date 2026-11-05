@@ -48,7 +48,7 @@ function formDataDefault(): IFormUsuario {
     an_email: '',
     ca_senha: '',
     cn_perfil: null,
-    bo_sts_reg: true
+    bo_sts_reg: true,
   }
 }
 
@@ -59,37 +59,31 @@ async function onSubmit(values: IFormUsuario) {
 
   const errors: TGenericData = {}
 
-  if (!values.an_nome?.trim())
-    errors.an_nome = 'Campo obrigatório.'
+  if (!values.an_nome?.trim()) errors.an_nome = 'Campo obrigatório.'
 
-  if (!isEditing.value && !values.an_email?.trim())
-    errors.an_email = 'Campo obrigatório.'
-
+  if (!isEditing.value && !values.an_email?.trim()) errors.an_email = 'Campo obrigatório.'
   else if (!isEditing.value && !validateEmail(values.an_email.trim()))
     errors.an_email = 'Informe um e-mail válido.'
 
-  if (!isEditing.value && !values.ca_senha)
-    errors.ca_senha = 'Campo obrigatório.'
+  if (!isEditing.value && !values.ca_senha) errors.ca_senha = 'Campo obrigatório.'
   else if (!isEditing.value && (values.ca_senha.length < 6 || values.ca_senha.length > 128))
     errors.ca_senha = 'A senha deve conter entre 6 e 128 caracteres.'
 
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
 
-  if (!isValidated.value)
-    return setLoading(false)
+  if (!isValidated.value) return setLoading(false)
 
   try {
     if (isEditing.value) {
       const id = props.user?.cn_usuario
 
-      if (id === undefined)
-        throw new Error('Identificador do usuário inválido.')
+      if (id === undefined) throw new Error('Identificador do usuário inválido.')
 
       await updateUser(id, {
         an_nome: values.an_nome,
         bo_sts_reg: values.bo_sts_reg,
-        cn_perfil: formData.value.cn_perfil
+        cn_perfil: formData.value.cn_perfil,
       })
     } else {
       await createUser({ ...values, cn_perfil: formData.value.cn_perfil })
@@ -104,23 +98,28 @@ async function onSubmit(values: IFormUsuario) {
   }
 }
 
-watch([() => props.visible, () => props.user], ([visible]) => {
-  if (!visible)
-    return
+watch(
+  [() => props.visible, () => props.user],
+  ([visible]) => {
+    if (!visible) return
 
-  const user = props.user
+    const user = props.user
 
-  formData.value = user ? {
-    an_nome: user.an_nome ?? '',
-    an_email: user.an_email ?? '',
-    ca_senha: '',
-    cn_perfil: user.cn_perfil ?? null,
-    bo_sts_reg: user.bo_sts_reg ?? true,
-  } : formDataDefault()
-  formErrors.value = {}
-  isValidated.value = false
-  formKey.value++
-}, { immediate: true })
+    formData.value = user
+      ? {
+          an_nome: user.an_nome ?? '',
+          an_email: user.an_email ?? '',
+          ca_senha: '',
+          cn_perfil: user.cn_perfil ?? null,
+          bo_sts_reg: user.bo_sts_reg ?? true,
+        }
+      : formDataDefault()
+    formErrors.value = {}
+    isValidated.value = false
+    formKey.value++
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -144,14 +143,36 @@ watch([() => props.visible, () => props.user], ([visible]) => {
     >
       <Fieldset legend="Usuário">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="col-span-12 sm:col-span-10" name="an_nome" label="Nome" v-slot="{ invalid, field }">
-            <InputText maxlength="4000" :name="field" placeholder="Digite o nome" :invalid="invalid" fluid />
+          <FieldForm
+            class="col-span-12 sm:col-span-10"
+            name="an_nome"
+            label="Nome"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              maxlength="4000"
+              :name="field"
+              placeholder="Digite o nome"
+              :invalid="invalid"
+              fluid
+            />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status" v-slot="{ field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-2"
+            name="bo_sts_reg"
+            label="Status"
+            v-slot="{ field }"
+          >
             <ToggleSwitch :name="field" />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6" name="an_email" label="E-mail" v-slot="{ invalid, field }">
-            <InputText maxlength="4000"
+          <FieldForm
+            class="col-span-12 sm:col-span-6"
+            name="an_email"
+            label="E-mail"
+            v-slot="{ invalid, field }"
+          >
+            <InputText
+              maxlength="4000"
               :name="field"
               type="email"
               placeholder="Digite o e-mail"
@@ -160,7 +181,12 @@ watch([() => props.visible, () => props.user], ([visible]) => {
               :readonly="isEditing"
             />
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-6" name="cn_perfil" label="Perfil" v-slot="{ invalid, field }">
+          <FieldForm
+            class="col-span-12 sm:col-span-6"
+            name="cn_perfil"
+            label="Perfil"
+            v-slot="{ invalid, field }"
+          >
             <DomainField
               v-model="formData.cn_perfil"
               :name="field"
@@ -176,7 +202,8 @@ watch([() => props.visible, () => props.user], ([visible]) => {
             :label="isEditing ? 'Nova senha (opcional)' : 'Senha'"
             v-slot="{ invalid, field }"
           >
-            <Password :inputProps="{ maxlength: 128 }"
+            <Password
+              :inputProps="{ maxlength: 128 }"
               :name="field"
               placeholder="Digite a senha"
               :feedback="false"

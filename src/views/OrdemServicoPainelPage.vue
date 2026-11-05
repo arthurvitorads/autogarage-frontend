@@ -18,9 +18,19 @@ import Paginator from 'primevue/paginator'
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
-import type { IAdmOrdemServico, TCodigoOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type {
+  IAdmOrdemServico,
+  TCodigoOrdemServico,
+} from '@/interface/interface-pages/OrdemServicoPage'
 
-import { calcularTotalOrdem, corTextoStatus, formatCurrencyOrdem, statusOrdens, getStatusOrdem, ordemEncerrada } from '@/services/ordem-servico.service'
+import {
+  calcularTotalOrdem,
+  corTextoStatus,
+  formatCurrencyOrdem,
+  statusOrdens,
+  getStatusOrdem,
+  ordemEncerrada,
+} from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
 
@@ -42,12 +52,27 @@ function filtrosOrdem() {
     ...(filtroClassificacao.value ? { classificacao: String(filtroClassificacao.value) } : {}),
   }
 }
-watch([datas, filtroStatus, filtroClassificacao], () => {
-  if (intervaloDatas(datas.value))
-    search()
-}, { deep: true })
+watch(
+  [datas, filtroStatus, filtroClassificacao],
+  () => {
+    if (intervaloDatas(datas.value)) search()
+  },
+  { deep: true },
+)
 const { classificacoes } = storeToRefs(useOrdemServicoStore())
-const { registros: ordens, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmOrdemServico>((page, limit, search) => getOrdensPagina(page, limit, search, filtrosOrdem()))
+const {
+  registros: ordens,
+  total,
+  primeiroRegistro,
+  limite,
+  filtro,
+  loadingGrid,
+  load,
+  search,
+  changePage,
+} = usePesquisa<IAdmOrdemServico>((page, limit, search) =>
+  getOrdensPagina(page, limit, search, filtrosOrdem()),
+)
 
 const manutOrdemVisible = ref(false)
 const statusVisible = ref(false)
@@ -72,8 +97,6 @@ function iniciar(ordem: IAdmOrdemServico) {
   movimentoVisible.value = true
 }
 
-
-
 function abrirOrdem(ordem: IAdmOrdemServico) {
   if (ordemEncerrada(ordem)) {
     detalheOrdem.value = ordem
@@ -84,7 +107,7 @@ function abrirOrdem(ordem: IAdmOrdemServico) {
 }
 
 function getClassificacao(codigo: TCodigoOrdemServico) {
-  return classificacoes.value.find(item => String(item.cn_classificacao) === String(codigo))
+  return classificacoes.value.find((item) => String(item.cn_classificacao) === String(codigo))
 }
 
 usePageLoad(async () => {
@@ -104,14 +127,37 @@ function atualizarVenda(venda: { cn_venda: string }) {
         <p class="text-surface-500 mt-1">{{ total }} ordem(ns)</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <Button label="Classificações" icon="pi pi-cog" severity="secondary" @click="statusVisible = true" />
+        <Button
+          label="Classificações"
+          icon="pi pi-cog"
+          severity="secondary"
+          @click="statusVisible = true"
+        />
         <Button label="Nova O.S." icon="pi pi-plus" @click="newOrdem" />
       </div>
     </div>
     <div class="flex flex-wrap items-end gap-3">
       <FiltroData v-model="datas" :disabled="loadingGrid" />
-      <Select v-model="filtroStatus" :options="statusOrdens" optionLabel="label" optionValue="value" placeholder="Todos os status" showClear :disabled="loadingGrid" aria-label="Filtrar status" />
-      <Select v-model="filtroClassificacao" :options="classificacoes" optionLabel="an_descr" optionValue="cn_classificacao" placeholder="Todas as classificações" showClear :disabled="loadingGrid" aria-label="Filtrar classificação" />
+      <Select
+        v-model="filtroStatus"
+        :options="statusOrdens"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Todos os status"
+        showClear
+        :disabled="loadingGrid"
+        aria-label="Filtrar status"
+      />
+      <Select
+        v-model="filtroClassificacao"
+        :options="classificacoes"
+        optionLabel="an_descr"
+        optionValue="cn_classificacao"
+        placeholder="Todas as classificações"
+        showClear
+        :disabled="loadingGrid"
+        aria-label="Filtrar classificação"
+      />
       <div class="flex gap-2 flex-1 min-w-64">
         <InputText
           v-model="filtro"
@@ -120,7 +166,12 @@ function atualizarVenda(venda: { cn_venda: string }) {
           class="flex-1 min-w-0"
           @keyup.enter="search"
         />
-        <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
+        <Button
+          icon="pi pi-search"
+          aria-label="Pesquisar"
+          :disabled="loadingGrid"
+          @click="search"
+        />
       </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
@@ -131,13 +182,29 @@ function atualizarVenda(venda: { cn_venda: string }) {
         :style="{ borderLeftColor: getStatusOrdem(ordem.ca_status).cor ?? '#64748b' }"
       >
         <div class="flex flex-wrap items-start justify-between gap-2">
-          <span class="font-semibold text-surface-500">O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }}</span>
-          <span class="max-w-full rounded-full px-3 py-1 text-xs font-semibold break-words" :style="{ backgroundColor: getStatusOrdem(ordem.ca_status).cor ?? '#64748b', color: corTextoStatus(getStatusOrdem(ordem.ca_status).cor ?? '#64748b') }">{{ getStatusOrdem(ordem.ca_status).label }}</span>
+          <span class="font-semibold text-surface-500"
+            >O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }}</span
+          >
+          <span
+            class="max-w-full rounded-full px-3 py-1 text-xs font-semibold break-words"
+            :style="{
+              backgroundColor: getStatusOrdem(ordem.ca_status).cor ?? '#64748b',
+              color: corTextoStatus(getStatusOrdem(ordem.ca_status).cor ?? '#64748b'),
+            }"
+            >{{ getStatusOrdem(ordem.ca_status).label }}</span
+          >
         </div>
-        <p class="text-sm text-surface-500">{{ getClassificacao(ordem.cn_classificacao)?.an_descr || 'Sem classificação' }}</p>
+        <p class="text-sm text-surface-500">
+          {{ getClassificacao(ordem.cn_classificacao)?.an_descr || 'Sem classificação' }}
+        </p>
         <div class="min-w-0">
           <p class="text-2xl font-bold tracking-wide">{{ ordem.veiculo.an_placa }}</p>
-          <p class="text-surface-600 mt-1 truncate" :title="ordem.veiculo.an_marca + ' ' + ordem.veiculo.an_modelo">{{ ordem.veiculo.an_marca }} {{ ordem.veiculo.an_modelo }}</p>
+          <p
+            class="text-surface-600 mt-1 truncate"
+            :title="ordem.veiculo.an_marca + ' ' + ordem.veiculo.an_modelo"
+          >
+            {{ ordem.veiculo.an_marca }} {{ ordem.veiculo.an_modelo }}
+          </p>
         </div>
         <p class="font-semibold truncate" :title="ordem.an_cliente">
           <i class="pi pi-user mr-2 text-surface-400" aria-hidden="true"></i>
@@ -153,14 +220,34 @@ function atualizarVenda(venda: { cn_venda: string }) {
             <p>{{ formatDateTime(ordem.dt_previsao) }}</p>
           </div>
         </div>
-        <div class="flex justify-between items-center gap-2 mt-auto border-t border-surface-100 pt-3">
+        <div
+          class="flex justify-between items-center gap-2 mt-auto border-t border-surface-100 pt-3"
+        >
           <span class="text-surface-500 text-sm">{{ ordem.itens.length }} item(ns)</span>
-          <span class="font-bold text-lg">{{ formatCurrencyOrdem(calcularTotalOrdem(ordem.itens)) }}</span>
+          <span class="font-bold text-lg">{{
+            formatCurrencyOrdem(calcularTotalOrdem(ordem.itens))
+          }}</span>
         </div>
         <div class="flex flex-wrap gap-2">
-          <Button label="Detalhes" icon="pi pi-eye" severity="secondary" @click="abrirOrdem(ordem)" />
-          <Button v-if="!ordemEncerrada(ordem)" icon="pi pi-pencil" severity="secondary" aria-label="Editar O.S." @click="editOrdem(ordem)" />
-          <Button v-if="ordem.ca_status === 'ABERTO'" label="Iniciar serviço" icon="pi pi-play" @click="iniciar(ordem)" />
+          <Button
+            label="Detalhes"
+            icon="pi pi-eye"
+            severity="secondary"
+            @click="abrirOrdem(ordem)"
+          />
+          <Button
+            v-if="!ordemEncerrada(ordem)"
+            icon="pi pi-pencil"
+            severity="secondary"
+            aria-label="Editar O.S."
+            @click="editOrdem(ordem)"
+          />
+          <Button
+            v-if="ordem.ca_status === 'ABERTO'"
+            label="Iniciar serviço"
+            icon="pi pi-play"
+            @click="iniciar(ordem)"
+          />
         </div>
       </article>
     </div>
@@ -176,6 +263,15 @@ function atualizarVenda(venda: { cn_venda: string }) {
   </div>
   <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="selectOrdem" @saved="load" />
   <ClassificacaoOrdemServicoDialog v-model:visible="statusVisible" />
-  <MovimentarOrdemServicoDialog v-model:visible="movimentoVisible" :ordem="movimentoOrdem" acao="INICIAR" @saved="load" />
-  <DetalhesOrdemServicoDialog v-model:visible="detalheVisible" :ordem="detalheOrdem" @faturada="atualizarVenda" />
+  <MovimentarOrdemServicoDialog
+    v-model:visible="movimentoVisible"
+    :ordem="movimentoOrdem"
+    acao="INICIAR"
+    @saved="load"
+  />
+  <DetalhesOrdemServicoDialog
+    v-model:visible="detalheVisible"
+    :ordem="detalheOrdem"
+    @faturada="atualizarVenda"
+  />
 </template>

@@ -12,8 +12,10 @@ export interface IFormProduto {
   bo_sts_reg: boolean
 }
 
-export interface IManutProduto extends Omit<IFormProduto,
-  'vl_custo' | 'vl_venda' | 'qt_estoque' | 'qt_estoque_min' | 'an_categoria' | 'an_marca'> {
+export interface IManutProduto extends Omit<
+  IFormProduto,
+  'vl_custo' | 'vl_venda' | 'qt_estoque' | 'qt_estoque_min' | 'an_categoria' | 'an_marca'
+> {
   cn_produto?: number
   an_categoria: string
   an_marca: string
@@ -26,4 +28,3 @@ export interface IManutProduto extends Omit<IFormProduto,
 export interface IAdmProduto extends IManutProduto {
   cn_produto: number
 }
-

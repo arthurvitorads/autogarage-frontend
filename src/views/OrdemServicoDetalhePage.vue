@@ -17,9 +17,18 @@ import Tag from 'primevue/tag'
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 import ItemOrdemServicoDialog from '@/components/dialogs/ItemOrdemServicoDialog.vue'
 
-import type { TItemOrdemServico, TAcaoOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type {
+  TItemOrdemServico,
+  TAcaoOrdemServico,
+} from '@/interface/interface-pages/OrdemServicoPage'
 
-import { calcularTotalOrdem, corTextoStatus, formatCurrencyOrdem, getStatusOrdem, ordemEncerrada } from '@/services/ordem-servico.service'
+import {
+  calcularTotalOrdem,
+  corTextoStatus,
+  formatCurrencyOrdem,
+  getStatusOrdem,
+  ordemEncerrada,
+} from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
@@ -33,9 +42,15 @@ const { removeItem } = ordemStore
 const { normalizeError } = useUtilStore()
 const toast = useAppToast()
 const codigo = computed(() => String(route.params.id))
-const ordem = computed(() => ordens.value.find(item => String(item.cn_ordem_servico) === codigo.value))
-const statusOrdem = computed(() => ordem.value ? getStatusOrdem(ordem.value.ca_status) : null)
-const classificacao = computed(() => classificacoes.value.find(item => String(item.cn_classificacao) === String(ordem.value?.cn_classificacao)))
+const ordem = computed(() =>
+  ordens.value.find((item) => String(item.cn_ordem_servico) === codigo.value),
+)
+const statusOrdem = computed(() => (ordem.value ? getStatusOrdem(ordem.value.ca_status) : null))
+const classificacao = computed(() =>
+  classificacoes.value.find(
+    (item) => String(item.cn_classificacao) === String(ordem.value?.cn_classificacao),
+  ),
+)
 const movimentoVisible = ref(false)
 const acao = ref<TAcaoOrdemServico>('FINALIZAR')
 const confirmar = useConfirmacao()
@@ -43,8 +58,12 @@ function movimentar(value: TAcaoOrdemServico) {
   acao.value = value
   movimentoVisible.value = true
 }
-const totalProdutos = computed(() => calcularTotalOrdem(ordem.value?.itens.filter(item => item.ca_tipo === 'PRODUTO') ?? []))
-const totalServicos = computed(() => calcularTotalOrdem(ordem.value?.itens.filter(item => item.ca_tipo === 'SERVICO') ?? []))
+const totalProdutos = computed(() =>
+  calcularTotalOrdem(ordem.value?.itens.filter((item) => item.ca_tipo === 'PRODUTO') ?? []),
+)
+const totalServicos = computed(() =>
+  calcularTotalOrdem(ordem.value?.itens.filter((item) => item.ca_tipo === 'SERVICO') ?? []),
+)
 const totalOrdem = computed(() => calcularTotalOrdem(ordem.value?.itens ?? []))
 const manutOrdemVisible = ref(false)
 const itemVisible = ref(false)
@@ -65,8 +84,7 @@ function editItem(item: TItemOrdemServico) {
 }
 
 async function excluirItem(item: TItemOrdemServico) {
-  if (!ordem.value || !await confirmar())
-    return
+  if (!ordem.value || !(await confirmar())) return
 
   try {
     const dados = {
@@ -83,7 +101,8 @@ async function excluirItem(item: TItemOrdemServico) {
 }
 
 function atualizarTempo(item: TItemOrdemServico) {
-  const index = ordem.value?.itens.findIndex(atual => String(atual.cn_item) === String(item.cn_item)) ?? -1
+  const index =
+    ordem.value?.itens.findIndex((atual) => String(atual.cn_item) === String(item.cn_item)) ?? -1
   if (ordem.value && index >= 0) ordem.value.itens[index] = item
 }
 
@@ -109,14 +128,33 @@ function atualizarVenda(venda: { cn_venda: string }) {
           @click="voltarPainel"
         />
         <div>
-          <h1 class="text-xl font-semibold">O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }}</h1>
+          <h1 class="text-xl font-semibold">
+            O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }}
+          </h1>
           <p class="text-surface-500 mt-1">{{ ordem.an_cliente }}</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <span class="rounded-full px-3 py-1 font-semibold" :style="{ backgroundColor: statusOrdem?.cor ?? '#64748b', color: corTextoStatus(statusOrdem?.cor ?? '#64748b') }">{{ statusOrdem?.label ?? 'Status indisponível' }}</span>
-        <Button v-if="ordem.ca_status === 'ABERTO'" label="Iniciar serviço" icon="pi pi-play" @click="movimentar('INICIAR')" />
-        <Button v-if="ordem.ca_status === 'EM_ANDAMENTO'" label="Finalizar" icon="pi pi-check" @click="movimentar('FINALIZAR')" />
+        <span
+          class="rounded-full px-3 py-1 font-semibold"
+          :style="{
+            backgroundColor: statusOrdem?.cor ?? '#64748b',
+            color: corTextoStatus(statusOrdem?.cor ?? '#64748b'),
+          }"
+          >{{ statusOrdem?.label ?? 'Status indisponível' }}</span
+        >
+        <Button
+          v-if="ordem.ca_status === 'ABERTO'"
+          label="Iniciar serviço"
+          icon="pi pi-play"
+          @click="movimentar('INICIAR')"
+        />
+        <Button
+          v-if="ordem.ca_status === 'EM_ANDAMENTO'"
+          label="Finalizar"
+          icon="pi pi-check"
+          @click="movimentar('FINALIZAR')"
+        />
         <Button label="Cancelar O.S." severity="secondary" @click="movimentar('CANCELAR')" />
       </div>
     </div>
@@ -165,7 +203,13 @@ function atualizarVenda(venda: { cn_venda: string }) {
         </div>
         <div>
           <dt class="text-surface-500">Quilometragem</dt>
-          <dd class="mt-1">{{ ordem.veiculo.qt_quilometragem === null ? '—' : formatQuantidade(ordem.veiculo.qt_quilometragem) + ' km' }}</dd>
+          <dd class="mt-1">
+            {{
+              ordem.veiculo.qt_quilometragem === null
+                ? '—'
+                : formatQuantidade(ordem.veiculo.qt_quilometragem) + ' km'
+            }}
+          </dd>
         </div>
       </dl>
     </Fieldset>
@@ -187,7 +231,9 @@ function atualizarVenda(venda: { cn_venda: string }) {
         tableStyle="min-width: 55rem"
       >
         <template #groupheader="{ data }">
-          <span class="font-semibold text-primary-600">{{ data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços' }}</span>
+          <span class="font-semibold text-primary-600">{{
+            data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços'
+          }}</span>
         </template>
         <Column header="Ações" class="min-w-24">
           <template #body="{ data }">
@@ -219,7 +265,12 @@ function atualizarVenda(venda: { cn_venda: string }) {
         </Column>
         <Column field="an_descr" header="Descrição" />
         <Column header="Tempo de serviço">
-          <template #body="{ data }"><TempoServicoItem :item="data" :editable="ordem.ca_status === 'EM_ANDAMENTO'" @saved="atualizarTempo" /></template>
+          <template #body="{ data }"
+            ><TempoServicoItem
+              :item="data"
+              :editable="ordem.ca_status === 'EM_ANDAMENTO'"
+              @saved="atualizarTempo"
+          /></template>
         </Column>
         <Column field="ca_unidade" header="Unidade" />
         <Column header="Quantidade">
@@ -262,12 +313,30 @@ function atualizarVenda(venda: { cn_venda: string }) {
       </div>
     </Fieldset>
     <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="ordem" />
-    <ItemOrdemServicoDialog v-model:visible="itemVisible" :codigoOrdem="ordem.cn_ordem_servico" :item="selectItem" />
+    <ItemOrdemServicoDialog
+      v-model:visible="itemVisible"
+      :codigoOrdem="ordem.cn_ordem_servico"
+      :item="selectItem"
+    />
   </div>
   <div v-else-if="!ordem" class="flex flex-col items-start gap-4">
     <p>Esta ordem de serviço não está disponível.</p>
-    <Button label="Voltar ao painel" icon="pi pi-arrow-left" severity="secondary" @click="voltarPainel" />
+    <Button
+      label="Voltar ao painel"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      @click="voltarPainel"
+    />
   </div>
-  <MovimentarOrdemServicoDialog v-model:visible="movimentoVisible" :ordem="ordem ?? null" :acao="acao" />
-  <DetalhesOrdemServicoDialog :visible="!!ordem && ordemEncerrada(ordem)" :ordem="ordem ?? null" @faturada="atualizarVenda" @update:visible="voltarPainel" />
+  <MovimentarOrdemServicoDialog
+    v-model:visible="movimentoVisible"
+    :ordem="ordem ?? null"
+    :acao="acao"
+  />
+  <DetalhesOrdemServicoDialog
+    :visible="!!ordem && ordemEncerrada(ordem)"
+    :ordem="ordem ?? null"
+    @faturada="atualizarVenda"
+    @update:visible="voltarPainel"
+  />
 </template>

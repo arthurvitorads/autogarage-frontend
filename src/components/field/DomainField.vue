@@ -36,13 +36,13 @@ const generatedId = useId()
 
 const fieldId = computed(() => props.inputId ?? generatedId)
 const statusId = computed(() => `${fieldId.value}-status`)
-const isEmpty = computed(() => !isLoading.value && !errorMessage.value && options.value.length === 0)
+const isEmpty = computed(
+  () => !isLoading.value && !errorMessage.value && options.value.length === 0,
+)
 const fieldPlaceholder = computed(() => {
-  if (isLoading.value)
-    return 'Carregando opções...'
+  if (isLoading.value) return 'Carregando opções...'
 
-  if (errorMessage.value)
-    return 'Opções indisponíveis'
+  if (errorMessage.value) return 'Opções indisponíveis'
 
   return isEmpty.value ? props.emptyMessage : props.placeholder
 })
@@ -59,28 +59,35 @@ async function reload() {
   isLoading.value = true
 
   try {
-    const result = await getDomainOptions(props.endpoint, props.optionsPath, props.params, current.signal)
-    if (current.signal.aborted)
-      return
+    const result = await getDomainOptions(
+      props.endpoint,
+      props.optionsPath,
+      props.params,
+      current.signal,
+    )
+    if (current.signal.aborted) return
 
     options.value = result
     emit('loaded', options.value)
   } catch (error) {
-    if (current.signal.aborted)
-      return
+    if (current.signal.aborted) return
 
-    const failure = error instanceof Error ? error : new Error('Não foi possível carregar as opções.')
+    const failure =
+      error instanceof Error ? error : new Error('Não foi possível carregar as opções.')
     errorMessage.value = failure.message
     emit('error', failure)
   } finally {
-    if (controller === current)
-      isLoading.value = false
+    if (controller === current) isLoading.value = false
   }
 }
 
-watch(() => [props.endpoint, props.optionsPath, props.params], () => {
-  void reload()
-}, { immediate: true, deep: true })
+watch(
+  () => [props.endpoint, props.optionsPath, props.params],
+  () => {
+    void reload()
+  },
+  { immediate: true, deep: true },
+)
 
 onBeforeUnmount(() => controller?.abort())
 defineExpose({ reload })

@@ -14,21 +14,38 @@ import Column from 'primevue/column'
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
-import type { IAdmOrdemServico, TCodigoOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type {
+  IAdmOrdemServico,
+  TCodigoOrdemServico,
+} from '@/interface/interface-pages/OrdemServicoPage'
 
-import { calcularTotalOrdem, corTextoStatus, formatCurrencyOrdem, getStatusOrdem, ordemEncerrada } from '@/services/ordem-servico.service'
+import {
+  calcularTotalOrdem,
+  corTextoStatus,
+  formatCurrencyOrdem,
+  getStatusOrdem,
+  ordemEncerrada,
+} from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
 
 const router = useRouter()
 const { classificacoes } = storeToRefs(useOrdemServicoStore())
-const { registros: ordens, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmOrdemServico>(getOrdensPagina)
+const {
+  registros: ordens,
+  total,
+  primeiroRegistro,
+  limite,
+  filtro,
+  loadingGrid,
+  load,
+  search,
+  changePage,
+} = usePesquisa<IAdmOrdemServico>(getOrdensPagina)
 
 const manutOrdemVisible = ref(false)
 const statusVisible = ref(false)
 const selectOrdem = ref<IAdmOrdemServico | null>(null)
-
-
 
 function newOrdem() {
   selectOrdem.value = null
@@ -45,7 +62,7 @@ function abrirOrdem(ordem: IAdmOrdemServico) {
 }
 
 function getStatus(codigo: TCodigoOrdemServico) {
-  return classificacoes.value.find(item => item.cn_classificacao === codigo)
+  return classificacoes.value.find((item) => item.cn_classificacao === codigo)
 }
 
 usePageLoad(async () => {
@@ -66,10 +83,20 @@ usePageLoad(async () => {
             class="flex-1 min-w-0"
             @keyup.enter="search"
           />
-          <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
+          <Button
+            icon="pi pi-search"
+            aria-label="Pesquisar"
+            :disabled="loadingGrid"
+            @click="search"
+          />
         </div>
         <div class="flex gap-2">
-          <Button label="Classificações" icon="pi pi-cog" severity="secondary" @click="statusVisible = true" />
+          <Button
+            label="Classificações"
+            icon="pi pi-cog"
+            severity="secondary"
+            @click="statusVisible = true"
+          />
           <Button label="Novo" icon="pi pi-plus" @click="newOrdem" />
         </div>
       </div>
@@ -126,11 +153,20 @@ usePageLoad(async () => {
             <template #body="{ data }">{{ data.veiculo.an_placa }}</template>
           </Column>
           <Column header="Veículo">
-            <template #body="{ data }">{{ data.veiculo.an_marca }} {{ data.veiculo.an_modelo }}</template>
+            <template #body="{ data }"
+              >{{ data.veiculo.an_marca }} {{ data.veiculo.an_modelo }}</template
+            >
           </Column>
           <Column header="Status">
             <template #body="{ data }">
-              <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold" :style="{ backgroundColor: getStatusOrdem(data.ca_status).cor ?? '#64748b', color: corTextoStatus(getStatusOrdem(data.ca_status).cor ?? '#64748b') }">{{ getStatusOrdem(data.ca_status).label }}</span>
+              <span
+                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                :style="{
+                  backgroundColor: getStatusOrdem(data.ca_status).cor ?? '#64748b',
+                  color: corTextoStatus(getStatusOrdem(data.ca_status).cor ?? '#64748b'),
+                }"
+                >{{ getStatusOrdem(data.ca_status).label }}</span
+              >
             </template>
           </Column>
           <Column header="Entrada">
@@ -140,7 +176,9 @@ usePageLoad(async () => {
             <template #body="{ data }">{{ formatDateTime(data.dt_previsao) }}</template>
           </Column>
           <Column header="Total">
-            <template #body="{ data }">{{ formatCurrencyOrdem(calcularTotalOrdem(data.itens)) }}</template>
+            <template #body="{ data }">{{
+              formatCurrencyOrdem(calcularTotalOrdem(data.itens))
+            }}</template>
           </Column>
         </DataTable>
       </div>

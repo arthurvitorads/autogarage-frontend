@@ -2,23 +2,22 @@ import { auth } from '@/services/firebase.service'
 import { API_URL } from '@/constants/utils'
 
 export interface IApiResponse<T> {
-  sucesso: boolean;
+  sucesso: boolean
   dados: T
 }
 
 export interface IPagination {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-  hasNextPage: boolean;
+  page: number
+  limit: number
+  total: number
+  totalPages: number
+  hasNextPage: boolean
   hasPreviousPage: boolean
 }
 
 export async function apiRequest<T>(endpoint: string, values?: unknown): Promise<IApiResponse<T>> {
   const user = auth.currentUser
-  if (!user)
-    throw new Error('Usuário não autenticado.')
+  if (!user) throw new Error('Usuário não autenticado.')
   const token = await user.getIdToken()
   const response = await fetch(`${API_URL}${endpoint}`, {
     method: values === undefined ? 'GET' : 'POST',
@@ -37,9 +36,11 @@ export async function apiList<T>(endpoint: string, key: string): Promise<T[]> {
   let page = 1
   let hasNextPage: boolean
   do {
-    const result = await apiRequest<Record<string, T[]> & {
-      pagination: IPagination
-    }>(`${endpoint}?page=${page}&limit=100`)
+    const result = await apiRequest<
+      Record<string, T[]> & {
+        pagination: IPagination
+      }
+    >(`${endpoint}?page=${page}&limit=100`)
     registros.push(...result.dados[key]!)
     hasNextPage = result.dados.pagination.hasNextPage
     page++
@@ -47,8 +48,21 @@ export async function apiList<T>(endpoint: string, key: string): Promise<T[]> {
   return registros
 }
 
-export function apiPage<T>(endpoint: string, key: string, page: number, limit: number, search: string, filters: Record<string, string> = {}) {
-  const query = new URLSearchParams({ page: String(page), limit: String(limit), search, ...filters })
-  return apiRequest<Record<string, T[]> & { pagination: IPagination }>(endpoint + '?' + query)
-    .then(resultado => ({ registros: resultado.dados[key]!, total: resultado.dados.pagination.total }))
+export function apiPage<T>(
+  endpoint: string,
+  key: string,
+  page: number,
+  limit: number,
+  search: string,
+  filters: Record<string, string> = {},
+) {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    search,
+    ...filters,
+  })
+  return apiRequest<Record<string, T[]> & { pagination: IPagination }>(endpoint + '?' + query).then(
+    (resultado) => ({ registros: resultado.dados[key]!, total: resultado.dados.pagination.total }),
+  )
 }

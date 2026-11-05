@@ -21,11 +21,11 @@ import FormPage from '@/components/pages/FormPage.vue'
 import { login } from '@/services/auth.service'
 import { useRouter } from 'vue-router'
 
-const utilStore = useUtilStore();
+const utilStore = useUtilStore()
 
-const router = useRouter();
+const router = useRouter()
 
-const toastService = useAppToast();
+const toastService = useAppToast()
 
 function formDataDefault(): IFormLogin {
   return {
@@ -39,14 +39,10 @@ const formData = reactive<IFormLogin>(formDataDefault())
 const formErros = ref<TGenericData>({})
 
 async function onSubmit(values: IFormLogin) {
+  if (!values.an_email) formErros.value.an_email = 'Informe o e-mail.'
+  if (!values.ca_senha) formErros.value.ca_senha = 'Informe a senha.'
 
-  if (!values.an_email) 
-    formErros.value.an_email = 'Informe o e-mail.'
-  if (!values.ca_senha) 
-    formErros.value.ca_senha = 'Informe a senha.'
-
-  if (Object.keys(formErros.value).length) 
-    return
+  if (Object.keys(formErros.value).length) return
 
   utilStore.setLoading(true)
   try {
@@ -58,13 +54,12 @@ async function onSubmit(values: IFormLogin) {
     utilStore.setLoading(false)
   }
 }
-
 </script>
 
 <template>
   <div class="flex min-h-screen">
     <div class="w-1/2 flex items-center justify-center bg-neutral-900">
-      <img class="w-150" :src="logoClara" alt="Logo do AutoGarage">
+      <img class="w-150" :src="logoClara" alt="Logo do AutoGarage" />
     </div>
 
     <div class="w-1/2 flex flex-col items-center justify-center bg-purple-50">
@@ -76,28 +71,24 @@ async function onSubmit(values: IFormLogin) {
           </div>
         </template>
 
-        <FormPage 
-          class="flex flex-col w-100" 
-          v-model:errors="formErros" 
+        <FormPage
+          class="flex flex-col w-100"
+          v-model:errors="formErros"
           :initialValues="formData"
           @submit="onSubmit"
         >
           <FieldForm name="an_email" label="E-mail" v-slot="{ invalid, field }">
-            <InputText 
-              :name="field" 
-              placeholder="Digite seu e-mail" 
-              :invalid="invalid" 
-            />
+            <InputText :name="field" placeholder="Digite seu e-mail" :invalid="invalid" />
           </FieldForm>
 
           <FieldForm name="ca_senha" label="Senha" v-slot="{ invalid, field }">
-            <Password 
-              :name="field" 
-              placeholder="Digite sua senha" 
-              :feedback="false" 
-              toggleMask 
+            <Password
+              :name="field"
+              placeholder="Digite sua senha"
+              :feedback="false"
+              toggleMask
               fluid
-              :invalid="invalid" 
+              :invalid="invalid"
             />
           </FieldForm>
 

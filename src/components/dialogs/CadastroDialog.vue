@@ -7,15 +7,18 @@ import { useUtilStore } from '@/stores/util.store'
 const { loading } = storeToRefs(useUtilStore())
 
 // Estrutura padrão das janelas de cadastro: conteúdo em fieldsets e rodapé fixo.
-withDefaults(defineProps<{
-  visible: boolean
-  header: string
-  width?: string
-  disabled?: boolean
-}>(), {
-  width: '72rem',
-  disabled: false,
-})
+withDefaults(
+  defineProps<{
+    visible: boolean
+    header: string
+    width?: string
+    disabled?: boolean
+  }>(),
+  {
+    width: '72rem',
+    disabled: false,
+  },
+)
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -34,7 +37,12 @@ const emit = defineEmits<{
     <slot />
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
         <Button
           type="button"
           label="Gravar"

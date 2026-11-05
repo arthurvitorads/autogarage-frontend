@@ -1,5 +1,5 @@
 export interface IMeResponse {
-  sucesso: boolean,
+  sucesso: boolean
   dados: IMeUser
 }
 export interface IMeUser {

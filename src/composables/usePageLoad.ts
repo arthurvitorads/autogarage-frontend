@@ -11,8 +11,7 @@ export function usePageLoad(load: () => Promise<void>) {
       await load()
     } catch (error) {
       toast.error(normalizeError(error))
-    }
-    finally {
+    } finally {
       setLoading(false)
     }
   })

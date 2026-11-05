@@ -14,21 +14,25 @@ import ManutProdutoDialog from '@/components/dialogs/ManutProdutoDialog.vue'
 
 import type { IAdmProduto } from '@/interface/interface-pages/ProdutoPage'
 
-
 import { useCatalogoStore } from '@/stores/catalogo.store'
-
-
 
 // paginação e filtros
 
 // form
-const { registros: produtos, total, primeiroRegistro, limite, filtro, loadingGrid, load, search, changePage } = usePesquisa<IAdmProduto>(getProdutosPagina)
+const {
+  registros: produtos,
+  total,
+  primeiroRegistro,
+  limite,
+  filtro,
+  loadingGrid,
+  load,
+  search,
+  changePage,
+} = usePesquisa<IAdmProduto>(getProdutosPagina)
 
 const manutProdutoVisible = ref(false)
 const selectProduto = ref<IAdmProduto | null>(null)
-
-
-
 
 function newProduto() {
   selectProduto.value = null
@@ -67,7 +71,12 @@ usePageLoad(async () => {
               class="flex-1 min-w-0"
               @keyup.enter="search"
             />
-            <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
+            <Button
+              icon="pi pi-search"
+              aria-label="Pesquisar"
+              :disabled="loadingGrid"
+              @click="search"
+            />
           </div>
           <Button label="Novo" icon="pi pi-plus" @click="newProduto" />
         </div>
@@ -123,8 +132,13 @@ usePageLoad(async () => {
             <template #body="{ data }">
               <Tag
                 :value="formatQuantidade(data.qt_estoque)"
-                :severity="data.qt_estoque === 0 ? 'danger'
-                : data.qt_estoque_min > 0 && data.qt_estoque <= data.qt_estoque_min ? 'warn' : 'secondary'"
+                :severity="
+                  data.qt_estoque === 0
+                    ? 'danger'
+                    : data.qt_estoque_min > 0 && data.qt_estoque <= data.qt_estoque_min
+                      ? 'warn'
+                      : 'secondary'
+                "
               />
             </template>
           </Column>
@@ -133,12 +147,20 @@ usePageLoad(async () => {
           </Column>
           <Column header="Status">
             <template #body="{ data }">
-              <Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg ? 'success' : 'danger'" />
+              <Tag
+                :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+                :severity="data.bo_sts_reg ? 'success' : 'danger'"
+              />
             </template>
           </Column>
         </DataTable>
       </div>
     </div>
   </div>
-  <ManutProdutoDialog v-model:visible="manutProdutoVisible" :produto="selectProduto" :produtos="produtos" @saved="load" />
+  <ManutProdutoDialog
+    v-model:visible="manutProdutoVisible"
+    :produto="selectProduto"
+    :produtos="produtos"
+    @saved="load"
+  />
 </template>
