@@ -1,9 +1,9 @@
 import { apiList, apiPage, apiRequest } from '@/services/api.service'
-import type { IAdmProduto, IManutProduto } from '@/interface/interface-pages/ProdutoPage'
-import type { IAdmServico, IManutServico } from '@/interface/interface-pages/ServicoPage'
+import type { IAdmProduto, IManutProduct } from '@/interface/interface-pages/ProdutoPage'
+import type { IAdmServico, IManutService } from '@/interface/interface-pages/ServicoPage'
 import type {
   IAdmCadastroAuxiliar,
-  IManutCadastroAuxiliar,
+  IManutAuxiliary,
 } from '@/interface/interface-pages/CadastroAuxiliar'
 
 export function getProdutos() {
@@ -20,21 +20,21 @@ export function getCadastrosAuxiliares() {
   }>('/cadastrosAuxiliares')
 }
 
-export function saveProduto(values: IManutProduto) {
+export function saveProduto(values: IManutProduct) {
   return apiRequest<IAdmProduto>(
     `/produtos${values.cn_produto === undefined ? '' : '/' + values.cn_produto}`,
     values,
   )
 }
 
-export function saveServico(values: IManutServico) {
+export function saveServico(values: IManutService) {
   return apiRequest<IAdmServico>(
     `/servicos${values.cn_servico === undefined ? '' : '/' + values.cn_servico}`,
     values,
   )
 }
 
-export function saveCadastroAuxiliar(values: IManutCadastroAuxiliar) {
+export function saveCadastroAuxiliar(values: IManutAuxiliary) {
   return apiRequest<IAdmCadastroAuxiliar>(
     '/cadastrosAuxiliares' + (values.cn_cadastro === undefined ? '' : '/' + values.cn_cadastro),
     values,

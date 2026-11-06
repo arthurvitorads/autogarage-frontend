@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { ProductModel } from '@/models/product.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IManutProductDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -7,7 +10,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
-import ToggleSwitch from 'primevue/toggleswitch'
+import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 
 import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
@@ -17,127 +20,109 @@ import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.
 
 import type {
   IAdmProduto,
-  IFormProduto,
-  IManutProduto,
+  IFormProduct,
+  IManutProduct,
 } from '@/interface/interface-pages/ProdutoPage'
 import type {
   IAdmCadastroAuxiliar,
-  TTipoCadastroAuxiliar,
+  TAuxiliaryType,
 } from '@/interface/interface-pages/CadastroAuxiliar'
 import type { TGenericData } from '@/interface/util'
 
-import { isQuantidadeValida } from '@/services/estoque.service'
+import { isQuantidadeValida as isValidQuantity } from '@/services/estoque.service'
 import { normalizeString } from '@/services/util.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useCatalogoStore } from '@/stores/catalogo.store'
+import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
-const props = defineProps<{
-  visible: boolean
-  produto?: IAdmProduto | null
-  produtos: IAdmProduto[]
-}>()
+const props = defineProps<IManutProductDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [produto: IManutProduto]
+  saved: [produto: IManutProduct]
 }>()
 
 const toast = useAppToast()
-const catalogoStore = useCatalogoStore()
-const { saveProduto } = catalogoStore
-const { categoriasProduto, marcasProduto, unidadesProduto } = storeToRefs(catalogoStore)
+const catalogStore = useCatalogStore()
+const { saveProduto: saveProduct } = catalogStore
+const {
+  categoriasProduto: productCategories,
+  marcasProduto: productBrands,
+  unidadesProduto: productUnits,
+} = storeToRefs(catalogStore)
 const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
+const formRef = ref<IFormPageRef | null>(null)
 const isValidated = ref(false)
-const isEditing = computed(() => !!props.produto)
-const cadastroAuxiliarVisible = ref(false)
-const tipoCadastroAuxiliar = ref<TTipoCadastroAuxiliar>('CATEGORIA_PRODUTO')
+const isEditing = computed(() => !!props.product)
+const auxiliaryDialogVisible = ref(false)
+const auxiliaryType = ref<TAuxiliaryType>('CATEGORIA_PRODUTO')
 
-function newCadastroAuxiliar(tipo: TTipoCadastroAuxiliar) {
-  tipoCadastroAuxiliar.value = tipo
-  cadastroAuxiliarVisible.value = true
+function newAuxiliary(tipo: TAuxiliaryType) {
+  auxiliaryType.value = tipo
+  auxiliaryDialogVisible.value = true
 }
 
-function selectCadastroAuxiliar(cadastro: IAdmCadastroAuxiliar) {
-  if (cadastro.ca_tipo === 'CATEGORIA_PRODUTO') {
-    formData.value.an_categoria = cadastro.an_descr
+function selectAuxiliary(auxiliary: IAdmCadastroAuxiliar) {
+  if (auxiliary.ca_tipo === 'CATEGORIA_PRODUTO') {
+    formData.value.an_categoria = auxiliary.an_descr
     delete formErrors.value.an_categoria
   }
 
-  if (cadastro.ca_tipo === 'MARCA') {
-    formData.value.an_marca = cadastro.an_descr
+  if (auxiliary.ca_tipo === 'MARCA') {
+    formData.value.an_marca = auxiliary.an_descr
     delete formErrors.value.an_marca
   }
 
-  if (cadastro.ca_tipo === 'UNIDADE') {
-    formData.value.ca_unidade = cadastro.ca_sigla
+  if (auxiliary.ca_tipo === 'UNIDADE') {
+    formData.value.ca_unidade = auxiliary.ca_sigla
     delete formErrors.value.ca_unidade
   }
 }
 
-function formDataDefault(): IFormProduto {
-  return {
-    an_nome: '',
-    an_referencia: '',
-    an_categoria: null,
-    an_marca: null,
-    ca_unidade: '',
-    vl_custo: 0,
-    vl_venda: 0,
-    qt_estoque: 0,
-    qt_estoque_min: 0,
-    an_obs: '',
-    bo_sts_reg: true,
-  }
-}
+const formData = ref<IFormProduct>(ProductModel.createForm())
 
-const formData = ref<IFormProduto>(formDataDefault())
-
-async function onSubmit(values: IFormProduto) {
+async function onSubmit(values: IFormProduct) {
   const errors: TGenericData = {}
 
   if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
 
-  if (values.an_categoria && !categoriasProduto.value.includes(values.an_categoria))
+  if (values.an_categoria && !productCategories.value.includes(values.an_categoria))
     errors.an_categoria = 'Selecione uma categoria.'
 
-  if (values.an_marca && !marcasProduto.value.includes(values.an_marca))
+  if (values.an_marca && !productBrands.value.includes(values.an_marca))
     errors.an_marca = 'Selecione uma marca.'
 
-  if (!unidadesProduto.value.some((unidade) => unidade.value === values.ca_unidade))
+  if (!productUnits.value.some((unidade) => unidade.value === values.ca_unidade))
     errors.ca_unidade = 'Selecione uma unidade.'
 
-  for (const campo of ['vl_custo', 'vl_venda'] as const) {
-    const valor = values[campo]
+  for (const field of ['vl_custo', 'vl_venda'] as const) {
+    const value = values[field]
 
     if (
-      valor === null ||
-      !Number.isFinite(valor) ||
-      valor < 0 ||
-      valor > 999_999_999.99 ||
-      Math.abs(valor * 100 - Math.round(valor * 100)) > 0.000001
+      value === null ||
+      !Number.isFinite(value) ||
+      value < 0 ||
+      value > 999_999_999.99 ||
+      Math.abs(value * 100 - Math.round(value * 100)) > 0.000001
     )
-      errors[campo] = 'Informe um valor válido, com até duas casas decimais.'
+      errors[field] = 'Informe um valor válido, com até duas casas decimais.'
   }
 
-  if (!isQuantidadeValida(values.qt_estoque))
+  if (!isValidQuantity(values.qt_estoque))
     errors.qt_estoque = 'Informe uma quantidade de estoque válida, com até três casas decimais.'
 
-  if (!isQuantidadeValida(values.qt_estoque_min))
+  if (!isValidQuantity(values.qt_estoque_min))
     errors.qt_estoque_min = 'Informe um estoque mínimo válido, com até três casas decimais.'
 
   if (
     values.an_referencia.trim() &&
-    props.produtos.some(
-      (produto) =>
-        produto.cn_produto !== props.produto?.cn_produto &&
-        normalizeString(produto.an_referencia) === normalizeString(values.an_referencia),
+    props.products.some(
+      (product) =>
+        product.cn_produto !== props.product?.cn_produto &&
+        normalizeString(product.an_referencia) === normalizeString(values.an_referencia),
     )
   )
     errors.an_referencia = 'Referência já cadastrada.'
@@ -150,8 +135,8 @@ async function onSubmit(values: IFormProduto) {
   setLoading(true)
 
   try {
-    const produto: IManutProduto = {
-      ...(props.produto ? { cn_produto: props.produto.cn_produto } : {}),
+    const product: IManutProduct = {
+      ...(props.product ? { cn_produto: props.product.cn_produto } : {}),
       an_nome: values.an_nome.trim(),
       an_referencia: values.an_referencia.trim(),
       an_categoria: values.an_categoria ?? '',
@@ -165,8 +150,8 @@ async function onSubmit(values: IFormProduto) {
       bo_sts_reg: values.bo_sts_reg,
     }
 
-    await saveProduto(produto)
-    emit('saved', produto)
+    await saveProduct(product)
+    emit('saved', product)
     toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
@@ -177,27 +162,27 @@ async function onSubmit(values: IFormProduto) {
 }
 
 watch(
-  [() => props.visible, () => props.produto],
+  [() => props.visible, () => props.product],
   ([visible]) => {
     if (!visible) return
 
-    const produto = props.produto
+    const product = props.product
 
-    formData.value = produto
+    formData.value = product
       ? {
-          an_nome: produto.an_nome,
-          an_referencia: produto.an_referencia,
-          an_categoria: produto.an_categoria,
-          an_marca: produto.an_marca,
-          ca_unidade: produto.ca_unidade,
-          vl_custo: produto.vl_custo,
-          vl_venda: produto.vl_venda,
-          qt_estoque: produto.qt_estoque,
-          qt_estoque_min: produto.qt_estoque_min,
-          an_obs: produto.an_obs,
-          bo_sts_reg: produto.bo_sts_reg,
+          an_nome: product.an_nome,
+          an_referencia: product.an_referencia,
+          an_categoria: product.an_categoria,
+          an_marca: product.an_marca,
+          ca_unidade: product.ca_unidade,
+          vl_custo: product.vl_custo,
+          vl_venda: product.vl_venda,
+          qt_estoque: product.qt_estoque,
+          qt_estoque_min: product.qt_estoque_min,
+          an_obs: product.an_obs,
+          bo_sts_reg: product.bo_sts_reg,
         }
-      : formDataDefault()
+      : ProductModel.createForm()
     formErrors.value = {}
     isValidated.value = false
     formKey.value++
@@ -246,9 +231,8 @@ watch(
             class="col-span-12 sm:col-span-2 flex items-start"
             name="bo_sts_reg"
             label="Status"
-            v-slot="{ field }"
           >
-            <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Produto ativo" />
+            <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
           <FieldForm
             class="col-span-12 sm:col-span-6 lg:col-span-3"
@@ -274,7 +258,7 @@ watch(
               <Select
                 v-model="formData.an_categoria"
                 :name="field"
-                :options="categoriasProduto"
+                :options="productCategories"
                 :invalid="invalid"
                 class="flex-1 min-w-0"
                 placeholder="Selecione"
@@ -285,7 +269,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar categoria"
-                @click="newCadastroAuxiliar('CATEGORIA_PRODUTO')"
+                @click="newAuxiliary('CATEGORIA_PRODUTO')"
               />
             </div>
           </FieldForm>
@@ -299,7 +283,7 @@ watch(
               <Select
                 v-model="formData.an_marca"
                 :name="field"
-                :options="marcasProduto"
+                :options="productBrands"
                 :invalid="invalid"
                 class="flex-1 min-w-0"
                 placeholder="Selecione"
@@ -310,7 +294,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar marca"
-                @click="newCadastroAuxiliar('MARCA')"
+                @click="newAuxiliary('MARCA')"
               />
             </div>
           </FieldForm>
@@ -324,7 +308,7 @@ watch(
               <Select
                 v-model="formData.ca_unidade"
                 :name="field"
-                :options="unidadesProduto"
+                :options="productUnits"
                 :invalid="invalid"
                 class="flex-1 min-w-0"
                 placeholder="Selecione"
@@ -336,7 +320,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar unidade"
-                @click="newCadastroAuxiliar('UNIDADE')"
+                @click="newAuxiliary('UNIDADE')"
               />
             </div>
           </FieldForm>
@@ -427,8 +411,8 @@ watch(
     </FormPage>
   </CadastroDialog>
   <CadastroAuxiliarDialog
-    v-model:visible="cadastroAuxiliarVisible"
-    :tipo="tipoCadastroAuxiliar"
-    @saved="selectCadastroAuxiliar"
+    v-model:visible="auxiliaryDialogVisible"
+    :auxiliaryType="auxiliaryType"
+    @saved="selectAuxiliary"
   />
 </template>

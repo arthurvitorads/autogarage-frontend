@@ -3,12 +3,12 @@ import { defineStore } from 'pinia'
 import type {
   IAdmOrdemServico,
   IClienteOrdemServico,
-  IManutOrdemServico,
-  IManutClassificacaoOrdemServico,
+  IManutServiceOrder,
+  IManutOrderClassification,
   IClassificacaoOrdemServico,
   TItemOrdemServico,
-  TManutItemOrdemServico,
-  TCodigoOrdemServico,
+  TManutServiceOrderItem,
+  TServiceOrderCode,
 } from '@/interface/interface-pages/OrdemServicoPage'
 import * as ordemService from '@/services/ordem-api.service'
 import { useUtilStore } from '@/stores/util.store'
@@ -50,7 +50,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     clientes.value = listaClientes.dados.clientes
   }
   async function saveClassificacao(
-    values: IManutClassificacaoOrdemServico,
+    values: IManutOrderClassification,
   ): Promise<IClassificacaoOrdemServico> {
     const { dados } = await ordemService.saveClassificacao(values)
     if (dados.bo_padrao)
@@ -64,7 +64,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     else classificacoes.value[index] = dados
     return dados
   }
-  async function saveOrdem(values: IManutOrdemServico): Promise<IAdmOrdemServico> {
+  async function saveOrdem(values: IManutServiceOrder): Promise<IAdmOrdemServico> {
     const { dados } = await ordemService.saveOrdem(values)
     const index = ordens.value.findIndex(
       (item) => String(item.cn_ordem_servico) === String(dados.cn_ordem_servico),
@@ -74,8 +74,8 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     return dados
   }
   async function movimentar(
-    codigo: TCodigoOrdemServico,
-    acao: import('@/interface/interface-pages/OrdemServicoPage').TAcaoOrdemServico,
+    codigo: TServiceOrderCode,
+    acao: import('@/interface/interface-pages/OrdemServicoPage').TServiceOrderAction,
     motivo: string,
   ) {
     const { dados } = await ordemService.movimentarOrdem(codigo, acao, motivo)
@@ -85,7 +85,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     return dados
   }
 
-  async function saveItem(values: TManutItemOrdemServico): Promise<TItemOrdemServico> {
+  async function saveItem(values: TManutServiceOrderItem): Promise<TItemOrdemServico> {
     const { dados } = await ordemService.saveItem(values)
     const ordem = ordens.value.find(
       (item) => String(item.cn_ordem_servico) === String(values.cn_ordem_servico),
@@ -97,7 +97,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     }
     return dados
   }
-  async function removeItem(codigoOrdem: TCodigoOrdemServico, codigoItem: TCodigoOrdemServico) {
+  async function removeItem(codigoOrdem: TServiceOrderCode, codigoItem: TServiceOrderCode) {
     await ordemService.removeItem(codigoOrdem, codigoItem)
     const ordem = ordens.value.find((item) => String(item.cn_ordem_servico) === String(codigoOrdem))
     if (ordem)

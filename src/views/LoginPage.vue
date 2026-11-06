@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LoginModel } from '@/models/login.model'
 import logoClara from '../assets/img/logo_clara.png'
 
 import Panel from 'primevue/panel'
@@ -27,22 +28,15 @@ const router = useRouter()
 
 const toastService = useAppToast()
 
-function formDataDefault(): IFormLogin {
-  return {
-    an_email: '',
-    ca_senha: '',
-  }
-}
+const formData = reactive<IFormLogin>(LoginModel.createForm())
 
-const formData = reactive<IFormLogin>(formDataDefault())
-
-const formErros = ref<TGenericData>({})
+const formErrors = ref<TGenericData>({})
 
 async function onSubmit(values: IFormLogin) {
-  if (!values.an_email) formErros.value.an_email = 'Informe o e-mail.'
-  if (!values.ca_senha) formErros.value.ca_senha = 'Informe a senha.'
+  if (!values.an_email) formErrors.value.an_email = 'Informe o e-mail.'
+  if (!values.ca_senha) formErrors.value.ca_senha = 'Informe a senha.'
 
-  if (Object.keys(formErros.value).length) return
+  if (Object.keys(formErrors.value).length) return
 
   utilStore.setLoading(true)
   try {
@@ -73,7 +67,7 @@ async function onSubmit(values: IFormLogin) {
 
         <FormPage
           class="flex flex-col w-100"
-          v-model:errors="formErros"
+          v-model:errors="formErrors"
           :initialValues="formData"
           @submit="onSubmit"
         >

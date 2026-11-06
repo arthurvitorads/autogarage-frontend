@@ -16,67 +16,67 @@ import { useUtilStore } from '@/stores/util.store'
 
 import { useAppToast } from '@/services/toast.service'
 import { formatDateTime } from '@/services/util.service'
-import { getPerfil } from '@/services/perfil.service'
+import { getPerfil as getProfiles } from '@/services/perfil.service'
 
 const { normalizeError, setLoading } = useUtilStore()
 
 const toastService = useAppToast()
 
 // paginacao
-const limite = ref(20)
-const pagina = ref(1)
+const limit = ref(20)
+const page = ref(1)
 const total = ref(0)
 
-const filtro = ref('')
+const filter = ref('')
 
 // skeleton
-const colunasSkeleton = ['Ações', 'Descrição', 'Status', 'Dt. inclusão', 'Dt. alteração']
+const skeletonColumns = ['Ações', 'Descrição', 'Status', 'Dt. inclusão', 'Dt. alteração']
 const loadingGrid = ref(false)
 
 // form
-const manutPerfilVisible = ref(false)
-const selectedPerfil = ref<IAdmPerfil | null>(null)
+const manutProfileVisible = ref(false)
+const selectProfile = ref<IAdmPerfil | null>(null)
 
-const perfil = ref<IAdmPerfil[]>([])
+const profile = ref<IAdmPerfil[]>([])
 
 function search() {
   if (loadingGrid.value) return
 
-  pagina.value = 1
-  loadPerfil()
+  page.value = 1
+  loadProfiles()
 }
 
 function changePage(event: DataTablePageEvent) {
   if (loadingGrid.value) return
 
-  pagina.value = event.page + 1
-  limite.value = event.rows
+  page.value = event.page + 1
+  limit.value = event.rows
 
-  loadPerfil()
+  loadProfiles()
 }
 
-function newPerfil() {
-  selectedPerfil.value = null
-  manutPerfilVisible.value = true
+function newProfile() {
+  selectProfile.value = null
+  manutProfileVisible.value = true
 }
 
-function editPerfil(perfil: IAdmPerfil) {
-  selectedPerfil.value = perfil
-  manutPerfilVisible.value = true
+function editProfile(profile: IAdmPerfil) {
+  selectProfile.value = profile
+  manutProfileVisible.value = true
 }
 
-async function loadPerfil() {
+async function loadProfiles() {
   loadingGrid.value = true
 
   try {
-    const resultado = await getPerfil(pagina.value, limite.value, filtro.value)
+    const result = await getProfiles(page.value, limit.value, filter.value)
 
-    perfil.value = resultado.dados.perfil
-    total.value = resultado.dados.pagination.total
+    profile.value = result.dados.perfil
+    total.value = result.dados.pagination.total
   } catch (error) {
     toastService.error(normalizeError(error))
 
-    perfil.value = []
+    profile.value = []
     total.value = 0
   } finally {
     loadingGrid.value = false
@@ -87,7 +87,7 @@ onMounted(async () => {
   setLoading(true)
 
   try {
-    await loadPerfil()
+    await loadProfiles()
   } finally {
     setLoading(false)
   }
@@ -100,7 +100,7 @@ onMounted(async () => {
       <div class="flex justify-between m-5">
         <div class="flex justify-center gap-2 w-140">
           <InputText
-            v-model="filtro"
+            v-model="filter"
             placeholder="Digite o que deseja pesquisar..."
             class="flex-1 min-w-0"
             :disabled="loadingGrid"
@@ -109,7 +109,7 @@ onMounted(async () => {
           <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex">
-          <Button label="Novo" icon="pi pi-plus" @click="newPerfil" />
+          <Button label="Novo" icon="pi pi-plus" @click="newProfile" />
         </div>
       </div>
 
@@ -118,7 +118,7 @@ onMounted(async () => {
           :pt="{
             emptyMessage: { class: 'hidden' },
           }"
-          :value="perfil"
+          :value="profile"
           :aria-busy="loadingGrid"
           dataKey="cn_perfil"
           size="small"
@@ -128,15 +128,15 @@ onMounted(async () => {
           tableStyle="min-width: 50rem"
           lazy
           paginator
-          :first="(pagina - 1) * limite"
-          :rows="limite"
+          :first="(page - 1) * limit"
+          :rows="limit"
           :totalRecords="total"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Total: {totalRecords}"
           @page="changePage"
         >
           <template v-if="loadingGrid">
-            <Column v-for="header in colunasSkeleton" :key="header" :header="header">
+            <Column v-for="header in skeletonColumns" :key="header" :header="header">
               <template #body>
                 <Skeleton height="2.8rem" />
               </template>
@@ -151,7 +151,7 @@ onMounted(async () => {
                   text
                   rounded
                   v-tooltip.top="'Editar'"
-                  @click="editPerfil(data)"
+                  @click="editProfile(data)"
                 />
               </template>
             </Column>
@@ -181,8 +181,8 @@ onMounted(async () => {
     </div>
   </div>
   <ManutPerfilDialog
-    v-model:visible="manutPerfilVisible"
-    :perfil="selectedPerfil"
-    @saved="loadPerfil"
+    v-model:visible="manutProfileVisible"
+    :profile="selectProfile"
+    @saved="loadProfiles"
   />
 </template>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { useConfirmacao } from '@/composables/useConfirmacao'
+import { ServiceOrderItemModel } from '@/models/service-order-item.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IServiceOrderItemDialogProps } from '@/interface/dialog'
+import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -14,114 +17,100 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type {
-  IFormItemOrdemServico,
+  IFormServiceOrderItem,
   TItemOrdemServico,
-  TManutItemOrdemServico,
-  TCodigoOrdemServico,
+  TManutServiceOrderItem,
+  TServiceOrderCode,
 } from '@/interface/interface-pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import {
-  calcularTotalItemOrdem,
-  formatCurrencyOrdem,
-  isPrecoOrdemValido,
+  calcularTotalItemOrdem as calculateItemTotal,
+  formatCurrencyOrdem as formatOrderCurrency,
+  isPrecoOrdemValido as isValidOrderPrice,
 } from '@/services/ordem-servico.service'
-import { isQuantidadeValida } from '@/services/estoque.service'
+import { isQuantidadeValida as isValidQuantity } from '@/services/estoque.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useCatalogoStore } from '@/stores/catalogo.store'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
-const props = defineProps<{
-  visible: boolean
-  codigoOrdem: TCodigoOrdemServico
-  item?: TItemOrdemServico | null
-  tipo?: 'PRODUTO' | 'SERVICO'
-}>()
+const props = defineProps<IServiceOrderItemDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
   saved: []
 }>()
 
-const { produtos, servicos } = storeToRefs(useCatalogoStore())
-const { saveItem } = useOrdemServicoStore()
+const { produtos: products, servicos: services } = storeToRefs(useCatalogStore())
+const { saveItem } = useServiceOrderStore()
 const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
-const confirmar = useConfirmacao()
+const confirmAction = useConfirmation()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
-const tiposItem = [
+const formRef = ref<IFormPageRef | null>(null)
+const itemTypes = [
   { label: 'Produto', value: 'PRODUTO' },
   { label: 'Serviço', value: 'SERVICO' },
 ]
 
-function formDataDefault(): IFormItemOrdemServico {
-  return {
-    ca_tipo: props.tipo ?? 'PRODUTO',
-    cn_referencia: null,
-    qt_quantidade: 1,
-    vl_unitario: 0,
-  }
-}
-
-const formData = ref<IFormItemOrdemServico>(formDataDefault())
+const formData = ref<IFormServiceOrderItem>(
+  ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO'),
+)
 const options = computed(() =>
   formData.value.ca_tipo === 'PRODUTO'
-    ? produtos.value
-        .filter((produto) => produto.bo_sts_reg)
-        .map((produto) => ({
-          cn_referencia: produto.cn_produto,
-          an_nome: produto.an_nome,
-          ca_unidade: produto.ca_unidade,
-          vl_preco: produto.vl_venda,
+    ? products.value
+        .filter((product) => product.bo_sts_reg)
+        .map((product) => ({
+          cn_referencia: product.cn_produto,
+          an_nome: product.an_nome,
+          ca_unidade: product.ca_unidade,
+          vl_preco: product.vl_venda,
         }))
-    : servicos.value
-        .filter((servico) => servico.bo_sts_reg)
-        .map((servico) => ({
-          cn_referencia: servico.cn_servico,
-          an_nome: servico.an_nome,
+    : services.value
+        .filter((service) => service.bo_sts_reg)
+        .map((service) => ({
+          cn_referencia: service.cn_servico,
+          an_nome: service.an_nome,
           ca_unidade: '',
-          vl_preco: servico.vl_preco,
+          vl_preco: service.vl_preco,
         })),
 )
-const selectReferencia = computed(() =>
+const selectedReference = computed(() =>
   options.value.find((item) => item.cn_referencia === formData.value.cn_referencia),
 )
 const totalItem = computed(() => {
   if (formData.value.qt_quantidade === null || formData.value.vl_unitario === null) return null
 
   try {
-    return calcularTotalItemOrdem(formData.value.qt_quantidade, formData.value.vl_unitario)
+    return calculateItemTotal(formData.value.qt_quantidade, formData.value.vl_unitario)
   } catch {
     return null
   }
 })
 
-function changeTipo() {
+function changeType() {
   formData.value.cn_referencia = null
   formData.value.vl_unitario = 0
   formErrors.value = {}
 }
 
-function loadPreco() {
-  formData.value.vl_unitario = selectReferencia.value?.vl_preco ?? 0
+function loadPrice() {
+  formData.value.vl_unitario = selectedReference.value?.vl_preco ?? 0
   delete formErrors.value.cn_referencia
   delete formErrors.value.vl_unitario
 }
 
-async function onSubmit(values: IFormItemOrdemServico) {
+async function onSubmit(values: IFormServiceOrderItem) {
   const errors: TGenericData = {}
 
-  if (!selectReferencia.value) errors.cn_referencia = 'Selecione um produto ou serviço ativo.'
+  if (!selectedReference.value) errors.cn_referencia = 'Selecione um produto ou serviço ativo.'
 
-  if (!isQuantidadeValida(values.qt_quantidade) || values.qt_quantidade === 0)
+  if (!isValidQuantity(values.qt_quantidade) || values.qt_quantidade === 0)
     errors.qt_quantidade = 'Informe uma quantidade maior que zero, com até três casas decimais.'
 
-  if (!isPrecoOrdemValido(values.vl_unitario))
+  if (!isValidOrderPrice(values.vl_unitario))
     errors.vl_unitario = 'Informe um preço válido, com até duas casas decimais.'
 
   if (
@@ -131,7 +120,7 @@ async function onSubmit(values: IFormItemOrdemServico) {
     values.vl_unitario !== null
   ) {
     try {
-      calcularTotalItemOrdem(values.qt_quantidade, values.vl_unitario)
+      calculateItemTotal(values.qt_quantidade, values.vl_unitario)
     } catch (error) {
       errors.vl_unitario = normalizeError(error)
     }
@@ -140,7 +129,7 @@ async function onSubmit(values: IFormItemOrdemServico) {
   formErrors.value = errors
   if (Object.keys(errors).length) return
 
-  if (!(await confirmar())) return
+  if (!(await confirmAction())) return
 
   setLoading(true)
 
@@ -153,12 +142,12 @@ async function onSubmit(values: IFormItemOrdemServico) {
       return
 
     const dadosBase = {
-      cn_ordem_servico: props.codigoOrdem,
+      cn_ordem_servico: props.orderCode,
       ...(props.item ? { cn_item: props.item.cn_item } : {}),
       qt_quantidade: values.qt_quantidade,
       vl_unitario: values.vl_unitario,
     }
-    const dados: TManutItemOrdemServico =
+    const data: TManutServiceOrderItem =
       values.ca_tipo === 'PRODUTO'
         ? {
             ...dadosBase,
@@ -171,7 +160,7 @@ async function onSubmit(values: IFormItemOrdemServico) {
             cn_servico: values.cn_referencia,
           }
 
-    await saveItem(dados)
+    await saveItem(data)
     emit('saved')
     toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
@@ -196,7 +185,7 @@ watch(
           qt_quantidade: item.qt_quantidade,
           vl_unitario: item.vl_unitario,
         }
-      : formDataDefault()
+      : ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO')
     formErrors.value = {}
     formKey.value++
   },
@@ -225,11 +214,11 @@ watch(
           <FieldForm class="col-span-12" name="ca_tipo" label="Tipo">
             <SelectButton
               v-model="formData.ca_tipo"
-              :options="tiposItem"
+              :options="itemTypes"
               optionLabel="label"
               optionValue="value"
               :allowEmpty="false"
-              @change="changeTipo"
+              @change="changeType"
             />
           </FieldForm>
           <FieldForm
@@ -248,13 +237,13 @@ watch(
               :invalid="invalid"
               filter
               fluid
-              @change="loadPreco"
+              @change="loadPrice"
             />
           </FieldForm>
           <FieldForm class="col-span-12 sm:col-span-3" name="ca_unidade" label="Unidade">
             <InputText
               maxlength="10"
-              :modelValue="selectReferencia?.ca_unidade || '—'"
+              :modelValue="selectedReference?.ca_unidade || '—'"
               readonly
               fluid
             />
@@ -297,7 +286,7 @@ watch(
           <FieldForm class="col-span-12 sm:col-span-4" name="vl_total" label="Total do item">
             <InputText
               maxlength="4000"
-              :modelValue="totalItem === null ? '—' : formatCurrencyOrdem(totalItem)"
+              :modelValue="totalItem === null ? '—' : formatOrderCurrency(totalItem)"
               readonly
               fluid
             />

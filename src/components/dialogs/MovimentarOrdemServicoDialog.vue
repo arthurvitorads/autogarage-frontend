@@ -1,32 +1,29 @@
 <script setup lang="ts">
+import type { IMoveServiceOrderDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
 import type {
   IAdmOrdemServico,
-  TAcaoOrdemServico,
+  TServiceOrderAction,
 } from '@/interface/interface-pages/OrdemServicoPage'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
-const props = defineProps<{
-  visible: boolean
-  ordem: IAdmOrdemServico | null
-  acao: TAcaoOrdemServico
-}>()
+const props = defineProps<IMoveServiceOrderDialogProps>()
 const emit = defineEmits<{ 'update:visible': [value: boolean]; saved: [ordem: IAdmOrdemServico] }>()
-const motivo = ref('')
-const erro = ref('')
+const reason = ref('')
+const errorMessage = ref('')
 const loading = ref(false)
-const store = useOrdemServicoStore()
+const store = useServiceOrderStore()
 const toast = useAppToast()
 const { normalizeError } = useUtilStore()
-const titulo = computed(() =>
-  props.acao === 'INICIAR'
+const title = computed(() =>
+  props.action === 'INICIAR'
     ? 'Iniciar serviço'
-    : props.acao === 'FINALIZAR'
+    : props.action === 'FINALIZAR'
       ? 'Finalizar O.S.'
       : 'Cancelar O.S.',
 )
@@ -34,25 +31,25 @@ const titulo = computed(() =>
 watch(
   () => props.visible,
   () => {
-    motivo.value = ''
-    erro.value = ''
+    reason.value = ''
+    errorMessage.value = ''
   },
 )
 
-async function confirmar() {
-  if (!props.ordem || loading.value) return
-  if (props.acao === 'CANCELAR' && !motivo.value.trim()) {
-    erro.value = 'Informe o motivo do cancelamento.'
+async function confirmAction() {
+  if (!props.order || loading.value) return
+  if (props.action === 'CANCELAR' && !reason.value.trim()) {
+    errorMessage.value = 'Informe o motivo do cancelamento.'
     return
   }
   loading.value = true
   try {
-    const ordem = await store.movimentar(
-      props.ordem.cn_ordem_servico,
-      props.acao,
-      motivo.value.trim(),
+    const order = await store.movimentar(
+      props.order.cn_ordem_servico,
+      props.action,
+      reason.value.trim(),
     )
-    emit('saved', ordem)
+    emit('saved', order)
     emit('update:visible', false)
     toast.success('Processo realizado com sucesso.')
   } catch (error) {
@@ -67,25 +64,25 @@ async function confirmar() {
   <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
-    :header="titulo"
+    :header="title"
     modal
     :closable="!loading"
     :closeOnEscape="!loading"
     :style="{ width: '34rem', maxWidth: '95vw' }"
   >
     <p class="mb-4">Deseja realizar o processo?</p>
-    <p class="text-surface-500 mb-4">O.S. #{{ ordem?.nu_numero }} — {{ ordem?.an_cliente }}</p>
-    <label v-if="acao === 'CANCELAR'" class="flex flex-col gap-2">
+    <p class="text-surface-500 mb-4">O.S. #{{ order?.nu_numero }} — {{ order?.an_cliente }}</p>
+    <label v-if="action === 'CANCELAR'" class="flex flex-col gap-2">
       <span>Motivo do cancelamento *</span>
       <Textarea
-        v-model="motivo"
+        v-model="reason"
         maxlength="4000"
         rows="4"
-        :invalid="!!erro"
+        :invalid="!!errorMessage"
         :disabled="loading"
         fluid
       />
-      <span v-if="erro" class="text-red-600 text-sm">{{ erro }}</span>
+      <span v-if="errorMessage" class="text-red-600 text-sm">{{ errorMessage }}</span>
     </label>
     <template #footer>
       <Button
@@ -94,7 +91,7 @@ async function confirmar() {
         :disabled="loading"
         @click="emit('update:visible', false)"
       />
-      <Button label="Sim, confirmar" :loading="loading" @click="confirmar" />
+      <Button label="Sim, confirmar" :loading="loading" @click="confirmAction" />
     </template>
   </Dialog>
 </template>

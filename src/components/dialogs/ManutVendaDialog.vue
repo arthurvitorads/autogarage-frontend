@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { SaleModel } from '@/models/sale.model'
+import type { IFormSale } from '@/interface/interface-pages/VendaPage'
+import type { IManutSaleDialogProps } from '@/interface/dialog'
+import { computed, reactive, ref, toRefs, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Select from 'primevue/select'
 import InputNumber from 'primevue/inputnumber'
@@ -13,106 +16,102 @@ import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoP
 import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
 import type {
   IAdmVenda,
-  IFormItemVenda,
-  IManutItemVenda,
+  IFormSaleItem,
+  IManutSaleItem,
 } from '@/interface/interface-pages/VendaPage'
-import { useCatalogoStore } from '@/stores/catalogo.store'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
 import { apiRequest } from '@/services/api.service'
-import { createVenda } from '@/services/faturamento.service'
-import { calcularTotalItemOrdem, formatCurrencyOrdem } from '@/services/ordem-servico.service'
+import { createVenda as createSale } from '@/services/faturamento.service'
+import {
+  calcularTotalItemOrdem as calculateItemTotal,
+  formatCurrencyOrdem as formatOrderCurrency,
+} from '@/services/ordem-servico.service'
 
-const props = defineProps<{ visible: boolean; ordem?: IAdmOrdemServico | null }>()
+const props = defineProps<IManutSaleDialogProps>()
+const formData = reactive<IFormSale>(SaleModel.createForm())
+const { origin, personId, orderId, notes, requestKey, items } = toRefs(formData)
 const emit = defineEmits<{ 'update:visible': [visible: boolean]; saved: [venda: IAdmVenda] }>()
-const catalogoStore = useCatalogoStore()
-const ordemStore = useOrdemServicoStore()
-const { produtos, servicos } = storeToRefs(catalogoStore)
-const { clientes, ordens } = storeToRefs(ordemStore)
+const catalogStore = useCatalogStore()
+const orderStore = useServiceOrderStore()
+const { produtos: products, servicos: services } = storeToRefs(catalogStore)
+const { clientes: customers, ordens: orders } = storeToRefs(orderStore)
 const { setLoading, normalizeError } = useUtilStore()
 const toast = useAppToast()
-const origem = ref('DIRETA')
-const cnPessoa = ref<string | number | null>(null)
-const cnOrdem = ref<string | number | null>(null)
-const cliente = ref<ICadPessoa | null>(null)
-const observacao = ref('')
-const itens = ref<(IManutItemVenda & { an_descr: string; vl_total: number })[]>([])
-const chave = ref('')
+
+const customer = ref<ICadPessoa | null>(null)
+
 const saving = ref(false)
-const carregando = ref(false)
-const erroCarga = ref('')
-const item = ref<IFormItemVenda>({
-  ca_tipo: 'PRODUTO',
-  cn_referencia: null,
-  qt_quantidade: 1,
-  vl_unitario: 0,
-})
-const opcoesOrigem = [
+const loadingData = ref(false)
+const loadError = ref('')
+const item = ref<IFormSaleItem>(SaleModel.createItem())
+const originOptions = [
   { label: 'Venda avulsa', value: 'DIRETA' },
   { label: 'Por ordem de serviço', value: 'ORDEM_SERVICO' },
 ]
-const tipos = [
+const itemTypes = [
   { label: 'Produto', value: 'PRODUTO' },
   { label: 'Serviço', value: 'SERVICO' },
 ]
-const ordensDisponiveis = computed(() =>
-  ordens.value
-    .filter((ordem) => ordem.ca_status === 'FINALIZADO' && ordem.itens.length && !ordem.cn_venda)
-    .map((ordem) => ({ ...ordem, an_label: 'O.S. ' + ordem.nu_numero + ' — ' + ordem.an_cliente })),
+const availableOrders = computed(() =>
+  orders.value
+    .filter((order) => order.ca_status === 'FINALIZADO' && order.itens.length && !order.cn_venda)
+    .map((order) => ({ ...order, an_label: 'O.S. ' + order.nu_numero + ' — ' + order.an_cliente })),
 )
-const ordemSelecionada = computed(
+const selectedOrder = computed(
   () =>
-    props.ordem ??
-    ordens.value.find((ordem) => String(ordem.cn_ordem_servico) === String(cnOrdem.value)) ??
+    props.order ??
+    orders.value.find((order) => String(order.cn_ordem_servico) === String(orderId.value)) ??
     null,
 )
-const referencias = computed(() =>
+const references = computed(() =>
   item.value.ca_tipo === 'PRODUTO'
-    ? produtos.value
-        .filter((produto) => produto.bo_sts_reg)
-        .map((produto) => ({
-          cn_referencia: produto.cn_produto,
-          an_nome: produto.an_nome,
-          vl_preco: produto.vl_venda,
+    ? products.value
+        .filter((product) => product.bo_sts_reg)
+        .map((product) => ({
+          cn_referencia: product.cn_produto,
+          an_nome: product.an_nome,
+          vl_preco: product.vl_venda,
         }))
-    : servicos.value
-        .filter((servico) => servico.bo_sts_reg)
-        .map((servico) => ({
-          cn_referencia: servico.cn_servico,
-          an_nome: servico.an_nome,
-          vl_preco: servico.vl_preco,
+    : services.value
+        .filter((service) => service.bo_sts_reg)
+        .map((service) => ({
+          cn_referencia: service.cn_servico,
+          an_nome: service.an_nome,
+          vl_preco: service.vl_preco,
         })),
 )
-const linhas = computed(() =>
-  origem.value === 'ORDEM_SERVICO' ? (ordemSelecionada.value?.itens ?? []) : itens.value,
+const rows = computed(() =>
+  origin.value === 'ORDEM_SERVICO' ? (selectedOrder.value?.itens ?? []) : items.value,
 )
 const total = computed(
-  () => linhas.value.reduce((soma, linha) => soma + Math.round(linha.vl_total * 100), 0) / 100,
+  () => rows.value.reduce((soma, linha) => soma + Math.round(linha.vl_total * 100), 0) / 100,
 )
-let consultaCliente = 0
-watch(cnPessoa, async (codigo) => {
-  const consulta = ++consultaCliente
-  cliente.value = null
-  if (!codigo) return
+let customerRequestId = 0
+watch(personId, async (code) => {
+  const requestId = ++customerRequestId
+  customer.value = null
+  if (!code) return
   try {
-    const { dados } = await apiRequest<ICadPessoa>('/pessoa/' + encodeURIComponent(codigo))
-    if (consulta === consultaCliente) cliente.value = dados
+    const { dados: data } = await apiRequest<ICadPessoa>('/pessoa/' + encodeURIComponent(code))
+    if (requestId === customerRequestId) customer.value = data
   } catch (error) {
-    if (consulta === consultaCliente) toast.error(normalizeError(error))
+    if (requestId === customerRequestId) toast.error(normalizeError(error))
   }
 })
-watch([origem, ordemSelecionada], () => {
-  if (origem.value === 'ORDEM_SERVICO') cnPessoa.value = ordemSelecionada.value?.cn_pessoa ?? null
+watch([origin, selectedOrder], () => {
+  if (origin.value === 'ORDEM_SERVICO') personId.value = selectedOrder.value?.cn_pessoa ?? null
 })
-watch(origem, (value) => {
-  if (value === 'DIRETA') cnPessoa.value = null
+watch(origin, (value) => {
+  if (value === 'DIRETA') personId.value = null
 })
 watch(
   () => [item.value.ca_tipo, item.value.cn_referencia],
   () => {
     item.value.vl_unitario =
-      referencias.value.find((ref) => ref.cn_referencia === item.value.cn_referencia)?.vl_preco ?? 0
+      references.value.find((ref) => ref.cn_referencia === item.value.cn_referencia)?.vl_preco ?? 0
   },
 )
 watch(
@@ -122,15 +121,15 @@ watch(
   },
 )
 
-async function carregar() {
-  carregando.value = true
-  erroCarga.value = ''
+async function loadData() {
+  loadingData.value = true
+  loadError.value = ''
   try {
-    await ordemStore.load()
+    await orderStore.load()
   } catch (error) {
-    erroCarga.value = normalizeError(error)
+    loadError.value = normalizeError(error)
   } finally {
-    carregando.value = false
+    loadingData.value = false
   }
 }
 
@@ -138,47 +137,40 @@ watch(
   () => props.visible,
   async (visible) => {
     if (!visible) return
-    chave.value = crypto.randomUUID()
-    origem.value = props.ordem ? 'ORDEM_SERVICO' : 'DIRETA'
-    cnOrdem.value = props.ordem?.cn_ordem_servico ?? null
-    cnPessoa.value = props.ordem?.cn_pessoa ?? null
-    observacao.value = ''
-    itens.value = []
-    item.value = { ca_tipo: 'PRODUTO', cn_referencia: null, qt_quantidade: 1, vl_unitario: 0 }
-    await carregar()
+    Object.assign(formData, SaleModel.createForm(props.order))
+    item.value = SaleModel.createItem()
+    await loadData()
   },
 )
 
-function adicionar() {
+function addItem() {
   try {
-    const referencia = referencias.value.find(
-      (ref) => ref.cn_referencia === item.value.cn_referencia,
-    )
-    if (!referencia) throw new Error('Selecione um item.')
-    const vlTotal = calcularTotalItemOrdem(item.value.qt_quantidade!, item.value.vl_unitario!)
-    itens.value.push({
+    const reference = references.value.find((ref) => ref.cn_referencia === item.value.cn_referencia)
+    if (!reference) throw new Error('Selecione um item.')
+    const lineTotal = calculateItemTotal(item.value.qt_quantidade!, item.value.vl_unitario!)
+    items.value.push({
       ca_tipo: item.value.ca_tipo,
-      cn_produto: item.value.ca_tipo === 'PRODUTO' ? referencia.cn_referencia : null,
-      cn_servico: item.value.ca_tipo === 'SERVICO' ? referencia.cn_referencia : null,
+      cn_produto: item.value.ca_tipo === 'PRODUTO' ? reference.cn_referencia : null,
+      cn_servico: item.value.ca_tipo === 'SERVICO' ? reference.cn_referencia : null,
       qt_quantidade: item.value.qt_quantidade!,
       vl_unitario: item.value.vl_unitario!,
-      an_descr: referencia.an_nome,
-      vl_total: vlTotal,
+      an_descr: reference.an_nome,
+      vl_total: lineTotal,
     })
   } catch (error) {
     toast.error(normalizeError(error))
   }
 }
 
-async function gravar() {
-  if (saving.value || carregando.value) return
-  if (!cliente.value || !cnPessoa.value || !linhas.value.length) {
+async function save() {
+  if (saving.value || loadingData.value) return
+  if (!customer.value || !personId.value || !rows.value.length) {
     toast.warn('Selecione o cliente e adicione pelo menos um item.')
     return
   }
   if (
-    origem.value === 'ORDEM_SERVICO' &&
-    (!ordemSelecionada.value || ordemSelecionada.value.ca_status !== 'FINALIZADO')
+    origin.value === 'ORDEM_SERVICO' &&
+    (!selectedOrder.value || selectedOrder.value.ca_status !== 'FINALIZADO')
   ) {
     toast.warn('Selecione uma O.S. finalizada.')
     return
@@ -186,16 +178,16 @@ async function gravar() {
   saving.value = true
   setLoading(true)
   try {
-    const { dados } = await createVenda({
-      cn_pessoa: cnPessoa.value,
-      ca_chave_requisicao: chave.value,
-      an_obs: observacao.value,
-      ...(origem.value === 'ORDEM_SERVICO'
-        ? { cn_ordem_servico: ordemSelecionada.value!.cn_ordem_servico }
-        : { itens: itens.value.map(({ an_descr, vl_total, ...dados }) => dados) }),
+    const { dados: data } = await createSale({
+      cn_pessoa: personId.value,
+      ca_chave_requisicao: requestKey.value,
+      an_obs: notes.value,
+      ...(origin.value === 'ORDEM_SERVICO'
+        ? { cn_ordem_servico: selectedOrder.value!.cn_ordem_servico }
+        : { itens: items.value.map(({ an_descr, vl_total, ...data }) => data) }),
     })
     toast.success('Venda registrada com sucesso.')
-    emit('saved', dados)
+    emit('saved', data)
     emit('update:visible', false)
   } catch (error) {
     toast.error(normalizeError(error))
@@ -211,29 +203,29 @@ async function gravar() {
     :visible="visible"
     header="Registrar venda"
     width="82rem"
-    :disabled="saving || carregando || !!erroCarga"
-    @submit="gravar"
+    :disabled="saving || loadingData || !!loadError"
+    @submit="save"
     @update:visible="emit('update:visible', $event)"
   >
     <div class="flex flex-col gap-4">
-      <p v-if="carregando">Carregando dados da venda...</p>
-      <div v-if="erroCarga" role="alert" class="flex gap-3 items-center">
-        <p>{{ erroCarga }}</p>
-        <Button label="Tentar novamente" severity="secondary" @click="carregar" />
+      <p v-if="loadingData">Carregando dados da venda...</p>
+      <div v-if="loadError" role="alert" class="flex gap-3 items-center">
+        <p>{{ loadError }}</p>
+        <Button label="Tentar novamente" severity="secondary" @click="loadData" />
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Select
-          v-model="origem"
-          :options="opcoesOrigem"
+          v-model="origin"
+          :options="originOptions"
           optionLabel="label"
           optionValue="value"
-          :disabled="!!ordem || saving"
+          :disabled="!!order || saving"
           aria-label="Origem da venda"
         />
         <Select
-          v-if="origem === 'ORDEM_SERVICO' && !ordem"
-          v-model="cnOrdem"
-          :options="ordensDisponiveis"
+          v-if="origin === 'ORDEM_SERVICO' && !order"
+          v-model="orderId"
+          :options="availableOrders"
           optionLabel="an_label"
           optionValue="cn_ordem_servico"
           placeholder="Selecione a O.S. finalizada"
@@ -241,9 +233,9 @@ async function gravar() {
           aria-label="Ordem de serviço"
         />
         <Select
-          v-if="origem === 'DIRETA'"
-          v-model="cnPessoa"
-          :options="clientes"
+          v-if="origin === 'DIRETA'"
+          v-model="personId"
+          :options="customers"
           optionLabel="an_nome"
           optionValue="cn_pessoa"
           placeholder="Selecione o cliente"
@@ -252,30 +244,30 @@ async function gravar() {
         />
       </div>
       <Fieldset legend="Cliente">
-        <div v-if="cliente" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <p class="font-semibold">{{ cliente.an_nome || cliente.an_razao_social }}</p>
-          <p>{{ cliente.ca_cpf || cliente.ca_cnpj }}</p>
-          <p>{{ cliente.an_email }}</p>
-          <p>{{ cliente.an_telefone }}</p>
-          <p v-if="cliente.endereco" class="sm:col-span-2">
-            {{ cliente.endereco.an_logradouro }}, {{ cliente.endereco.an_numero }} —
-            {{ cliente.endereco.an_cidade }}/{{ cliente.endereco.ca_uf }}
+        <div v-if="customer" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <p class="font-semibold">{{ customer.an_nome || customer.an_razao_social }}</p>
+          <p>{{ customer.ca_cpf || customer.ca_cnpj }}</p>
+          <p>{{ customer.an_email }}</p>
+          <p>{{ customer.an_telefone }}</p>
+          <p v-if="customer.endereco" class="sm:col-span-2">
+            {{ customer.endereco.an_logradouro }}, {{ customer.endereco.an_numero }} —
+            {{ customer.endereco.an_cidade }}/{{ customer.endereco.ca_uf }}
           </p>
         </div>
         <p v-else>Selecione um cliente para conferir as informações.</p>
       </Fieldset>
       <Fieldset legend="Itens">
-        <div v-if="origem === 'DIRETA'" class="flex flex-wrap gap-2 mb-4 items-end">
+        <div v-if="origin === 'DIRETA'" class="flex flex-wrap gap-2 mb-4 items-end">
           <Select
             v-model="item.ca_tipo"
-            :options="tipos"
+            :options="itemTypes"
             optionLabel="label"
             optionValue="value"
             aria-label="Tipo do item"
           />
           <Select
             v-model="item.cn_referencia"
-            :options="referencias"
+            :options="references"
             optionLabel="an_nome"
             optionValue="cn_referencia"
             placeholder="Produto ou serviço"
@@ -306,36 +298,36 @@ async function gravar() {
               aria-label="Preço unitário"
             />
           </div>
-          <Button icon="pi pi-plus" label="Adicionar" @click="adicionar" />
+          <Button icon="pi pi-plus" label="Adicionar" @click="addItem" />
         </div>
-        <DataTable :value="linhas" size="small" scrollable tableStyle="min-width: 45rem">
+        <DataTable :value="rows" size="small" scrollable tableStyle="min-width: 45rem">
           <Column field="an_descr" header="Descrição" /><Column
             field="ca_tipo"
             header="Tipo"
           /><Column field="qt_quantidade" header="Quantidade" />
           <Column header="Unitário"
             ><template #body="{ data }">{{
-              formatCurrencyOrdem(data.vl_unitario)
+              formatOrderCurrency(data.vl_unitario)
             }}</template></Column
           >
           <Column header="Total"
-            ><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template></Column
+            ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
-          <Column v-if="origem === 'DIRETA'" header="Ações"
+          <Column v-if="origin === 'DIRETA'" header="Ações"
             ><template #body="{ index }"
               ><Button
                 icon="pi pi-trash"
                 text
                 severity="danger"
                 aria-label="Remover item"
-                @click="itens.splice(index, 1)" /></template
+                @click="items.splice(index, 1)" /></template
           ></Column>
           <template #empty>Nenhum item adicionado.</template>
         </DataTable>
-        <p class="text-right font-bold mt-3">Total: {{ formatCurrencyOrdem(total) }}</p>
+        <p class="text-right font-bold mt-3">Total: {{ formatOrderCurrency(total) }}</p>
       </Fieldset>
       <label for="venda-observacao">Observações</label
-      ><Textarea id="venda-observacao" v-model="observacao" rows="2" fluid />
+      ><Textarea id="venda-observacao" v-model="notes" rows="2" fluid />
     </div>
   </CadastroDialog>
 </template>

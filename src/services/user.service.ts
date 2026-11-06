@@ -6,8 +6,8 @@ import { handleFirstLogin } from './auth.service'
 import { IMeResponse, IMeUser } from '@/interface/interface-pages/LoginPage'
 
 import {
-  IUsuarioResponse,
-  IFormUsuario,
+  IUserResponse,
+  IFormUser,
   ICreateUserResponse,
   IUpdateUser,
 } from '@/interface/interface-pages/UsuarioPage'
@@ -39,7 +39,7 @@ export async function updateUser(
   return result as ICreateUserResponse
 }
 
-export async function createUser(values: IFormUsuario): Promise<ICreateUserResponse> {
+export async function createUser(values: IFormUser): Promise<ICreateUserResponse> {
   const user = auth.currentUser
 
   if (!user) throw new Error('Usuário não autenticado no Firebase.')
@@ -101,7 +101,7 @@ export async function getUsers(
   ePage: number = 1,
   eLimit: number = 20,
   search: string = '',
-): Promise<IUsuarioResponse> {
+): Promise<IUserResponse> {
   const user = auth.currentUser
 
   if (!user) {
@@ -127,5 +127,5 @@ export async function getUsers(
     throw new Error('Erro ao carregar usuários.')
   }
 
-  return (await response.json()) as IUsuarioResponse
+  return (await response.json()) as IUserResponse
 }

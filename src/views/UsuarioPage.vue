@@ -22,14 +22,14 @@ const { normalizeError, setLoading } = useUtilStore()
 const toastService = useAppToast()
 
 // paginacao
-const limite = ref(20)
-const pagina = ref(1)
+const limit = ref(20)
+const page = ref(1)
 const total = ref(0)
 
-const filtro = ref('')
+const filter = ref('')
 
 // skeleton
-const colunasSkeleton = [
+const skeletonColumns = [
   'Ações',
   'Nome',
   'E-mail',
@@ -44,20 +44,20 @@ const loadingGrid = ref(false)
 const manutUserVisible = ref(false)
 const selectUser = ref<IAdmUsuario | null>(null)
 
-const usuarios = ref<IAdmUsuario[]>([])
+const users = ref<IAdmUsuario[]>([])
 
 function search() {
   if (loadingGrid.value) return
 
-  pagina.value = 1
+  page.value = 1
   loadUsers()
 }
 
 function changePage(event: DataTablePageEvent) {
   if (loadingGrid.value) return
 
-  pagina.value = event.page + 1
-  limite.value = event.rows
+  page.value = event.page + 1
+  limit.value = event.rows
 
   loadUsers()
 }
@@ -76,14 +76,14 @@ async function loadUsers() {
   loadingGrid.value = true
 
   try {
-    const resultado = await getUsers(pagina.value, limite.value, filtro.value)
+    const result = await getUsers(page.value, limit.value, filter.value)
 
-    usuarios.value = resultado.dados.usuarios
-    total.value = resultado.dados.pagination.total
+    users.value = result.dados.usuarios
+    total.value = result.dados.pagination.total
   } catch (error) {
     toastService.error(normalizeError(error))
 
-    usuarios.value = []
+    users.value = []
     total.value = 0
   } finally {
     loadingGrid.value = false
@@ -107,7 +107,7 @@ onMounted(async () => {
       <div class="flex justify-between m-5">
         <div class="flex justify-center gap-2 w-140">
           <InputText
-            v-model="filtro"
+            v-model="filter"
             placeholder="Digite o que deseja pesquisar..."
             class="flex-1 min-w-0"
             :disabled="loadingGrid"
@@ -125,7 +125,7 @@ onMounted(async () => {
           :pt="{
             emptyMessage: { class: 'hidden' },
           }"
-          :value="usuarios"
+          :value="users"
           :aria-busy="loadingGrid"
           dataKey="cn_usuario"
           size="small"
@@ -135,15 +135,15 @@ onMounted(async () => {
           tableStyle="min-width: 50rem"
           lazy
           paginator
-          :first="(pagina - 1) * limite"
-          :rows="limite"
+          :first="(page - 1) * limit"
+          :rows="limit"
           :totalRecords="total"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Total: {totalRecords}"
           @page="changePage"
         >
           <template v-if="loadingGrid">
-            <Column v-for="header in colunasSkeleton" :key="header" :header="header">
+            <Column v-for="header in skeletonColumns" :key="header" :header="header">
               <template #body>
                 <Skeleton height="2.8rem" />
               </template>

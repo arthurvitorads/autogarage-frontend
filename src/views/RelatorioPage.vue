@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IReportPageProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import Select from 'primevue/select'
@@ -9,83 +10,89 @@ import Dialog from 'primevue/dialog'
 import FiltroData from '@/components/field/FiltroData.vue'
 import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { datasMesAtual, intervaloDatas } from '@/services/periodo.service'
-import { getRelatorioTempos, getRelatorioVendas } from '@/services/faturamento.service'
+import {
+  datasMesAtual as currentMonthDates,
+  intervaloDatas as dateInterval,
+} from '@/services/periodo.service'
+import {
+  getRelatorioTempos as getTimeReport,
+  getRelatorioVendas as getSalesReport,
+} from '@/services/faturamento.service'
 import { formatTempo } from '@/services/tempo.service'
 import { formatDateTime } from '@/services/util.service'
-import { formatCurrencyOrdem } from '@/services/ordem-servico.service'
+import { formatCurrencyOrdem as formatOrderCurrency } from '@/services/ordem-servico.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
 import type {
-  IRelatorioTempoResponse,
-  IRelatorioVendaResponse,
-  IRelatorioTempo,
+  ITimeReportResponse,
+  ISaleReportResponse,
+  ITimeReport,
   IAdmVenda,
 } from '@/interface/interface-pages/VendaPage'
 
-const props = defineProps<{ tipo: 'tempos' | 'vendas' }>()
-const datas = ref<(Date | null)[]>(datasMesAtual())
-const ordenacao = ref('desc')
-const opcoesOrdem = [
+const props = defineProps<IReportPageProps>()
+const dates = ref<(Date | null)[]>(currentMonthDates())
+const sortOrder = ref('desc')
+const sortOptions = [
   { label: 'Mais longos primeiro', value: 'desc' },
   { label: 'Mais rápidos primeiro', value: 'asc' },
 ]
-const tempos = ref<IRelatorioTempoResponse | null>(null)
-const vendas = ref<IRelatorioVendaResponse | null>(null)
+const timeReport = ref<ITimeReportResponse | null>(null)
+const sales = ref<ISaleReportResponse | null>(null)
 const loading = ref(false)
-const primeiro = ref(0)
-const intervaloVisible = ref(false)
-const servicoSelecionado = ref<IRelatorioTempo | null>(null)
-const vendaSelecionada = ref<IAdmVenda | null>(null)
-const vendaVisible = ref(false)
+const firstRecord = ref(0)
+const intervalDialogVisible = ref(false)
+const selectServiceTime = ref<ITimeReport | null>(null)
+const selectSale = ref<IAdmVenda | null>(null)
+const saleDialogVisible = ref(false)
 const { normalizeError } = useUtilStore()
 const toast = useAppToast()
 const total = computed(() =>
-  props.tipo === 'tempos'
-    ? (tempos.value?.pagination.total ?? 0)
-    : (vendas.value?.pagination.total ?? 0),
+  props.reportType === 'tempos'
+    ? (timeReport.value?.pagination.total ?? 0)
+    : (sales.value?.pagination.total ?? 0),
 )
-let consulta = 0
+let requestId = 0
 
 async function load(reset = false) {
-  const periodo = intervaloDatas(datas.value)
-  if (!periodo) {
+  const period = dateInterval(dates.value)
+  if (!period) {
     toast.warn('Informe um período válido.')
     return
   }
-  if (reset) primeiro.value = 0
-  const atual = ++consulta
+  if (reset) firstRecord.value = 0
+  const currentRequest = ++requestId
   loading.value = true
   try {
-    const page = Math.floor(primeiro.value / 20) + 1
-    if (props.tipo === 'tempos') {
-      const { dados } = await getRelatorioTempos(page, periodo.inicio, periodo.fim, ordenacao.value)
-      if (atual === consulta) tempos.value = dados
+    const page = Math.floor(firstRecord.value / 20) + 1
+    if (props.reportType === 'tempos') {
+      const { dados: data } = await getTimeReport(page, period.inicio, period.fim, sortOrder.value)
+      if (currentRequest === requestId) timeReport.value = data
     } else {
-      const { dados } = await getRelatorioVendas(page, periodo.inicio, periodo.fim)
-      if (atual === consulta) vendas.value = dados
+      const { dados: data } = await getSalesReport(page, period.inicio, period.fim)
+      if (currentRequest === requestId) sales.value = data
     }
   } catch (error) {
-    if (atual === consulta) {
-      tempos.value = null
-      vendas.value = null
+    if (currentRequest === requestId) {
+      timeReport.value = null
+      sales.value = null
       toast.error(normalizeError(error))
     }
   } finally {
-    if (atual === consulta) loading.value = false
+    if (currentRequest === requestId) loading.value = false
   }
 }
 
-function detalharTempo(servico: IRelatorioTempo) {
-  servicoSelecionado.value = servico
-  intervaloVisible.value = true
+function showTimeDetails(service: ITimeReport) {
+  selectServiceTime.value = service
+  intervalDialogVisible.value = true
 }
 
 watch(
-  () => props.tipo,
+  () => props.reportType,
   () => {
-    tempos.value = null
-    vendas.value = null
+    timeReport.value = null
+    sales.value = null
     load(true)
   },
 )
@@ -95,14 +102,14 @@ usePageLoad(() => load())
 <template>
   <div class="flex flex-col gap-4">
     <h1 class="text-xl font-semibold">
-      {{ tipo === 'tempos' ? 'Relatório de tempo dos serviços' : 'Relatório de vendas' }}
+      {{ reportType === 'tempos' ? 'Relatório de tempo dos serviços' : 'Relatório de vendas' }}
     </h1>
     <div class="flex flex-wrap gap-3 items-end">
-      <FiltroData v-model="datas" :disabled="loading" />
+      <FiltroData v-model="dates" :disabled="loading" />
       <Select
-        v-if="tipo === 'tempos'"
-        v-model="ordenacao"
-        :options="opcoesOrdem"
+        v-if="reportType === 'tempos'"
+        v-model="sortOrder"
+        :options="sortOptions"
         optionLabel="label"
         optionValue="value"
         aria-label="Ordenar serviços por tempo"
@@ -114,27 +121,27 @@ usePageLoad(() => load())
         @click="load(true)"
       />
     </div>
-    <template v-if="tipo === 'tempos'">
+    <template v-if="reportType === 'tempos'">
       <p class="text-surface-500">
         Tempo efetivamente contado por item, excluindo pausas. Considera serviços medidos de O.S.
         finalizadas no período.
       </p>
-      <div v-if="tempos" class="flex flex-wrap gap-6 border border-surface-200 rounded-xl p-4">
+      <div v-if="timeReport" class="flex flex-wrap gap-6 border border-surface-200 rounded-xl p-4">
         <p>
-          Serviços: <strong>{{ tempos.resumo.qt_servicos }}</strong>
+          Serviços: <strong>{{ timeReport.resumo.qt_servicos }}</strong>
         </p>
         <p>
-          Média: <strong>{{ formatTempo(tempos.resumo.qt_media_segundos) }}</strong>
+          Média: <strong>{{ formatTempo(timeReport.resumo.qt_media_segundos) }}</strong>
         </p>
         <p>
-          Menor tempo: <strong>{{ formatTempo(tempos.resumo.qt_menor_segundos) }}</strong>
+          Menor tempo: <strong>{{ formatTempo(timeReport.resumo.qt_menor_segundos) }}</strong>
         </p>
         <p>
-          Maior tempo: <strong>{{ formatTempo(tempos.resumo.qt_maior_segundos) }}</strong>
+          Maior tempo: <strong>{{ formatTempo(timeReport.resumo.qt_maior_segundos) }}</strong>
         </p>
       </div>
       <DataTable
-        :value="tempos?.servicos ?? []"
+        :value="timeReport?.servicos ?? []"
         :loading="loading"
         size="small"
         scrollable
@@ -146,7 +153,7 @@ usePageLoad(() => load())
               icon="pi pi-clock"
               text
               aria-label="Consultar intervalos"
-              @click="detalharTempo(data)" /></template
+              @click="showTimeDetails(data)" /></template
         ></Column>
         <Column field="nu_ordem" header="O.S." /><Column field="an_descr" header="Serviço" /><Column
           field="an_cliente"
@@ -166,16 +173,16 @@ usePageLoad(() => load())
       </DataTable>
     </template>
     <template v-else>
-      <div v-if="vendas" class="flex gap-6 border border-surface-200 rounded-xl p-4">
+      <div v-if="sales" class="flex gap-6 border border-surface-200 rounded-xl p-4">
         <p>
-          Vendas: <strong>{{ vendas.resumo.qt_vendas }}</strong>
+          Vendas: <strong>{{ sales.resumo.qt_vendas }}</strong>
         </p>
         <p>
-          Total: <strong>{{ formatCurrencyOrdem(vendas.resumo.vl_total) }}</strong>
+          Total: <strong>{{ formatOrderCurrency(sales.resumo.vl_total) }}</strong>
         </p>
       </div>
       <DataTable
-        :value="vendas?.vendas ?? []"
+        :value="sales?.vendas ?? []"
         :loading="loading"
         size="small"
         scrollable
@@ -187,10 +194,7 @@ usePageLoad(() => load())
               icon="pi pi-eye"
               text
               aria-label="Detalhar venda"
-              @click="
-                vendaSelecionada = data
-                ,vendaVisible = true
-              " /></template
+              @click="((selectSale = data), (saleDialogVisible = true))" /></template
         ></Column>
         <Column field="nu_numero" header="Venda" /><Column field="an_cliente" header="Cliente" />
         <Column header="Origem"
@@ -202,30 +206,27 @@ usePageLoad(() => load())
           ><template #body="{ data }">{{ formatDateTime(data.dt_venda) }}</template></Column
         >
         <Column header="Total"
-          ><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template></Column
+          ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
         >
         <template #empty>Nenhuma venda no período.</template>
       </DataTable>
     </template>
     <Paginator
-      :first="primeiro"
+      :first="firstRecord"
       :rows="20"
       :totalRecords="total"
       :disabled="loading"
-      @page="
-        primeiro = $event.first
-        ,load()
-      "
+      @page="((firstRecord = $event.first), load())"
     />
   </div>
   <Dialog
-    v-model:visible="intervaloVisible"
+    v-model:visible="intervalDialogVisible"
     header="Intervalos do serviço"
     modal
     :style="{ width: '55rem', maxWidth: '95vw' }"
   >
-    <p class="font-semibold mb-3">{{ servicoSelecionado?.an_descr }}</p>
-    <DataTable :value="servicoSelecionado?.intervalos ?? []" size="small" scrollable>
+    <p class="font-semibold mb-3">{{ selectServiceTime?.an_descr }}</p>
+    <DataTable :value="selectServiceTime?.intervalos ?? []" size="small" scrollable>
       <Column header="Início"
         ><template #body="{ data }">{{ formatDateTime(data.dt_inicio) }}</template></Column
       >
@@ -238,5 +239,5 @@ usePageLoad(() => load())
       <Column field="ca_encerramento" header="Encerramento" />
     </DataTable>
   </Dialog>
-  <DetalhesVendaDialog v-model:visible="vendaVisible" :venda="vendaSelecionada" />
+  <DetalhesVendaDialog v-model:visible="saleDialogVisible" :sale="selectSale" />
 </template>

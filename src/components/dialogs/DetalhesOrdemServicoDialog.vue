@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IServiceOrderDetailsDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ManutVendaDialog from '@/components/dialogs/ManutVendaDialog.vue'
@@ -12,36 +13,36 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 import {
-  getStatusOrdem,
-  calcularTotalOrdem,
-  formatCurrencyOrdem,
+  getStatusOrdem as getOrderStatus,
+  calcularTotalOrdem as calculateOrderTotal,
+  formatCurrencyOrdem as formatOrderCurrency,
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
-const props = defineProps<{ visible: boolean; ordem: IAdmOrdemServico | null }>()
+const props = defineProps<IServiceOrderDetailsDialogProps>()
 const emit = defineEmits<{ 'update:visible': [value: boolean]; faturada: [venda: IAdmVenda] }>()
 const router = useRouter()
-const vendaVisible = ref(false)
-const vendaRegistrada = ref<string | null>(null)
+const saleDialogVisible = ref(false)
+const registeredSale = ref<string | null>(null)
 watch(
-  () => [props.visible, props.ordem?.cn_ordem_servico],
+  () => [props.visible, props.order?.cn_ordem_servico],
   () => {
-    vendaRegistrada.value = props.ordem?.cn_venda ?? null
+    registeredSale.value = props.order?.cn_venda ?? null
   },
 )
-function vendaSalva(venda: IAdmVenda) {
-  vendaRegistrada.value = venda.cn_venda
-  emit('faturada', venda)
+function onSaleSaved(sale: IAdmVenda) {
+  registeredSale.value = sale.cn_venda
+  emit('faturada', sale)
 }
-function consultarVenda() {
+function viewSale() {
   emit('update:visible', false)
-  router.push({ name: 'faturamento-vendas', query: { venda: vendaRegistrada.value! } })
+  router.push({ name: 'faturamento-vendas', query: { venda: registeredSale.value! } })
 }
-const { classificacoes } = storeToRefs(useOrdemServicoStore())
-const classificacao = computed(() =>
-  classificacoes.value.find(
-    (item) => String(item.cn_classificacao) === String(props.ordem?.cn_classificacao),
+const { classificacoes: classifications } = storeToRefs(useServiceOrderStore())
+const classification = computed(() =>
+  classifications.value.find(
+    (item) => String(item.cn_classificacao) === String(props.order?.cn_classificacao),
   ),
 )
 </script>
@@ -54,80 +55,80 @@ const classificacao = computed(() =>
     modal
     :style="{ width: '76rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
-    <div v-if="ordem" class="flex flex-col gap-4">
+    <div v-if="order" class="flex flex-col gap-4">
       <h2 class="text-xl font-semibold">
-        O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }} —
-        {{ getStatusOrdem(ordem.ca_status).label }}
+        O.S. #{{ String(order.nu_numero).padStart(6, '0') }} —
+        {{ getOrderStatus(order.ca_status).label }}
       </h2>
       <Fieldset legend="Dados gerais">
         <dl class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <dt class="text-surface-500">Cliente</dt>
-            <dd>{{ ordem.an_cliente }}</dd>
+            <dd>{{ order.an_cliente }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Classificação</dt>
-            <dd>{{ classificacao?.an_descr || '—' }}</dd>
+            <dd>{{ classification?.an_descr || '—' }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Responsável</dt>
-            <dd>{{ ordem.an_responsavel || '—' }}</dd>
+            <dd>{{ order.an_responsavel || '—' }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Entrada</dt>
-            <dd>{{ formatDateTime(ordem.dt_entrada) }}</dd>
+            <dd>{{ formatDateTime(order.dt_entrada) }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Previsão</dt>
-            <dd>{{ formatDateTime(ordem.dt_previsao) }}</dd>
+            <dd>{{ formatDateTime(order.dt_previsao) }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Início do serviço</dt>
-            <dd>{{ formatDateTime(ordem.dt_inicio) }}</dd>
+            <dd>{{ formatDateTime(order.dt_inicio) }}</dd>
           </div>
-          <div v-if="ordem.ca_status === 'FINALIZADO'">
+          <div v-if="order.ca_status === 'FINALIZADO'">
             <dt class="text-surface-500">Finalização</dt>
-            <dd>{{ formatDateTime(ordem.dt_finalizacao) }}</dd>
+            <dd>{{ formatDateTime(order.dt_finalizacao) }}</dd>
           </div>
         </dl>
       </Fieldset>
-      <Fieldset v-if="ordem.ca_status === 'CANCELADO'" legend="Detalhes do cancelamento">
-        <p class="text-surface-500 mb-2">{{ formatDateTime(ordem.dt_cancelamento) }}</p>
+      <Fieldset v-if="order.ca_status === 'CANCELADO'" legend="Detalhes do cancelamento">
+        <p class="text-surface-500 mb-2">{{ formatDateTime(order.dt_cancelamento) }}</p>
         <p class="whitespace-pre-wrap break-words">
-          {{ ordem.an_motivo_cancelamento || 'Motivo não registrado na ordem antiga.' }}
+          {{ order.an_motivo_cancelamento || 'Motivo não registrado na ordem antiga.' }}
         </p>
       </Fieldset>
       <Fieldset legend="Veículo">
         <dl class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <dt class="text-surface-500">Placa</dt>
-            <dd>{{ ordem.veiculo.an_placa }}</dd>
+            <dd>{{ order.veiculo.an_placa }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Marca</dt>
-            <dd>{{ ordem.veiculo.an_marca }}</dd>
+            <dd>{{ order.veiculo.an_marca }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Modelo</dt>
-            <dd>{{ ordem.veiculo.an_modelo }}</dd>
+            <dd>{{ order.veiculo.an_modelo }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Ano</dt>
-            <dd>{{ ordem.veiculo.nu_ano ?? '—' }}</dd>
+            <dd>{{ order.veiculo.nu_ano ?? '—' }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Cor</dt>
-            <dd>{{ ordem.veiculo.an_cor || '—' }}</dd>
+            <dd>{{ order.veiculo.an_cor || '—' }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Quilometragem</dt>
-            <dd>{{ ordem.veiculo.qt_quilometragem ?? '—' }}</dd>
+            <dd>{{ order.veiculo.qt_quilometragem ?? '—' }}</dd>
           </div>
         </dl>
       </Fieldset>
       <Fieldset legend="Produtos e serviços">
         <DataTable
-          :value="ordem.itens"
+          :value="order.itens"
           rowGroupMode="subheader"
           groupRowsBy="ca_tipo"
           sortField="ca_tipo"
@@ -150,41 +151,41 @@ const classificacao = computed(() =>
           >
           <Column header="Unitário"
             ><template #body="{ data }">{{
-              formatCurrencyOrdem(data.vl_unitario)
+              formatOrderCurrency(data.vl_unitario)
             }}</template></Column
           >
           <Column header="Total"
-            ><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template></Column
+            ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
           <template #empty>Nenhum item cadastrado.</template>
         </DataTable>
         <p class="text-right font-bold mt-4">
-          Total: {{ formatCurrencyOrdem(calcularTotalOrdem(ordem.itens)) }}
+          Total: {{ formatOrderCurrency(calculateOrderTotal(order.itens)) }}
         </p>
       </Fieldset>
       <Fieldset legend="Observações">
         <p class="text-surface-500">Solicitação do cliente</p>
-        <p class="whitespace-pre-wrap break-words mb-3">{{ ordem.an_solicitacao || '—' }}</p>
+        <p class="whitespace-pre-wrap break-words mb-3">{{ order.an_solicitacao || '—' }}</p>
         <p class="text-surface-500">Observações internas</p>
-        <p class="whitespace-pre-wrap break-words">{{ ordem.an_obs || '—' }}</p>
+        <p class="whitespace-pre-wrap break-words">{{ order.an_obs || '—' }}</p>
       </Fieldset>
     </div>
     <template #footer>
       <Button
-        v-if="ordem?.ca_status === 'FINALIZADO' && ordem.itens.length && !vendaRegistrada"
+        v-if="order?.ca_status === 'FINALIZADO' && order.itens.length && !registeredSale"
         label="Gerar venda"
         icon="pi pi-shopping-cart"
-        @click="vendaVisible = true"
+        @click="saleDialogVisible = true"
       />
       <Button
-        v-if="vendaRegistrada"
+        v-if="registeredSale"
         label="Consultar venda"
         icon="pi pi-eye"
         severity="secondary"
-        @click="consultarVenda"
+        @click="viewSale"
       />
       <Button
-        v-if="ordem?.ca_status === 'CANCELADO'"
+        v-if="order?.ca_status === 'CANCELADO'"
         label="Reabrir O.S."
         icon="pi pi-replay"
         disabled
@@ -194,5 +195,5 @@ const classificacao = computed(() =>
       <Button label="Fechar" @click="emit('update:visible', false)" />
     </template>
   </Dialog>
-  <ManutVendaDialog v-model:visible="vendaVisible" :ordem="ordem" @saved="vendaSalva" />
+  <ManutVendaDialog v-model:visible="saleDialogVisible" :order="order" @saved="onSaleSaved" />
 </template>

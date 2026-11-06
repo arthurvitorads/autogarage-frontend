@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { PersonModel } from '@/models/person.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IManutPersonDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 
 import Fieldset from 'primevue/fieldset'
@@ -6,7 +9,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import SelectButton from 'primevue/selectbutton'
 import Checkbox from 'primevue/checkbox'
-import ToggleSwitch from 'primevue/toggleswitch'
+import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 
@@ -14,9 +17,9 @@ import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { Pessoa, TipoPessoa } from '@/models/pessoa'
+import type { Person, TPersonType } from '@/models/pessoa'
 import { createPerson, updatePerson, personToRequest } from '@/services/person.service'
-import type { IFormPessoa } from '@/interface/interface-pages/PessoaPage'
+import type { IFormPerson } from '@/interface/interface-pages/PessoaPage'
 import type { TGenericData } from '@/interface/util'
 
 import {
@@ -31,11 +34,7 @@ import {
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
-const props = defineProps<{
-  visible: boolean
-  pessoa?: Pessoa | null
-  pessoas?: Pessoa[]
-}>()
+const props = defineProps<IManutPersonDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -47,23 +46,21 @@ const { fetchCep, fetchCnpj, normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
+const formRef = ref<IFormPageRef | null>(null)
 const isValidated = ref(false)
 
-const isEditing = computed(() => !!props.pessoa)
-const isFuncionario = computed(() => formData.value.bo_categ_func)
+const isEditing = computed(() => !!props.person)
+const isEmployee = computed(() => formData.value.bo_categ_func)
 
-const tiposPessoa: {
+const personTypes: {
   label: string
-  value: TipoPessoa
+  value: TPersonType
 }[] = [
   { label: 'Pessoa física', value: 'PF' },
   { label: 'Pessoa jurídica', value: 'PJ' },
 ]
 
-const ufs = [
+const states = [
   'AC',
   'AL',
   'AP',
@@ -93,17 +90,17 @@ const ufs = [
   'TO',
 ]
 
-const loadingCep = ref(false)
-const mensagemCep = ref('')
-const cepConsultado = ref('')
-let consultaCepId = 0
+const loadingPostalCode = ref(false)
+const postalCodeMessage = ref('')
+const queriedPostalCode = ref('')
+let postalCodeRequestId = 0
 
 const loadingCnpj = ref(false)
-const cnpjConsultado = ref('')
-const cnpjNaoEncontrado = ref('')
-let consultaCnpjId = 0
+const queriedCnpj = ref('')
+const missingCnpj = ref('')
+let cnpjRequestId = 0
 
-const camposCnpj = [
+const companyFields = [
   'razaoSocial',
   'nomeFantasia',
   'email',
@@ -116,67 +113,42 @@ const camposCnpj = [
   'cidade',
   'uf',
 ] as const
-type TCampoCnpj = (typeof camposCnpj)[number]
-let dadosCnpjPreenchidos: Partial<Record<TCampoCnpj, string>> = {}
+type TCampoCnpj = (typeof companyFields)[number]
+let filledCompanyFields: Partial<Record<TCampoCnpj, string>> = {}
 
-function formDataDefault(): IFormPessoa {
-  return {
-    tipo: 'PF',
-    bo_categ_cliente: true,
-    bo_categ_func: false,
-    bo_sts_reg: true,
-    nome: '',
-    cpf: '',
-    cnpj: '',
-    razaoSocial: '',
-    nomeFantasia: '',
-    email: '',
-    telefone: '',
-    cargo: '',
-    comissaoPercentual: 0,
-    cep: '',
-    logradouro: '',
-    numero: '',
-    complemento: '',
-    bairro: '',
-    cidade: '',
-    uf: '',
-  }
-}
+const formData = ref<IFormPerson>(PersonModel.createForm())
 
-const formData = ref<IFormPessoa>(formDataDefault())
-
-function resetConsultaCnpj(limparCampos = false) {
-  consultaCnpjId++
+function resetCnpjQuery(clearFields = false) {
+  cnpjRequestId++
   loadingCnpj.value = false
-  cnpjConsultado.value = ''
-  cnpjNaoEncontrado.value = ''
+  queriedCnpj.value = ''
+  missingCnpj.value = ''
   delete formErrors.value.cnpj
 
-  if (limparCampos) {
-    for (const campo of camposCnpj) {
+  if (clearFields) {
+    for (const field of companyFields) {
       if (
-        dadosCnpjPreenchidos[campo] !== undefined &&
-        formData.value[campo] === dadosCnpjPreenchidos[campo]
+        filledCompanyFields[field] !== undefined &&
+        formData.value[field] === filledCompanyFields[field]
       )
-        formData.value[campo] = ''
+        formData.value[field] = ''
     }
   }
 
-  dadosCnpjPreenchidos = {}
+  filledCompanyFields = {}
 }
 
 function onCnpjChange(value: string | null | undefined) {
   formData.value.cnpj = maskCnpj(value ?? '')
 
-  if (unMaskDocument(formData.value.cnpj).length === 14) void consultarCnpj()
+  if (unMaskDocument(formData.value.cnpj).length === 14) void queryCnpj()
 }
 
 function getCnpjText(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
-async function consultarCnpj(forcarConsulta = false) {
+async function queryCnpj(forceQuery = false) {
   if (!props.visible || formData.value.tipo !== 'PJ' || loadingCnpj.value) return
 
   const cnpj = unMaskDocument(formData.value.cnpj).toUpperCase()
@@ -189,140 +161,138 @@ async function consultarCnpj(forcarConsulta = false) {
     return
   }
 
-  if (!forcarConsulta && (cnpjConsultado.value === cnpj || cnpjNaoEncontrado.value === cnpj)) return
+  if (!forceQuery && (queriedCnpj.value === cnpj || missingCnpj.value === cnpj)) return
 
-  const consultaAtual = ++consultaCnpjId
-  const valoresAnteriores = { ...formData.value }
+  const currentRequest = ++cnpjRequestId
+  const previousValues = { ...formData.value }
   loadingCnpj.value = true
   delete formErrors.value.cnpj
 
   try {
-    const empresa = await fetchCnpj(cnpj)
+    const company = await fetchCnpj(cnpj)
 
-    if (consultaAtual !== consultaCnpjId) return
+    if (currentRequest !== cnpjRequestId) return
 
-    if (!empresa) {
-      cnpjNaoEncontrado.value = cnpj
+    if (!company) {
+      missingCnpj.value = cnpj
       formErrors.value.cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
       toast.warn('Não foi encontrado nenhum cadastro para este CNPJ.')
       return
     }
 
-    const tipoLogradouro = getCnpjText(empresa.descricao_tipo_de_logradouro)
-    const logradouro = getCnpjText(empresa.logradouro)
-    const telefone =
-      [empresa.ddd_telefone_1, empresa.ddd_telefone_2]
-        .map((valor) => onlyNumbers(getCnpjText(valor)))
-        .find((valor) => [10, 11].includes(valor.length)) ?? ''
-    const cep = onlyNumbers(getCnpjText(empresa.cep))
-    const dadosEmpresa: Record<TCampoCnpj, string> = {
-      razaoSocial: getCnpjText(empresa.razao_social),
-      nomeFantasia: getCnpjText(empresa.nome_fantasia),
-      email: getCnpjText(empresa.email),
-      telefone,
-      cep: cep.length === 8 ? cep : '',
+    const streetType = getCnpjText(company.descricao_tipo_de_logradouro)
+    const street = getCnpjText(company.logradouro)
+    const phone =
+      [company.ddd_telefone_1, company.ddd_telefone_2]
+        .map((value) => onlyNumbers(getCnpjText(value)))
+        .find((value) => [10, 11].includes(value.length)) ?? ''
+    const postalCode = onlyNumbers(getCnpjText(company.cep))
+    const companyData: Record<TCampoCnpj, string> = {
+      razaoSocial: getCnpjText(company.razao_social),
+      nomeFantasia: getCnpjText(company.nome_fantasia),
+      email: getCnpjText(company.email),
+      telefone: phone,
+      cep: postalCode.length === 8 ? postalCode : '',
       logradouro:
-        logradouro &&
-        tipoLogradouro &&
-        !logradouro.toUpperCase().startsWith(tipoLogradouro.toUpperCase() + ' ')
-          ? tipoLogradouro + ' ' + logradouro
-          : logradouro,
-      numero: getCnpjText(empresa.numero),
-      complemento: getCnpjText(empresa.complemento),
-      bairro: getCnpjText(empresa.bairro),
-      cidade: getCnpjText(empresa.municipio),
-      uf: getCnpjText(empresa.uf),
+        street && streetType && !street.toUpperCase().startsWith(streetType.toUpperCase() + ' ')
+          ? streetType + ' ' + street
+          : street,
+      numero: getCnpjText(company.numero),
+      complemento: getCnpjText(company.complemento),
+      bairro: getCnpjText(company.bairro),
+      cidade: getCnpjText(company.municipio),
+      uf: getCnpjText(company.uf),
     }
 
-    if (dadosEmpresa.cep && formData.value.cep === valoresAnteriores.cep) {
-      consultaCepId++
-      loadingCep.value = false
+    if (companyData.cep && formData.value.cep === previousValues.cep) {
+      postalCodeRequestId++
+      loadingPostalCode.value = false
     }
 
-    for (const campo of camposCnpj) {
+    for (const field of companyFields) {
       // Não substituir alterações feitas enquanto a consulta estava em andamento.
-      if (dadosEmpresa[campo] && formData.value[campo] === valoresAnteriores[campo]) {
-        formData.value[campo] = dadosEmpresa[campo]
-        dadosCnpjPreenchidos[campo] = dadosEmpresa[campo]
-        delete formErrors.value[campo]
+      if (companyData[field] && formData.value[field] === previousValues[field]) {
+        formData.value[field] = companyData[field]
+        filledCompanyFields[field] = companyData[field]
+        delete formErrors.value[field]
       }
     }
 
-    cnpjConsultado.value = cnpj
-    cnpjNaoEncontrado.value = ''
+    queriedCnpj.value = cnpj
+    missingCnpj.value = ''
     toast.success('CNPJ confirmado. Confira os dados preenchidos e complete os campos restantes.')
 
-    if (dadosCnpjPreenchidos.cep && formData.value.cep === dadosCnpjPreenchidos.cep)
-      await consultarCep(true)
+    if (filledCompanyFields.cep && formData.value.cep === filledCompanyFields.cep)
+      await queryPostalCode(true)
   } catch (error) {
-    if (consultaAtual !== consultaCnpjId) return
+    if (currentRequest !== cnpjRequestId) return
 
     toast.error(normalizeError(error))
   } finally {
-    if (consultaAtual === consultaCnpjId) loadingCnpj.value = false
+    if (currentRequest === cnpjRequestId) loadingCnpj.value = false
   }
 }
 
-async function consultarCep(preencherSomenteVazios = false) {
-  if (loadingCep.value) return
+async function queryPostalCode(fillOnlyEmpty = false) {
+  if (loadingPostalCode.value) return
 
-  const cep = onlyNumbers(formData.value.cep)
+  const postalCode = onlyNumbers(formData.value.cep)
 
-  if (cep.length !== 8) {
+  if (postalCode.length !== 8) {
     formErrors.value.cep = 'Informe um CEP com 8 dígitos.'
     return
   }
 
-  const consultaAtual = ++consultaCepId
-  loadingCep.value = true
-  mensagemCep.value = ''
+  const currentRequest = ++postalCodeRequestId
+  loadingPostalCode.value = true
+  postalCodeMessage.value = ''
 
   try {
-    const endereco = await fetchCep(cep)
+    const address = await fetchCep(postalCode)
 
-    if (consultaAtual !== consultaCepId) return
+    if (currentRequest !== postalCodeRequestId) return
 
-    if (!preencherSomenteVazios || !formData.value.logradouro) {
-      formData.value.logradouro = endereco.logradouro
+    if (!fillOnlyEmpty || !formData.value.logradouro) {
+      formData.value.logradouro = address.logradouro
 
-      if (preencherSomenteVazios) dadosCnpjPreenchidos.logradouro = endereco.logradouro
+      if (fillOnlyEmpty) filledCompanyFields.logradouro = address.logradouro
     }
 
-    if (!preencherSomenteVazios || !formData.value.bairro) {
-      formData.value.bairro = endereco.bairro
+    if (!fillOnlyEmpty || !formData.value.bairro) {
+      formData.value.bairro = address.bairro
 
-      if (preencherSomenteVazios) dadosCnpjPreenchidos.bairro = endereco.bairro
+      if (fillOnlyEmpty) filledCompanyFields.bairro = address.bairro
     }
 
-    if (!preencherSomenteVazios || !formData.value.cidade) {
-      formData.value.cidade = endereco.localidade
+    if (!fillOnlyEmpty || !formData.value.cidade) {
+      formData.value.cidade = address.localidade
 
-      if (preencherSomenteVazios) dadosCnpjPreenchidos.cidade = endereco.localidade
+      if (fillOnlyEmpty) filledCompanyFields.cidade = address.localidade
     }
 
-    if (!preencherSomenteVazios || !formData.value.uf) {
-      formData.value.uf = endereco.uf
+    if (!fillOnlyEmpty || !formData.value.uf) {
+      formData.value.uf = address.uf
 
-      if (preencherSomenteVazios) dadosCnpjPreenchidos.uf = endereco.uf
+      if (fillOnlyEmpty) filledCompanyFields.uf = address.uf
     }
 
-    for (const campo of ['cep', 'logradouro', 'bairro', 'cidade', 'uf'])
-      delete formErrors.value[campo]
+    for (const field of ['cep', 'logradouro', 'bairro', 'cidade', 'uf'])
+      delete formErrors.value[field]
   } catch (error) {
-    if (consultaAtual !== consultaCepId) return
+    if (currentRequest !== postalCodeRequestId) return
 
-    mensagemCep.value = normalizeError(error) + ' Preencha o endereço manualmente.'
-    toast.warn(mensagemCep.value)
+    postalCodeMessage.value = normalizeError(error) + ' Preencha o endereço manualmente.'
+    toast.warn(postalCodeMessage.value)
   } finally {
-    if (consultaAtual === consultaCepId) {
-      cepConsultado.value = cep
-      loadingCep.value = false
+    if (currentRequest === postalCodeRequestId) {
+      queriedPostalCode.value = postalCode
+      loadingPostalCode.value = false
     }
   }
 }
 
-async function onSubmit(values: IFormPessoa) {
-  if (loadingCep.value || loadingCnpj.value) return
+async function onSubmit(values: IFormPerson) {
+  if (loadingPostalCode.value || loadingCnpj.value) return
 
   const errors: TGenericData = {}
 
@@ -339,7 +309,7 @@ async function onSubmit(values: IFormPessoa) {
     if (!values.nomeFantasia.trim()) errors.nomeFantasia = 'Campo obrigatório.'
 
     if (!validateCNPJ(values.cnpj)) errors.cnpj = 'Informe um CNPJ válido.'
-    else if (cnpjNaoEncontrado.value === unMaskDocument(values.cnpj).toUpperCase())
+    else if (missingCnpj.value === unMaskDocument(values.cnpj).toUpperCase())
       errors.cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
   }
 
@@ -354,7 +324,7 @@ async function onSubmit(values: IFormPessoa) {
     errors.telefone = 'Informe um telefone com DDD (10 ou 11 dígitos).'
 
   if (!/^\d{5}-?\d{3}$/.test(values.cep.trim())) errors.cep = 'Informe um CEP válido.'
-  else if (cepConsultado.value !== onlyNumbers(values.cep))
+  else if (queriedPostalCode.value !== onlyNumbers(values.cep))
     errors.cep =
       'Consulte o CEP antes de gravar. Se a consulta falhar, preencha o endereço manualmente.'
 
@@ -366,7 +336,7 @@ async function onSubmit(values: IFormPessoa) {
 
   if (!values.cidade.trim()) errors.cidade = 'Campo obrigatório.'
 
-  if (!ufs.includes(values.uf.trim().toUpperCase())) errors.uf = 'Informe uma UF válida.'
+  if (!states.includes(values.uf.trim().toUpperCase())) errors.uf = 'Informe uma UF válida.'
 
   if (
     values.bo_categ_func &&
@@ -377,15 +347,15 @@ async function onSubmit(values: IFormPessoa) {
   )
     errors.comissaoPercentual = 'A comissão deve estar entre 0% e 100%.'
 
-  const documento = unMaskDocument(values.tipo === 'PF' ? values.cpf : values.cnpj).toUpperCase()
-  const documentoDuplicado = (props.pessoas ?? []).some(
-    (pessoa) =>
-      pessoa !== props.pessoa &&
-      (props.pessoa?.id === undefined || pessoa.id !== props.pessoa.id) &&
-      unMaskDocument(pessoa.tipo === 'PF' ? pessoa.cpf : pessoa.cnpj).toUpperCase() === documento,
+  const document = unMaskDocument(values.tipo === 'PF' ? values.cpf : values.cnpj).toUpperCase()
+  const duplicateDocument = (props.people ?? []).some(
+    (person) =>
+      person !== props.person &&
+      (props.person?.id === undefined || person.id !== props.person.id) &&
+      unMaskDocument(person.tipo === 'PF' ? person.cpf : person.cnpj).toUpperCase() === document,
   )
 
-  if (documentoDuplicado) errors[values.tipo === 'PF' ? 'cpf' : 'cnpj'] = 'Documento já cadastrado.'
+  if (duplicateDocument) errors[values.tipo === 'PF' ? 'cpf' : 'cnpj'] = 'Documento já cadastrado.'
 
   formErrors.value = errors
   isValidated.value = !Object.keys(errors).length
@@ -395,8 +365,8 @@ async function onSubmit(values: IFormPessoa) {
   setLoading(true)
 
   try {
-    const dadosPessoa = {
-      ...(props.pessoa?.id !== undefined ? { id: props.pessoa.id } : {}),
+    const personData = {
+      ...(props.person?.id !== undefined ? { id: props.person.id } : {}),
       bo_categ_cliente: values.bo_categ_cliente,
       bo_categ_func: values.bo_categ_func,
       bo_sts_reg: values.bo_sts_reg,
@@ -418,24 +388,24 @@ async function onSubmit(values: IFormPessoa) {
           }
         : {}),
     }
-    const pessoa: Pessoa =
+    const person: Person =
       values.tipo === 'PF'
         ? {
-            ...dadosPessoa,
+            ...personData,
             tipo: 'PF',
             nome: values.nome.trim(),
-            cpf: documento,
+            cpf: document,
           }
         : {
-            ...dadosPessoa,
+            ...personData,
             tipo: 'PJ',
             razaoSocial: values.razaoSocial.trim(),
             nomeFantasia: values.nomeFantasia.trim(),
-            cnpj: documento,
+            cnpj: document,
           }
 
-    if (props.pessoa?.id !== undefined) await updatePerson(props.pessoa.id, personToRequest(pessoa))
-    else await createPerson(personToRequest(pessoa))
+    if (props.person?.id !== undefined) await updatePerson(props.person.id, personToRequest(person))
+    else await createPerson(personToRequest(person))
     toast.success('Pessoa gravada com sucesso.')
     emit('update:visible', false)
     emit('saved')
@@ -447,39 +417,39 @@ async function onSubmit(values: IFormPessoa) {
 }
 
 watch(
-  [() => props.visible, () => props.pessoa],
+  [() => props.visible, () => props.person],
   ([visible]) => {
-    resetConsultaCnpj()
-    consultaCepId++
-    loadingCep.value = false
+    resetCnpjQuery()
+    postalCodeRequestId++
+    loadingPostalCode.value = false
 
     if (!visible) return
 
-    const pessoa = props.pessoa
+    const person = props.person
 
-    formData.value = pessoa
+    formData.value = person
       ? {
-          ...formDataDefault(),
-          tipo: pessoa.tipo,
-          bo_categ_cliente: pessoa.bo_categ_cliente,
-          bo_categ_func: pessoa.bo_categ_func,
-          bo_sts_reg: pessoa.bo_sts_reg,
-          nome: pessoa.tipo === 'PF' ? pessoa.nome : '',
-          cpf: pessoa.tipo === 'PF' ? maskCpf(pessoa.cpf) : '',
-          cnpj: pessoa.tipo === 'PJ' ? maskCnpj(pessoa.cnpj) : '',
-          razaoSocial: pessoa.tipo === 'PJ' ? pessoa.razaoSocial : '',
-          nomeFantasia: pessoa.tipo === 'PJ' ? pessoa.nomeFantasia : '',
-          email: pessoa.email,
-          telefone: pessoa.telefone,
-          cargo: pessoa.cargo ?? '',
-          comissaoPercentual: pessoa.comissaoPercentual ?? 0,
-          ...pessoa.endereco,
+          ...PersonModel.createForm(),
+          tipo: person.tipo,
+          bo_categ_cliente: person.bo_categ_cliente,
+          bo_categ_func: person.bo_categ_func,
+          bo_sts_reg: person.bo_sts_reg,
+          nome: person.tipo === 'PF' ? person.nome : '',
+          cpf: person.tipo === 'PF' ? maskCpf(person.cpf) : '',
+          cnpj: person.tipo === 'PJ' ? maskCnpj(person.cnpj) : '',
+          razaoSocial: person.tipo === 'PJ' ? person.razaoSocial : '',
+          nomeFantasia: person.tipo === 'PJ' ? person.nomeFantasia : '',
+          email: person.email,
+          telefone: person.telefone,
+          cargo: person.cargo ?? '',
+          comissaoPercentual: person.comissaoPercentual ?? 0,
+          ...person.endereco,
         }
-      : formDataDefault()
+      : PersonModel.createForm()
     formErrors.value = {}
     isValidated.value = false
-    mensagemCep.value = ''
-    cepConsultado.value = pessoa ? onlyNumbers(pessoa.endereco.cep) : ''
+    postalCodeMessage.value = ''
+    queriedPostalCode.value = person ? onlyNumbers(person.endereco.cep) : ''
     formKey.value++
   },
   { immediate: true },
@@ -488,10 +458,10 @@ watch(
 watch(
   () => formData.value.cep,
   () => {
-    consultaCepId++
-    loadingCep.value = false
-    cepConsultado.value = ''
-    mensagemCep.value = ''
+    postalCodeRequestId++
+    loadingPostalCode.value = false
+    queriedPostalCode.value = ''
+    postalCodeMessage.value = ''
   },
   { flush: 'sync' },
 )
@@ -499,9 +469,9 @@ watch(
 watch(
   () => formData.value.tipo,
   () => {
-    resetConsultaCnpj()
-    consultaCepId++
-    loadingCep.value = false
+    resetCnpjQuery()
+    postalCodeRequestId++
+    loadingPostalCode.value = false
     formErrors.value = {}
     isValidated.value = false
   },
@@ -511,9 +481,9 @@ watch(
 watch(
   () => unMaskDocument(formData.value.cnpj).toUpperCase(),
   () => {
-    resetConsultaCnpj(true)
-    consultaCepId++
-    loadingCep.value = false
+    resetCnpjQuery(true)
+    postalCodeRequestId++
+    loadingPostalCode.value = false
     isValidated.value = false
   },
   { flush: 'sync' },
@@ -539,7 +509,7 @@ watch(
     @update:visible="emit('update:visible', $event)"
     :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'"
     width="96rem"
-    :disabled="loadingCep || loadingCnpj"
+    :disabled="loadingPostalCode || loadingCnpj"
     @submit="formRef?.submit()"
   >
     <FormPage
@@ -556,28 +526,27 @@ watch(
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
-            class="col-span-10 sm:col-span-6 lg:col-span-5"
+            class="col-span-8 sm:col-span-6 lg:col-span-5"
             name="tipo"
             label="Tipo de pessoa"
           >
             <SelectButton
               v-model="formData.tipo"
-              :options="tiposPessoa"
+              :options="personTypes"
               optionLabel="label"
               optionValue="value"
               :allowEmpty="false"
             />
           </FieldForm>
           <FieldForm
-            class="col-span-2 col-start-11 row-start-1 lg:col-span-1 lg:col-start-12 flex items-end"
+            class="col-span-4 col-start-9 row-start-1 lg:col-span-2 lg:col-start-11 flex items-end"
             name="bo_sts_reg"
             label="Status"
-            v-slot="{ field }"
           >
-            <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Pessoa ativa" />
+            <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-4 lg:col-span-6"
+            class="col-span-12"
             name="bo_categ_cliente"
             label="Categorias *"
             v-slot="{ invalid }"
@@ -682,14 +651,14 @@ watch(
                 maxlength="18"
                 class="flex-1 min-w-0"
                 @update:modelValue="onCnpjChange"
-                @blur="consultarCnpj()"
+                @blur="queryCnpj()"
               />
               <Button
                 type="button"
                 icon="pi pi-search"
                 aria-label="Consultar CNPJ"
                 :loading="loadingCnpj"
-                @click="consultarCnpj(true)"
+                @click="queryCnpj(true)"
               />
             </div>
           </FieldForm>
@@ -747,8 +716,8 @@ watch(
       </Fieldset>
       <Fieldset legend="Endereço">
         <div class="grid grid-cols-12 gap-x-4">
-          <Message v-if="mensagemCep" severity="warn" class="col-span-12 mb-3">{{
-            mensagemCep
+          <Message v-if="postalCodeMessage" severity="warn" class="col-span-12 mb-3">{{
+            postalCodeMessage
           }}</Message>
           <FieldForm
             class="col-span-12 sm:col-span-4 lg:col-span-3"
@@ -764,14 +733,14 @@ watch(
                 maxlength="9"
                 :invalid="invalid"
                 class="flex-1 min-w-0"
-                @blur="consultarCep()"
+                @blur="queryPostalCode()"
               />
               <Button
                 type="button"
                 icon="pi pi-search"
                 aria-label="Consultar CEP"
-                :loading="loadingCep"
-                @click="consultarCep()"
+                :loading="loadingPostalCode"
+                @click="queryPostalCode()"
               />
             </div>
           </FieldForm>
@@ -855,7 +824,7 @@ watch(
           </FieldForm>
         </div>
       </Fieldset>
-      <Fieldset v-if="isFuncionario" legend="Dados do funcionário">
+      <Fieldset v-if="isEmployee" legend="Dados do funcionário">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
             class="col-span-12 sm:col-span-8"

@@ -1,12 +1,12 @@
 import { apiRequest } from '@/services/api.service'
 import type {
   ICadPessoa,
-  IPessoaResponse,
-  IManutPessoa,
+  IPersonResponse,
+  IManutPerson,
 } from '@/interface/interface-pages/PessoaPage'
-import type { Pessoa } from '@/models/pessoa'
+import type { Person } from '@/models/pessoa'
 
-export function getPerson(ePage = 1, eLimit = 20, search = ''): Promise<IPessoaResponse> {
+export function getPerson(ePage = 1, eLimit = 20, search = ''): Promise<IPersonResponse> {
   const params = new URLSearchParams({
     page: String(ePage),
     limit: String(eLimit),
@@ -15,15 +15,15 @@ export function getPerson(ePage = 1, eLimit = 20, search = ''): Promise<IPessoaR
   return apiRequest(`/pessoa?${params}`)
 }
 
-export function createPerson(values: IManutPessoa) {
+export function createPerson(values: IManutPerson) {
   return apiRequest<ICadPessoa>('/pessoa', values)
 }
 
-export function updatePerson(id: string | number, values: IManutPessoa) {
+export function updatePerson(id: string | number, values: IManutPerson) {
   return apiRequest<ICadPessoa>(`/pessoa/${encodeURIComponent(id)}`, values)
 }
 
-export function personToForm(pessoa: ICadPessoa): Pessoa {
+export function personToForm(pessoa: ICadPessoa): Person {
   const endereco = pessoa.endereco
   const dados = {
     id: pessoa.cn_pessoa,
@@ -60,7 +60,7 @@ export function personToForm(pessoa: ICadPessoa): Pessoa {
       }
 }
 
-export function personToRequest(pessoa: Pessoa): IManutPessoa {
+export function personToRequest(pessoa: Person): IManutPerson {
   return {
     ca_tipo: pessoa.tipo,
     an_nome: pessoa.tipo === 'PF' ? pessoa.nome : null,

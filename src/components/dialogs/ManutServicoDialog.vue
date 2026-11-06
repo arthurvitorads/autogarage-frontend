@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { ServiceModel } from '@/models/service.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IManutServiceDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -7,7 +10,7 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
-import ToggleSwitch from 'primevue/toggleswitch'
+import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 
 import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
@@ -17,34 +20,31 @@ import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.
 
 import type {
   IAdmServico,
-  IFormServico,
-  IManutServico,
+  IFormService,
+  IManutService,
 } from '@/interface/interface-pages/ServicoPage'
 import type { IAdmCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useCatalogoStore } from '@/stores/catalogo.store'
+import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
-const props = defineProps<{
-  visible: boolean
-  servico?: IAdmServico | null
-}>()
+const props = defineProps<IManutServiceDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [servico: IManutServico]
+  saved: [servico: IManutService]
 }>()
 
 const toast = useAppToast()
-const catalogoStore = useCatalogoStore()
-const { saveServico } = catalogoStore
-const { categoriasServico } = storeToRefs(catalogoStore)
-const cadastroCategoriaVisible = ref(false)
+const catalogStore = useCatalogStore()
+const { saveServico: saveService } = catalogStore
+const { categoriasServico: serviceCategories } = storeToRefs(catalogStore)
+const categoryDialogVisible = ref(false)
 
-function selectCategoria(cadastro: IAdmCadastroAuxiliar) {
-  formData.value.an_categoria = cadastro.an_descr
+function selectCategory(auxiliary: IAdmCadastroAuxiliar) {
+  formData.value.an_categoria = auxiliary.an_descr
   delete formErrors.value.an_categoria
 }
 
@@ -52,31 +52,18 @@ const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
+const formRef = ref<IFormPageRef | null>(null)
 const isValidated = ref(false)
-const isEditing = computed(() => !!props.servico)
+const isEditing = computed(() => !!props.service)
 
-function formDataDefault(): IFormServico {
-  return {
-    an_nome: '',
-    an_categoria: null,
-    vl_preco: 0,
-    nu_tempo_estimado: null,
-    an_obs: '',
-    bo_sts_reg: true,
-  }
-}
+const formData = ref<IFormService>(ServiceModel.createForm())
 
-const formData = ref<IFormServico>(formDataDefault())
-
-async function onSubmit(values: IFormServico) {
+async function onSubmit(values: IFormService) {
   const errors: TGenericData = {}
 
   if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
 
-  if (values.an_categoria && !categoriasServico.value.includes(values.an_categoria))
+  if (values.an_categoria && !serviceCategories.value.includes(values.an_categoria))
     errors.an_categoria = 'Selecione uma categoria.'
 
   if (
@@ -104,8 +91,8 @@ async function onSubmit(values: IFormServico) {
   setLoading(true)
 
   try {
-    const servico: IManutServico = {
-      ...(props.servico ? { cn_servico: props.servico.cn_servico } : {}),
+    const service: IManutService = {
+      ...(props.service ? { cn_servico: props.service.cn_servico } : {}),
       an_nome: values.an_nome.trim(),
       an_categoria: values.an_categoria ?? '',
       vl_preco: values.vl_preco ?? 0,
@@ -114,8 +101,8 @@ async function onSubmit(values: IFormServico) {
       bo_sts_reg: values.bo_sts_reg,
     }
 
-    await saveServico(servico)
-    emit('saved', servico)
+    await saveService(service)
+    emit('saved', service)
     toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
@@ -126,22 +113,22 @@ async function onSubmit(values: IFormServico) {
 }
 
 watch(
-  [() => props.visible, () => props.servico],
+  [() => props.visible, () => props.service],
   ([visible]) => {
     if (!visible) return
 
-    const servico = props.servico
+    const service = props.service
 
-    formData.value = servico
+    formData.value = service
       ? {
-          an_nome: servico.an_nome,
-          an_categoria: servico.an_categoria,
-          vl_preco: servico.vl_preco,
-          nu_tempo_estimado: servico.nu_tempo_estimado ?? null,
-          an_obs: servico.an_obs,
-          bo_sts_reg: servico.bo_sts_reg,
+          an_nome: service.an_nome,
+          an_categoria: service.an_categoria,
+          vl_preco: service.vl_preco,
+          nu_tempo_estimado: service.nu_tempo_estimado ?? null,
+          an_obs: service.an_obs,
+          bo_sts_reg: service.bo_sts_reg,
         }
-      : formDataDefault()
+      : ServiceModel.createForm()
     formErrors.value = {}
     isValidated.value = false
     formKey.value++
@@ -186,13 +173,8 @@ watch(
               placeholder="Digite o nome do serviço"
             />
           </FieldForm>
-          <FieldForm
-            class="col-span-12 sm:col-span-2"
-            name="bo_sts_reg"
-            label="Status"
-            v-slot="{ field }"
-          >
-            <ToggleSwitch v-model="formData.bo_sts_reg" :name="field" aria-label="Serviço ativo" />
+          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status">
+            <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
           <FieldForm
             class="col-span-12 sm:col-span-6 lg:col-span-4"
@@ -204,7 +186,7 @@ watch(
               <Select
                 v-model="formData.an_categoria"
                 :name="field"
-                :options="categoriasServico"
+                :options="serviceCategories"
                 :invalid="invalid"
                 class="flex-1 min-w-0"
                 placeholder="Selecione a categoria"
@@ -215,7 +197,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar categoria"
-                @click="cadastroCategoriaVisible = true"
+                @click="categoryDialogVisible = true"
               />
             </div>
           </FieldForm>
@@ -265,8 +247,8 @@ watch(
     </FormPage>
   </CadastroDialog>
   <CadastroAuxiliarDialog
-    v-model:visible="cadastroCategoriaVisible"
-    tipo="CATEGORIA_SERVICO"
-    @saved="selectCategoria"
+    v-model:visible="categoryDialogVisible"
+    auxiliaryType="CATEGORIA_SERVICO"
+    @saved="selectCategory"
   />
 </template>

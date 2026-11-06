@@ -53,3 +53,6 @@ export interface ICnpjBrasilApiResponse {
   municipio?: string | null
   uf?: string | null
 }
+export interface IFormPageRef {
+  submit: () => void
+}

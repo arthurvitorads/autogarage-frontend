@@ -1,15 +1,15 @@
-export type TTipoCadastroAuxiliar = 'CATEGORIA_PRODUTO' | 'CATEGORIA_SERVICO' | 'MARCA' | 'UNIDADE'
+export type TAuxiliaryType = 'CATEGORIA_PRODUTO' | 'CATEGORIA_SERVICO' | 'MARCA' | 'UNIDADE'
 
-export interface IFormCadastroAuxiliar {
+export interface IFormAuxiliary {
   an_descr: string
   ca_sigla: string
 }
 
-export interface IManutCadastroAuxiliar extends IFormCadastroAuxiliar {
+export interface IManutAuxiliary extends IFormAuxiliary {
   cn_cadastro?: number
-  ca_tipo: TTipoCadastroAuxiliar
+  ca_tipo: TAuxiliaryType
 }
 
-export interface IAdmCadastroAuxiliar extends IManutCadastroAuxiliar {
+export interface IAdmCadastroAuxiliar extends IManutAuxiliary {
   cn_cadastro: number
 }

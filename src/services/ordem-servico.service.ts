@@ -1,6 +1,6 @@
 import type {
   IAdmOrdemServico,
-  IFormOrdemServico,
+  IFormServiceOrder,
   TItemOrdemServico,
 } from '@/interface/interface-pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
@@ -89,7 +89,7 @@ export function dataHoraLocal(value = new Date().toISOString()): string {
   )
 }
 
-export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
+export function validarDadosOrdem(values: IFormServiceOrder): TGenericData {
   const errors: TGenericData = {}
 
   if (values.cn_pessoa === null || values.cn_pessoa === '')

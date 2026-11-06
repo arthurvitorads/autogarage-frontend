@@ -2,12 +2,12 @@ import { apiList, apiPage, apiRequest } from '@/services/api.service'
 import type {
   IAdmOrdemServico,
   IClienteOrdemServico,
-  IManutOrdemServico,
-  IManutClassificacaoOrdemServico,
+  IManutServiceOrder,
+  IManutOrderClassification,
   IClassificacaoOrdemServico,
   TItemOrdemServico,
-  TManutItemOrdemServico,
-  TCodigoOrdemServico,
+  TManutServiceOrderItem,
+  TServiceOrderCode,
 } from '@/interface/interface-pages/OrdemServicoPage'
 
 export function getOrdens() {
@@ -26,28 +26,28 @@ export function getClientes() {
   }>('/paramPessoa')
 }
 
-export function saveOrdem(values: IManutOrdemServico) {
+export function saveOrdem(values: IManutServiceOrder) {
   return apiRequest<IAdmOrdemServico>(
     `/ordensServico${values.cn_ordem_servico === undefined ? '' : '/' + encodeURIComponent(values.cn_ordem_servico)}`,
     values,
   )
 }
 
-export function saveClassificacao(values: IManutClassificacaoOrdemServico) {
+export function saveClassificacao(values: IManutOrderClassification) {
   return apiRequest<IClassificacaoOrdemServico>(
     `/classificacoesOrdens${values.cn_classificacao === undefined ? '' : '/' + encodeURIComponent(values.cn_classificacao)}`,
     values,
   )
 }
 
-export function saveItem(values: TManutItemOrdemServico) {
+export function saveItem(values: TManutServiceOrderItem) {
   return apiRequest<TItemOrdemServico>(
     `/ordensServico/${encodeURIComponent(values.cn_ordem_servico)}/itens${values.cn_item === undefined ? '' : '/' + encodeURIComponent(values.cn_item)}`,
     values,
   )
 }
 
-export function removeItem(ordem: TCodigoOrdemServico, item: TCodigoOrdemServico) {
+export function removeItem(ordem: TServiceOrderCode, item: TServiceOrderCode) {
   return apiRequest(
     `/ordensServico/${encodeURIComponent(ordem)}/itens/${encodeURIComponent(item)}/remover`,
     {},
@@ -64,8 +64,8 @@ export function getOrdensPagina(
 }
 
 export function movimentarOrdem(
-  codigo: TCodigoOrdemServico,
-  acao: import('@/interface/interface-pages/OrdemServicoPage').TAcaoOrdemServico,
+  codigo: TServiceOrderCode,
+  acao: import('@/interface/interface-pages/OrdemServicoPage').TServiceOrderAction,
   motivo: string,
 ) {
   return apiRequest<IAdmOrdemServico>(

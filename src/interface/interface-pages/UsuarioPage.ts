@@ -9,7 +9,7 @@ export interface ICreateUserResponse {
   dados: IAdmUsuario
 }
 
-export interface IFormUsuario {
+export interface IFormUser {
   an_nome: string
   an_email: string
   ca_senha: string
@@ -34,7 +34,7 @@ export interface IAdmUsuario {
   dt_alt: Date
 }
 
-export interface IUsuarioResponse {
+export interface IUserResponse {
   sucesso: boolean
   dados: {
     usuarios: IAdmUsuario[]

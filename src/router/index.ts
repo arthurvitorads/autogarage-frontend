@@ -93,14 +93,14 @@ const router = createRouter({
           path: 'relatorios/tempos',
           name: 'relatorio-tempos',
           component: RelatorioPage,
-          props: { tipo: 'tempos' },
+          props: { reportType: 'tempos' },
           meta: { title: 'Tempo dos serviços | AutoGarage' },
         },
         {
           path: 'relatorios/vendas',
           name: 'relatorio-vendas',
           component: RelatorioPage,
-          props: { tipo: 'vendas' },
+          props: { reportType: 'vendas' },
           meta: { title: 'Relatório de vendas | AutoGarage' },
         },
         {

@@ -1,25 +1,24 @@
 <script setup lang="ts">
+import { ProfileModel } from '@/models/profile.model'
+import type { IManutProfileDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
-import ToggleSwitch from 'primevue/toggleswitch'
+import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IAdmPerfil, IFormPerfil } from '@/interface/interface-pages/PerfilPage'
+import type { IAdmPerfil, IFormProfile } from '@/interface/interface-pages/PerfilPage'
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { createPerfil, updatePerfil } from '@/services/perfil.service'
 
-const props = defineProps<{
-  visible: boolean
-  perfil?: IAdmPerfil | null
-}>()
+const props = defineProps<IManutProfileDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -34,18 +33,11 @@ const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const isValidated = ref(false)
 
-const isEditing = computed(() => !!props.perfil)
+const isEditing = computed(() => !!props.profile)
 
-function formDataDefault(): IFormPerfil {
-  return {
-    an_descr: '',
-    bo_sts_reg: true,
-  }
-}
+const formData = ref<IFormProfile>(ProfileModel.createForm())
 
-const formData = ref<IFormPerfil>(formDataDefault())
-
-async function onSubmit(values: IFormPerfil) {
+async function onSubmit(values: IFormProfile) {
   setLoading(true)
 
   const errors: TGenericData = {}
@@ -59,7 +51,7 @@ async function onSubmit(values: IFormPerfil) {
 
   try {
     if (isEditing.value) {
-      const id = props.perfil?.cn_perfil
+      const id = props.profile?.cn_perfil
 
       if (id === undefined) throw new Error('Identificador do usuário inválido.')
 
@@ -79,16 +71,16 @@ async function onSubmit(values: IFormPerfil) {
 }
 
 watch(
-  [() => props.visible, () => props.perfil],
+  [() => props.visible, () => props.profile],
   ([visible]) => {
     if (!visible) return
 
-    formData.value = props.perfil
+    formData.value = props.profile
       ? {
-          an_descr: props.perfil.an_descr ?? '',
-          bo_sts_reg: props.perfil.bo_sts_reg ?? true,
+          an_descr: props.profile.an_descr ?? '',
+          bo_sts_reg: props.profile.bo_sts_reg ?? true,
         }
-      : formDataDefault()
+      : ProfileModel.createForm()
 
     formErrors.value = {}
     isValidated.value = false
@@ -111,11 +103,11 @@ watch(
       :key="formKey"
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit"
+      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
       @input="isValidated = false"
       @change="isValidated = false"
     >
-      <FieldForm class="col-span-10" name="an_descr" label="Descrição" v-slot="{ invalid, field }">
+      <FieldForm class="col-span-8" name="an_descr" label="Descrição" v-slot="{ invalid, field }">
         <InputText
           maxlength="4000"
           :name="field"
@@ -124,13 +116,8 @@ watch(
           fluid
         />
       </FieldForm>
-      <FieldForm
-        class="flex justify-center ml-2"
-        name="bo_sts_reg"
-        label="Status"
-        v-slot="{ field }"
-      >
-        <ToggleSwitch :name="field" />
+      <FieldForm class="col-span-4 flex items-start ml-2" name="bo_sts_reg" label="Status">
+        <StatusField v-model="formData.bo_sts_reg" />
       </FieldForm>
       <div class="col-span-12 flex justify-end gap-2 mt-4">
         <Button

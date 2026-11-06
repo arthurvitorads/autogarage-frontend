@@ -4,20 +4,20 @@ import { computed, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
 import FiltroData from '@/components/field/FiltroData.vue'
-import { filtroPeriodo, intervaloDatas } from '@/services/periodo.service'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { filtroPeriodo, intervaloDatas as dateInterval } from '@/services/periodo.service'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
-const { ordens } = storeToRefs(useOrdemServicoStore())
+const { ordens: orders } = storeToRefs(useServiceOrderStore())
 const ultimoMes = filtroPeriodo('trinta-dias')
-const datas = ref<(Date | null)[]>([new Date(ultimoMes.inicio), new Date(ultimoMes.fim)])
-const intervalo = computed(() => intervaloDatas(datas.value))
+const dates = ref<(Date | null)[]>([new Date(ultimoMes.inicio), new Date(ultimoMes.fim)])
+const intervalo = computed(() => dateInterval(dates.value))
 
 const ordensPeriodo = computed(() => {
   if (!intervalo.value) return []
   const inicio = new Date(intervalo.value.inicio)
   const fim = new Date(intervalo.value.fim)
-  return ordens.value.filter((ordem) => {
-    const entrada = new Date(ordem.dt_entrada).getTime()
+  return orders.value.filter((order) => {
+    const entrada = new Date(order.dt_entrada).getTime()
     return entrada >= inicio.getTime() && entrada <= fim.getTime()
   })
 })
@@ -53,7 +53,7 @@ const indicadores = computed(() =>
     },
   ].map((item) => ({
     ...item,
-    valor: ordensPeriodo.value.filter((ordem) => ordem.ca_status === item.status).length,
+    valor: ordensPeriodo.value.filter((order) => order.ca_status === item.status).length,
   })),
 )
 
@@ -83,7 +83,7 @@ const atalhos = [
     rota: 'servico',
   },
 ]
-usePageLoad(() => useOrdemServicoStore().load())
+usePageLoad(() => useServiceOrderStore().load())
 </script>
 
 <template>
@@ -94,7 +94,7 @@ usePageLoad(() => useOrdemServicoStore().load())
           <h2 id="resumo-titulo">Visão geral da oficina</h2>
           <p>O.S. por data de entrada no período selecionado.</p>
         </div>
-        <FiltroData v-model="datas" />
+        <FiltroData v-model="dates" />
       </div>
       <div class="indicators">
         <RouterLink

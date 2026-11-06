@@ -1,32 +1,32 @@
-import type { TipoPessoa } from '@/models/pessoa'
+import type { TPersonType } from '@/models/pessoa'
 
-export type TStatusOrdemServico = 'ABERTO' | 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO'
-export type TAcaoOrdemServico = 'INICIAR' | 'FINALIZAR' | 'CANCELAR'
+export type TServiceOrderStatus = 'ABERTO' | 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO'
+export type TServiceOrderAction = 'INICIAR' | 'FINALIZAR' | 'CANCELAR'
 
-export type TCodigoOrdemServico = string | number
+export type TServiceOrderCode = string | number
 
 export interface IClienteOrdemServico {
   cn_pessoa: string | number
   an_nome: string
   an_documento: string
-  tipo: TipoPessoa
+  tipo: TPersonType
 }
 
-export interface IFormClassificacaoOrdemServico {
+export interface IFormOrderClassification {
   an_descr: string
   ca_cor: string
   bo_padrao: boolean
 }
 
-export interface IManutClassificacaoOrdemServico extends IFormClassificacaoOrdemServico {
-  cn_classificacao?: TCodigoOrdemServico
+export interface IManutOrderClassification extends IFormOrderClassification {
+  cn_classificacao?: TServiceOrderCode
 }
 
-export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServico {
-  cn_classificacao: TCodigoOrdemServico
+export interface IClassificacaoOrdemServico extends IManutOrderClassification {
+  cn_classificacao: TServiceOrderCode
 }
 
-export interface IVeiculoOrdemServico {
+export interface IServiceOrderVehicle {
   an_placa: string
   an_marca: string
   an_modelo: string
@@ -35,9 +35,9 @@ export interface IVeiculoOrdemServico {
   qt_quilometragem: number | null
 }
 
-export interface IFormOrdemServico extends IVeiculoOrdemServico {
+export interface IFormServiceOrder extends IServiceOrderVehicle {
   cn_pessoa: string | number | null
-  cn_classificacao: TCodigoOrdemServico | null
+  cn_classificacao: TServiceOrderCode | null
   dt_entrada: string
   dt_previsao: string
   an_responsavel: string
@@ -46,65 +46,65 @@ export interface IFormOrdemServico extends IVeiculoOrdemServico {
 }
 
 // Contratos de manutenção e resposta da API de ordens.
-export interface IManutOrdemServico {
-  cn_ordem_servico?: TCodigoOrdemServico
+export interface IManutServiceOrder {
+  cn_ordem_servico?: TServiceOrderCode
   cn_pessoa: string | number
-  cn_classificacao: TCodigoOrdemServico
+  cn_classificacao: TServiceOrderCode
   dt_entrada: string
   dt_previsao: string | null
   an_responsavel: string
-  veiculo: IVeiculoOrdemServico
+  veiculo: IServiceOrderVehicle
   an_solicitacao: string
   an_obs: string
 }
 
-export type TTipoItemOrdemServico = 'PRODUTO' | 'SERVICO'
+export type TServiceOrderItemType = 'PRODUTO' | 'SERVICO'
 
-export interface IFormItemOrdemServico {
-  ca_tipo: TTipoItemOrdemServico
-  cn_referencia: TCodigoOrdemServico | null
+export interface IFormServiceOrderItem {
+  ca_tipo: TServiceOrderItemType
+  cn_referencia: TServiceOrderCode | null
   qt_quantidade: number | null
   vl_unitario: number | null
 }
 
-interface IManutItemOrdemBase {
-  cn_ordem_servico: TCodigoOrdemServico
-  cn_item?: TCodigoOrdemServico
+interface IManutServiceOrderItemBase {
+  cn_ordem_servico: TServiceOrderCode
+  cn_item?: TServiceOrderCode
   qt_quantidade: number
   vl_unitario: number
 }
 
-export type TManutItemOrdemServico = IManutItemOrdemBase &
+export type TManutServiceOrderItem = IManutServiceOrderItemBase &
   (
     | {
         ca_tipo: 'PRODUTO'
-        cn_produto: TCodigoOrdemServico
+        cn_produto: TServiceOrderCode
       }
     | {
         ca_tipo: 'SERVICO'
-        cn_servico: TCodigoOrdemServico
+        cn_servico: TServiceOrderCode
       }
   )
 
-export type TItemOrdemServico = TManutItemOrdemServico & {
+export type TItemOrdemServico = TManutServiceOrderItem & {
   ca_status_servico: 'PENDENTE' | 'EM_ANDAMENTO' | 'PAUSADO' | 'FINALIZADO' | 'CANCELADO'
   qt_tempo_segundos: number
   dt_inicio_tempo: string | null
   dt_servidor: string
-  cn_item: TCodigoOrdemServico
+  cn_item: TServiceOrderCode
   an_descr: string
   ca_unidade: string
   vl_total: number
 }
 
-export interface IAdmOrdemServico extends IManutOrdemServico {
+export interface IAdmOrdemServico extends IManutServiceOrder {
   cn_venda: string | null
-  ca_status: TStatusOrdemServico
+  ca_status: TServiceOrderStatus
   an_motivo_cancelamento: string
   dt_inicio: string | null
   dt_finalizacao: string | null
   dt_cancelamento: string | null
-  cn_ordem_servico: TCodigoOrdemServico
+  cn_ordem_servico: TServiceOrderCode
   nu_numero: number
   an_cliente: string
   itens: TItemOrdemServico[]

@@ -5,12 +5,12 @@ import { ref, watch, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
-import type { TTipoCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
+import type { TAuxiliaryType } from '@/interface/interface-pages/CadastroAuxiliar'
 
 const cadastroVisible = ref(false)
 const classificacaoVisible = ref(false)
-const tipoCadastro = ref<TTipoCadastroAuxiliar>('MARCA')
-function abrirCadastro(tipo: TTipoCadastroAuxiliar | 'CLASSIFICACAO') {
+const tipoCadastro = ref<TAuxiliaryType>('MARCA')
+function abrirCadastro(tipo: TAuxiliaryType | 'CLASSIFICACAO') {
   if (tipo === 'CLASSIFICACAO') classificacaoVisible.value = true
   else {
     tipoCadastro.value = tipo
@@ -34,38 +34,6 @@ const modules = [
     label: 'Geral',
     icon: 'th-large',
     items: [{ key: 'geral:home', label: 'Home', icon: 'home', route: '/' }],
-  },
-  {
-    key: 'faturamento',
-    label: 'Faturamento',
-    icon: 'wallet',
-    items: [
-      {
-        key: 'faturamento:vendas',
-        label: 'Vendas',
-        icon: 'shopping-cart',
-        route: '/faturamento/vendas',
-      },
-    ],
-  },
-  {
-    key: 'relatorios',
-    label: 'Relatórios',
-    icon: 'chart-bar',
-    items: [
-      {
-        key: 'relatorios:tempos',
-        label: 'Tempo dos serviços',
-        icon: 'clock',
-        route: '/relatorios/tempos',
-      },
-      {
-        key: 'relatorios:vendas',
-        label: 'Vendas por período',
-        icon: 'chart-line',
-        route: '/relatorios/vendas',
-      },
-    ],
   },
   {
     key: 'cadastros',
@@ -110,6 +78,38 @@ const modules = [
         label: 'Painel',
         icon: 'th-large',
         route: '/ordem-servico/painel',
+      },
+    ],
+  },
+  {
+    key: 'faturamento',
+    label: 'Faturamento',
+    icon: 'wallet',
+    items: [
+      {
+        key: 'faturamento:vendas',
+        label: 'Vendas',
+        icon: 'shopping-cart',
+        route: '/faturamento/vendas',
+      },
+    ],
+  },
+  {
+    key: 'relatorios',
+    label: 'Relatórios',
+    icon: 'chart-bar',
+    items: [
+      {
+        key: 'relatorios:tempos',
+        label: 'Tempo dos serviços',
+        icon: 'clock',
+        route: '/relatorios/tempos',
+      },
+      {
+        key: 'relatorios:vendas',
+        label: 'Vendas por período',
+        icon: 'chart-line',
+        route: '/relatorios/vendas',
       },
     ],
   },
@@ -196,7 +196,7 @@ onMounted(openCurrentModule)
       </nav>
     </div>
   </aside>
-  <CadastroAuxiliarDialog v-model:visible="cadastroVisible" :tipo="tipoCadastro" />
+  <CadastroAuxiliarDialog v-model:visible="cadastroVisible" :auxiliaryType="tipoCadastro" />
   <ClassificacaoOrdemServicoDialog v-model:visible="classificacaoVisible" />
 </template>
 

@@ -30,14 +30,14 @@ export interface IAdmVenda {
   itens: IItemVenda[]
 }
 
-export interface IFormItemVenda {
+export interface IFormSaleItem {
   ca_tipo: 'PRODUTO' | 'SERVICO'
   cn_referencia: number | null
   qt_quantidade: number | null
   vl_unitario: number | null
 }
 
-export interface IManutItemVenda {
+export interface IManutSaleItem {
   ca_tipo: 'PRODUTO' | 'SERVICO'
   cn_produto: number | null
   cn_servico: number | null
@@ -45,15 +45,15 @@ export interface IManutItemVenda {
   vl_unitario: number
 }
 
-export interface IManutVenda {
+export interface IManutSale {
   cn_pessoa: string | number
   cn_ordem_servico?: string | number
   ca_chave_requisicao: string
   an_obs: string
-  itens?: IManutItemVenda[]
+  itens?: IManutSaleItem[]
 }
 
-export interface IRelatorioTempo {
+export interface ITimeReport {
   cn_item: string
   cn_ordem_servico: string
   nu_ordem: number
@@ -66,8 +66,8 @@ export interface IRelatorioTempo {
   intervalos: { dt_inicio: string; dt_fim: string; qt_segundos: number; ca_encerramento: string }[]
 }
 
-export interface IRelatorioTempoResponse {
-  servicos: IRelatorioTempo[]
+export interface ITimeReportResponse {
+  servicos: ITimeReport[]
   resumo: {
     qt_servicos: number
     qt_media_segundos: number
@@ -77,8 +77,23 @@ export interface IRelatorioTempoResponse {
   pagination: IPagination
 }
 
-export interface IRelatorioVendaResponse {
+export interface ISaleReportResponse {
   vendas: IAdmVenda[]
   resumo: { qt_vendas: number; vl_total: number }
   pagination: IPagination
+}
+export type TSaleOrigin = 'DIRETA' | 'ORDEM_SERVICO'
+
+export interface ISaleDraftItem extends IManutSaleItem {
+  an_descr: string
+  vl_total: number
+}
+
+export interface IFormSale {
+  origin: TSaleOrigin
+  personId: string | number | null
+  orderId: string | number | null
+  notes: string
+  requestKey: string
+  items: ISaleDraftItem[]
 }

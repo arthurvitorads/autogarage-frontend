@@ -6,7 +6,7 @@ export interface IAdmPerfil {
   dt_alt: Date
 }
 
-export interface IManutPerfil {
+export interface IManutProfile {
   cn_perfil?: number
   an_descr: string
   bo_sts_reg: boolean
@@ -14,12 +14,12 @@ export interface IManutPerfil {
   dt_alt?: Date
 }
 
-export interface IFormPerfil {
+export interface IFormProfile {
   an_descr: string
   bo_sts_reg: boolean
 }
 
-export interface IPerfilResponse {
+export interface IProfileResponse {
   sucesso: boolean
   dados: {
     perfil: IAdmPerfil[]
@@ -34,7 +34,7 @@ export interface IPerfilResponse {
   }
 }
 
-export interface IManutPerfilResponse {
+export interface IManutProfileResponse {
   sucesso: boolean
   dados: IAdmPerfil
 }

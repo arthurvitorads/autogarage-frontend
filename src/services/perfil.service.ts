@@ -1,9 +1,9 @@
 import { auth } from './firebase.service'
 
 import {
-  IFormPerfil,
-  IManutPerfilResponse,
-  IPerfilResponse,
+  IFormProfile,
+  IManutProfileResponse,
+  IProfileResponse,
 } from '@/interface/interface-pages/PerfilPage'
 
 import { API_URL } from '@/constants/utils'
@@ -12,7 +12,7 @@ export async function getPerfil(
   ePage: number = 1,
   eLimit: number = 20,
   search: string = '',
-): Promise<IPerfilResponse> {
+): Promise<IProfileResponse> {
   const user = auth.currentUser
 
   if (!user) {
@@ -40,13 +40,13 @@ export async function getPerfil(
     throw new Error('Erro ao carregar perfil.')
   }
 
-  return (await response.json()) as IPerfilResponse
+  return (await response.json()) as IProfileResponse
 }
 
 export async function updatePerfil(
   id: string | number,
-  values: IFormPerfil,
-): Promise<IManutPerfilResponse> {
+  values: IFormProfile,
+): Promise<IManutProfileResponse> {
   const user = auth.currentUser
 
   if (!user) throw new Error('Usuário não autenticado no Firebase.')
@@ -66,10 +66,10 @@ export async function updatePerfil(
 
   if (!response.ok) throw new Error(result.erro || 'Erro ao atualizar perfil.')
 
-  return result as IManutPerfilResponse
+  return result as IManutProfileResponse
 }
 
-export async function createPerfil(values: IFormPerfil): Promise<IManutPerfilResponse> {
+export async function createPerfil(values: IFormProfile): Promise<IManutProfileResponse> {
   const user = auth.currentUser
 
   if (!user) throw new Error('Usuário não autenticado no Firebase.')
@@ -92,5 +92,5 @@ export async function createPerfil(values: IFormPerfil): Promise<IManutPerfilRes
 
   if (!response.ok) throw new Error(result.erro || 'Erro ao criar perfil.')
 
-  return result as IManutPerfilResponse
+  return result as IManutProfileResponse
 }

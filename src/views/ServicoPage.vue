@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { usePesquisa } from '@/composables/usePesquisa'
-import { getServicosPagina } from '@/services/catalogo.service'
+import { usePesquisa as useSearch } from '@/composables/usePesquisa'
+import { getServicosPagina as getServicesPage } from '@/services/catalogo.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
@@ -14,34 +13,34 @@ import ManutServicoDialog from '@/components/dialogs/ManutServicoDialog.vue'
 
 import type { IAdmServico } from '@/interface/interface-pages/ServicoPage'
 
-import { useCatalogoStore } from '@/stores/catalogo.store'
+import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
 // paginação e filtros
 
 // form
 const {
-  registros: servicos,
+  registros: services,
   total,
-  primeiroRegistro,
-  limite,
-  filtro,
+  primeiroRegistro: firstRecord,
+  limite: limit,
+  filtro: filter,
   loadingGrid,
   load,
   search,
   changePage,
-} = usePesquisa<IAdmServico>(getServicosPagina)
+} = useSearch<IAdmServico>(getServicesPage)
 
-const manutServicoVisible = ref(false)
-const selectServico = ref<IAdmServico | null>(null)
+const manutServiceVisible = ref(false)
+const selectService = ref<IAdmServico | null>(null)
 
-function newServico() {
-  selectServico.value = null
-  manutServicoVisible.value = true
+function newService() {
+  selectService.value = null
+  manutServiceVisible.value = true
 }
 
-function editServico(servico: IAdmServico) {
-  selectServico.value = servico
-  manutServicoVisible.value = true
+function editService(service: IAdmServico) {
+  selectService.value = service
+  manutServiceVisible.value = true
 }
 
 function formatCurrency(value: number): string {
@@ -49,7 +48,7 @@ function formatCurrency(value: number): string {
 }
 
 usePageLoad(async () => {
-  await useCatalogoStore().loadCadastros()
+  await useCatalogStore().loadCadastros()
   await load()
 })
 </script>
@@ -61,7 +60,7 @@ usePageLoad(async () => {
         <div class="flex flex-wrap justify-between gap-3">
           <div class="flex gap-2 w-140 max-w-full">
             <InputText
-              v-model="filtro"
+              v-model="filter"
               placeholder="Pesquisar por código ou nome..."
               aria-label="Pesquisar serviços"
               class="flex-1 min-w-0"
@@ -74,13 +73,13 @@ usePageLoad(async () => {
               @click="search"
             />
           </div>
-          <Button label="Novo" icon="pi pi-plus" @click="newServico" />
+          <Button label="Novo" icon="pi pi-plus" @click="newService" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <DataTable
           :pt="{ emptyMessage: { class: 'hidden' } }"
-          :value="servicos"
+          :value="services"
           dataKey="cn_servico"
           size="small"
           stripedRows
@@ -92,8 +91,8 @@ usePageLoad(async () => {
           :totalRecords="total"
           @page="changePage"
           paginator
-          v-model:first="primeiroRegistro"
-          :rows="limite"
+          v-model:first="firstRecord"
+          :rows="limit"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Total: {totalRecords}"
         >
@@ -106,7 +105,7 @@ usePageLoad(async () => {
                 rounded
                 aria-label="Editar serviço"
                 v-tooltip.top="'Editar serviço'"
-                @click="editServico(data)"
+                @click="editService(data)"
               />
             </template>
           </Column>
@@ -134,8 +133,8 @@ usePageLoad(async () => {
     </div>
   </div>
   <ManutServicoDialog
-    v-model:visible="manutServicoVisible"
-    :servico="selectServico"
+    v-model:visible="manutServiceVisible"
+    :service="selectService"
     @saved="load"
   />
 </template>

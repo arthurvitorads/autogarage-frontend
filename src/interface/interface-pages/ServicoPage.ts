@@ -1,4 +1,4 @@
-export interface IFormServico {
+export interface IFormService {
   an_nome: string
   an_categoria: string | null
   vl_preco: number | null
@@ -7,8 +7,8 @@ export interface IFormServico {
   bo_sts_reg: boolean
 }
 
-export interface IManutServico extends Omit<
-  IFormServico,
+export interface IManutService extends Omit<
+  IFormService,
   'vl_preco' | 'nu_tempo_estimado' | 'an_categoria'
 > {
   cn_servico?: number
@@ -17,6 +17,6 @@ export interface IManutServico extends Omit<
   nu_tempo_estimado?: number
 }
 
-export interface IAdmServico extends IManutServico {
+export interface IAdmServico extends IManutService {
   cn_servico: number
 }

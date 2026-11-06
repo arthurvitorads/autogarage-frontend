@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { OrderClassificationModel } from '@/models/order-classification.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -14,71 +17,61 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type {
-  IFormClassificacaoOrdemServico,
-  IManutClassificacaoOrdemServico,
+  IFormOrderClassification,
+  IManutOrderClassification,
   IClassificacaoOrdemServico,
-  TCodigoOrdemServico,
+  TServiceOrderCode,
 } from '@/interface/interface-pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
-import { corTextoStatus } from '@/services/ordem-servico.service'
+import { corTextoStatus as statusTextColor } from '@/services/ordem-servico.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
-const props = defineProps<{
-  visible: boolean
-}>()
+const props = defineProps<IDialogProps>()
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
   saved: [classificacoes: IClassificacaoOrdemServico]
 }>()
 
-const ordemStore = useOrdemServicoStore()
-const { classificacoes } = storeToRefs(ordemStore)
-const { saveClassificacao } = ordemStore
+const orderStore = useServiceOrderStore()
+const { classificacoes: classifications } = storeToRefs(orderStore)
+const { saveClassificacao: saveClassification } = orderStore
 const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
-const selectClassificacao = ref<TCodigoOrdemServico | null>(null)
-const isEditing = computed(() => selectClassificacao.value !== null)
+const selectClassification = ref<TServiceOrderCode | null>(null)
+const isEditing = computed(() => selectClassification.value !== null)
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
+const formRef = ref<IFormPageRef | null>(null)
 
-function formDataDefault(): IFormClassificacaoOrdemServico {
-  return {
-    an_descr: '',
-    ca_cor: '#64748b',
-    bo_padrao: classificacoes.value.length === 0,
-  }
-}
+const formData = ref<IFormOrderClassification>(
+  OrderClassificationModel.createForm(classifications.value.length === 0),
+)
 
-const formData = ref<IFormClassificacaoOrdemServico>(formDataDefault())
-
-function loadClassificacao() {
-  const selecionado = classificacoes.value.find(
-    (item) => item.cn_classificacao === selectClassificacao.value,
+function loadClassification() {
+  const selectedClassification = classifications.value.find(
+    (item) => item.cn_classificacao === selectClassification.value,
   )
 
-  formData.value = selecionado
+  formData.value = selectedClassification
     ? {
-        an_descr: selecionado.an_descr,
-        ca_cor: selecionado.ca_cor,
-        bo_padrao: selecionado.bo_padrao,
+        an_descr: selectedClassification.an_descr,
+        ca_cor: selectedClassification.ca_cor,
+        bo_padrao: selectedClassification.bo_padrao,
       }
-    : formDataDefault()
+    : OrderClassificationModel.createForm(classifications.value.length === 0)
   formErrors.value = {}
   formKey.value++
 }
 
-function newClassificacao() {
-  selectClassificacao.value = null
-  loadClassificacao()
+function newClassification() {
+  selectClassification.value = null
+  loadClassification()
 }
 
-async function onSubmit(values: IFormClassificacaoOrdemServico) {
+async function onSubmit(values: IFormOrderClassification) {
   const errors: TGenericData = {}
 
   if (!values.an_descr.trim()) errors.an_descr = 'Campo obrigatório.'
@@ -90,16 +83,16 @@ async function onSubmit(values: IFormClassificacaoOrdemServico) {
   setLoading(true)
 
   try {
-    const dados: IManutClassificacaoOrdemServico = {
-      ...(selectClassificacao.value !== null
-        ? { cn_classificacao: selectClassificacao.value }
+    const data: IManutOrderClassification = {
+      ...(selectClassification.value !== null
+        ? { cn_classificacao: selectClassification.value }
         : {}),
       an_descr: values.an_descr.trim(),
       ca_cor: values.ca_cor,
       bo_padrao: values.bo_padrao,
     }
-    const resultado = await saveClassificacao(dados)
-    emit('saved', resultado)
+    const result = await saveClassification(data)
+    emit('saved', result)
     toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
@@ -109,14 +102,14 @@ async function onSubmit(values: IFormClassificacaoOrdemServico) {
   }
 }
 
-watch(selectClassificacao, loadClassificacao)
+watch(selectClassification, loadClassification)
 watch(
   () => props.visible,
   async (visible) => {
     if (visible) {
       try {
-        await ordemStore.loadParametros()
-        newClassificacao()
+        await orderStore.loadParametros()
+        newClassification()
       } catch (error) {
         toast.error(normalizeError(error))
       }
@@ -135,9 +128,9 @@ watch(
     @submit="formRef?.submit()"
   >
     <div class="flex justify-end mb-3">
-      <Button label="Novo" icon="pi pi-plus" @click="newClassificacao" />
+      <Button label="Novo" icon="pi pi-plus" @click="newClassification" />
     </div>
-    <DataTable :value="classificacoes" size="small" scrollable scrollHeight="14rem" class="mb-4">
+    <DataTable :value="classifications" size="small" scrollable scrollHeight="14rem" class="mb-4">
       <Column header="Ações"
         ><template #body="{ data }"
           ><Button
@@ -145,7 +138,7 @@ watch(
             severity="secondary"
             text
             aria-label="Editar classificação"
-            @click="selectClassificacao = data.cn_classificacao" /></template
+            @click="selectClassification = data.cn_classificacao" /></template
       ></Column>
       <Column field="an_descr" header="Descrição" />
       <Column header="Cor"
@@ -216,7 +209,7 @@ watch(
           <div class="col-span-12 mt-2">
             <span
               class="inline-flex rounded-full px-3 py-1 font-semibold"
-              :style="{ backgroundColor: formData.ca_cor, color: corTextoStatus(formData.ca_cor) }"
+              :style="{ backgroundColor: formData.ca_cor, color: statusTextColor(formData.ca_cor) }"
               >{{ formData.an_descr || 'Prévia da classificação' }}</span
             >
           </div>

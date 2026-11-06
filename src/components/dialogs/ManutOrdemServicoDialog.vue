@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { useConfirmacao } from '@/composables/useConfirmacao'
+import { ServiceOrderModel } from '@/models/service-order.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IManutServiceOrderDialogProps } from '@/interface/dialog'
+import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -17,101 +20,88 @@ import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoO
 
 import type {
   IAdmOrdemServico,
-  IFormOrdemServico,
-  IManutOrdemServico,
+  IFormServiceOrder,
+  IManutServiceOrder,
   IClassificacaoOrdemServico,
 } from '@/interface/interface-pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
-import { dataHoraLocal, normalizarPlaca, validarDadosOrdem } from '@/services/ordem-servico.service'
+import {
+  dataHoraLocal as localDateTime,
+  normalizarPlaca as normalizePlate,
+  validarDadosOrdem as validateOrderData,
+} from '@/services/ordem-servico.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
-const props = defineProps<{
-  visible: boolean
-  ordem?: IAdmOrdemServico | null
-}>()
+const props = defineProps<IManutServiceOrderDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
   saved: [ordem: IAdmOrdemServico]
 }>()
 
-const ordemStore = useOrdemServicoStore()
-const { clientes, classificacoes, classificacaoPadrao } = storeToRefs(ordemStore)
-const { saveOrdem } = ordemStore
+const orderStore = useServiceOrderStore()
+const {
+  clientes: customers,
+  classificacoes: classifications,
+  classificacaoPadrao: defaultClassification,
+} = storeToRefs(orderStore)
+const { saveOrdem: saveOrder } = orderStore
 const { normalizeError, setLoading } = useUtilStore()
 const toast = useAppToast()
-const confirmar = useConfirmacao()
+const confirmAction = useConfirmation()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
-const classificacaoVisible = ref(false)
-const isEditing = computed(() => !!props.ordem)
-const anoMaximo = new Date().getFullYear() + 1
-const clientesOptions = computed(() =>
-  clientes.value.map((cliente) => ({
-    ...cliente,
-    an_label: cliente.an_nome + ' — ' + cliente.an_documento,
+const formRef = ref<IFormPageRef | null>(null)
+const classificationDialogVisible = ref(false)
+const isEditing = computed(() => !!props.order)
+const maxYear = new Date().getFullYear() + 1
+const customerOptions = computed(() =>
+  customers.value.map((customer) => ({
+    ...customer,
+    an_label: customer.an_nome + ' — ' + customer.an_documento,
   })),
 )
 
-function formDataDefault(): IFormOrdemServico {
-  return {
-    cn_pessoa: null,
-    cn_classificacao: classificacaoPadrao.value?.cn_classificacao ?? null,
-    dt_entrada: dataHoraLocal(),
-    dt_previsao: '',
-    an_responsavel: '',
-    an_placa: '',
-    an_marca: '',
-    an_modelo: '',
-    nu_ano: null,
-    an_cor: '',
-    qt_quilometragem: null,
-    an_solicitacao: '',
-    an_obs: '',
-  }
-}
+const formData = ref<IFormServiceOrder>(
+  ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null),
+)
 
-const formData = ref<IFormOrdemServico>(formDataDefault())
-
-function selectClassificacao(item: IClassificacaoOrdemServico) {
+function selectClassification(item: IClassificacaoOrdemServico) {
   formData.value.cn_classificacao = item.cn_classificacao
   delete formErrors.value.cn_classificacao
 }
 
-async function onSubmit(values: IFormOrdemServico) {
-  const errors = validarDadosOrdem(values)
+async function onSubmit(values: IFormServiceOrder) {
+  const errors = validateOrderData(values)
 
-  if (!clientes.value.some((cliente) => String(cliente.cn_pessoa) === String(values.cn_pessoa)))
+  if (!customers.value.some((customer) => String(customer.cn_pessoa) === String(values.cn_pessoa)))
     errors.cn_pessoa = 'Selecione um cliente ativo disponível.'
 
-  if (!classificacoes.value.some((item) => item.cn_classificacao === values.cn_classificacao))
+  if (!classifications.value.some((item) => item.cn_classificacao === values.cn_classificacao))
     errors.cn_classificacao = 'Selecione uma classificação válida.'
 
   formErrors.value = errors
   if (Object.keys(errors).length) return
 
-  if (!(await confirmar())) return
+  if (!(await confirmAction())) return
 
   setLoading(true)
 
   try {
     if (values.cn_pessoa === null || values.cn_classificacao === null) return
 
-    const dados: IManutOrdemServico = {
-      ...(props.ordem ? { cn_ordem_servico: props.ordem.cn_ordem_servico } : {}),
+    const data: IManutServiceOrder = {
+      ...(props.order ? { cn_ordem_servico: props.order.cn_ordem_servico } : {}),
       cn_pessoa: values.cn_pessoa,
       cn_classificacao: values.cn_classificacao,
       dt_entrada: new Date(values.dt_entrada).toISOString(),
       dt_previsao: values.dt_previsao ? new Date(values.dt_previsao).toISOString() : null,
       an_responsavel: values.an_responsavel.trim(),
       veiculo: {
-        an_placa: normalizarPlaca(values.an_placa),
+        an_placa: normalizePlate(values.an_placa),
         an_marca: values.an_marca.trim(),
         an_modelo: values.an_modelo.trim(),
         nu_ano: values.nu_ano,
@@ -121,8 +111,8 @@ async function onSubmit(values: IFormOrdemServico) {
       an_solicitacao: values.an_solicitacao.trim(),
       an_obs: values.an_obs.trim(),
     }
-    const resultado = await saveOrdem(dados)
-    emit('saved', resultado)
+    const result = await saveOrder(data)
+    emit('saved', result)
     toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
@@ -133,24 +123,24 @@ async function onSubmit(values: IFormOrdemServico) {
 }
 
 watch(
-  [() => props.visible, () => props.ordem],
+  [() => props.visible, () => props.order],
   ([visible]) => {
     if (!visible) return
 
-    const ordem = props.ordem
+    const order = props.order
 
-    formData.value = ordem
+    formData.value = order
       ? {
-          cn_pessoa: ordem.cn_pessoa,
-          cn_classificacao: ordem.cn_classificacao,
-          dt_entrada: dataHoraLocal(ordem.dt_entrada),
-          dt_previsao: ordem.dt_previsao ? dataHoraLocal(ordem.dt_previsao) : '',
-          an_responsavel: ordem.an_responsavel,
-          ...ordem.veiculo,
-          an_solicitacao: ordem.an_solicitacao,
-          an_obs: ordem.an_obs,
+          cn_pessoa: order.cn_pessoa,
+          cn_classificacao: order.cn_classificacao,
+          dt_entrada: localDateTime(order.dt_entrada),
+          dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
+          an_responsavel: order.an_responsavel,
+          ...order.veiculo,
+          an_solicitacao: order.an_solicitacao,
+          an_obs: order.an_obs,
         }
-      : formDataDefault()
+      : ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null)
     formErrors.value = {}
     formKey.value++
   },
@@ -180,7 +170,7 @@ watch(
           <FieldForm class="col-span-12 sm:col-span-3" name="nu_numero" label="Número">
             <InputText
               maxlength="4000"
-              :modelValue="ordem ? String(ordem.nu_numero).padStart(6, '0') : 'Automático'"
+              :modelValue="order ? String(order.nu_numero).padStart(6, '0') : 'Automático'"
               readonly
               fluid
             />
@@ -194,7 +184,7 @@ watch(
             <Select
               v-model="formData.cn_pessoa"
               :name="field"
-              :options="clientesOptions"
+              :options="customerOptions"
               optionLabel="an_label"
               optionValue="cn_pessoa"
               placeholder="Selecione o cliente PF ou PJ"
@@ -215,7 +205,7 @@ watch(
               <Select
                 v-model="formData.cn_classificacao"
                 :name="field"
-                :options="classificacoes"
+                :options="classifications"
                 optionLabel="an_descr"
                 optionValue="cn_classificacao"
                 :invalid="invalid"
@@ -227,7 +217,7 @@ watch(
                 type="button"
                 icon="pi pi-plus"
                 aria-label="Cadastrar classificação"
-                @click="classificacaoVisible = true"
+                @click="classificationDialogVisible = true"
               />
             </div>
           </FieldForm>
@@ -327,7 +317,7 @@ watch(
               :name="field"
               :invalid="invalid"
               :min="1900"
-              :max="anoMaximo"
+              :max="maxYear"
               :useGrouping="false"
               fluid
             />
@@ -382,7 +372,7 @@ watch(
     </FormPage>
   </CadastroDialog>
   <ClassificacaoOrdemServicoDialog
-    v-model:visible="classificacaoVisible"
-    @saved="selectClassificacao"
+    v-model:visible="classificationDialogVisible"
+    @saved="selectClassification"
   />
 </template>

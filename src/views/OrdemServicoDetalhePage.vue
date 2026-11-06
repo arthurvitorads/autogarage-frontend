@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
-import { useConfirmacao } from '@/composables/useConfirmacao'
+import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
 import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServicoDialog.vue'
 import { usePageLoad } from '@/composables/usePageLoad'
@@ -19,105 +19,107 @@ import ItemOrdemServicoDialog from '@/components/dialogs/ItemOrdemServicoDialog.
 
 import type {
   TItemOrdemServico,
-  TAcaoOrdemServico,
+  TServiceOrderAction,
 } from '@/interface/interface-pages/OrdemServicoPage'
 
 import {
-  calcularTotalOrdem,
-  corTextoStatus,
-  formatCurrencyOrdem,
-  getStatusOrdem,
-  ordemEncerrada,
+  calcularTotalOrdem as calculateOrderTotal,
+  corTextoStatus as statusTextColor,
+  formatCurrencyOrdem as formatOrderCurrency,
+  getStatusOrdem as getOrderStatus,
+  ordemEncerrada as isOrderClosed,
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useOrdemServicoStore } from '@/stores/ordem-servico.store'
+import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
 const route = useRoute()
 const router = useRouter()
-const ordemStore = useOrdemServicoStore()
-const { ordens, classificacoes } = storeToRefs(ordemStore)
-const { removeItem } = ordemStore
+const orderStore = useServiceOrderStore()
+const { ordens: orders, classificacoes: classifications } = storeToRefs(orderStore)
+const { removeItem } = orderStore
 const { normalizeError } = useUtilStore()
 const toast = useAppToast()
-const codigo = computed(() => String(route.params.id))
-const ordem = computed(() =>
-  ordens.value.find((item) => String(item.cn_ordem_servico) === codigo.value),
+const code = computed(() => String(route.params.id))
+const order = computed(() =>
+  orders.value.find((item) => String(item.cn_ordem_servico) === code.value),
 )
-const statusOrdem = computed(() => (ordem.value ? getStatusOrdem(ordem.value.ca_status) : null))
-const classificacao = computed(() =>
-  classificacoes.value.find(
-    (item) => String(item.cn_classificacao) === String(ordem.value?.cn_classificacao),
+const orderStatus = computed(() => (order.value ? getOrderStatus(order.value.ca_status) : null))
+const classification = computed(() =>
+  classifications.value.find(
+    (item) => String(item.cn_classificacao) === String(order.value?.cn_classificacao),
   ),
 )
-const movimentoVisible = ref(false)
-const acao = ref<TAcaoOrdemServico>('FINALIZAR')
-const confirmar = useConfirmacao()
-function movimentar(value: TAcaoOrdemServico) {
-  acao.value = value
-  movimentoVisible.value = true
+const orderMovementVisible = ref(false)
+const action = ref<TServiceOrderAction>('FINALIZAR')
+const confirmAction = useConfirmation()
+function moveOrder(value: TServiceOrderAction) {
+  action.value = value
+  orderMovementVisible.value = true
 }
-const totalProdutos = computed(() =>
-  calcularTotalOrdem(ordem.value?.itens.filter((item) => item.ca_tipo === 'PRODUTO') ?? []),
+const productsTotal = computed(() =>
+  calculateOrderTotal(order.value?.itens.filter((item) => item.ca_tipo === 'PRODUTO') ?? []),
 )
-const totalServicos = computed(() =>
-  calcularTotalOrdem(ordem.value?.itens.filter((item) => item.ca_tipo === 'SERVICO') ?? []),
+const servicesTotal = computed(() =>
+  calculateOrderTotal(order.value?.itens.filter((item) => item.ca_tipo === 'SERVICO') ?? []),
 )
-const totalOrdem = computed(() => calcularTotalOrdem(ordem.value?.itens ?? []))
-const manutOrdemVisible = ref(false)
-const itemVisible = ref(false)
+const orderTotal = computed(() => calculateOrderTotal(order.value?.itens ?? []))
+const manutOrderVisible = ref(false)
+const itemDialogVisible = ref(false)
 const selectItem = ref<TItemOrdemServico | null>(null)
 
-function voltarPainel() {
+function backToPanel() {
   router.push({ name: 'ordem-servico-painel' })
 }
 
 function newItem() {
   selectItem.value = null
-  itemVisible.value = true
+  itemDialogVisible.value = true
 }
 
 function editItem(item: TItemOrdemServico) {
   selectItem.value = item
-  itemVisible.value = true
+  itemDialogVisible.value = true
 }
 
-async function excluirItem(item: TItemOrdemServico) {
-  if (!ordem.value || !(await confirmar())) return
+async function removeOrderItem(item: TItemOrdemServico) {
+  if (!order.value || !(await confirmAction())) return
 
   try {
-    const dados = {
+    const data = {
       operacao: 'REMOVER_ITEM',
-      cn_ordem_servico: ordem.value.cn_ordem_servico,
+      cn_ordem_servico: order.value.cn_ordem_servico,
       cn_item: item.cn_item,
     }
 
-    await removeItem(dados.cn_ordem_servico, dados.cn_item)
+    await removeItem(data.cn_ordem_servico, data.cn_item)
     toast.success('Item removido com sucesso.')
   } catch (error) {
     toast.error(normalizeError(error))
   }
 }
 
-function atualizarTempo(item: TItemOrdemServico) {
+function updateItemTime(item: TItemOrdemServico) {
   const index =
-    ordem.value?.itens.findIndex((atual) => String(atual.cn_item) === String(item.cn_item)) ?? -1
-  if (ordem.value && index >= 0) ordem.value.itens[index] = item
+    order.value?.itens.findIndex(
+      (currentRequest) => String(currentRequest.cn_item) === String(item.cn_item),
+    ) ?? -1
+  if (order.value && index >= 0) order.value.itens[index] = item
 }
 
-function formatQuantidade(value: number): string {
+function formatQuantity(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 }
 
-usePageLoad(() => useOrdemServicoStore().load())
-function atualizarVenda(venda: { cn_venda: string }) {
-  if (ordem.value) ordem.value.cn_venda = venda.cn_venda
+usePageLoad(() => useServiceOrderStore().load())
+function updateSale(sale: { cn_venda: string }) {
+  if (order.value) order.value.cn_venda = sale.cn_venda
 }
 </script>
 
 <template>
-  <div v-if="ordem && !ordemEncerrada(ordem)" class="flex flex-col gap-4">
+  <div v-if="order && !isOrderClosed(order)" class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
         <Button
@@ -125,57 +127,57 @@ function atualizarVenda(venda: { cn_venda: string }) {
           severity="secondary"
           text
           aria-label="Voltar ao painel"
-          @click="voltarPainel"
+          @click="backToPanel"
         />
         <div>
           <h1 class="text-xl font-semibold">
-            O.S. #{{ String(ordem.nu_numero).padStart(6, '0') }}
+            O.S. #{{ String(order.nu_numero).padStart(6, '0') }}
           </h1>
-          <p class="text-surface-500 mt-1">{{ ordem.an_cliente }}</p>
+          <p class="text-surface-500 mt-1">{{ order.an_cliente }}</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
         <span
           class="rounded-full px-3 py-1 font-semibold"
           :style="{
-            backgroundColor: statusOrdem?.cor ?? '#64748b',
-            color: corTextoStatus(statusOrdem?.cor ?? '#64748b'),
+            backgroundColor: orderStatus?.cor ?? '#64748b',
+            color: statusTextColor(orderStatus?.cor ?? '#64748b'),
           }"
-          >{{ statusOrdem?.label ?? 'Status indisponível' }}</span
+          >{{ orderStatus?.label ?? 'Status indisponível' }}</span
         >
         <Button
-          v-if="ordem.ca_status === 'ABERTO'"
+          v-if="order.ca_status === 'ABERTO'"
           label="Iniciar serviço"
           icon="pi pi-play"
-          @click="movimentar('INICIAR')"
+          @click="moveOrder('INICIAR')"
         />
         <Button
-          v-if="ordem.ca_status === 'EM_ANDAMENTO'"
+          v-if="order.ca_status === 'EM_ANDAMENTO'"
           label="Finalizar"
           icon="pi pi-check"
-          @click="movimentar('FINALIZAR')"
+          @click="moveOrder('FINALIZAR')"
         />
-        <Button label="Cancelar O.S." severity="secondary" @click="movimentar('CANCELAR')" />
+        <Button label="Cancelar O.S." severity="secondary" @click="moveOrder('CANCELAR')" />
       </div>
     </div>
     <Fieldset legend="Dados gerais">
-      <p class="mb-4 text-surface-500">Classificação: {{ classificacao?.an_descr || '—' }}</p>
+      <p class="mb-4 text-surface-500">Classificação: {{ classification?.an_descr || '—' }}</p>
       <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <dt class="text-surface-500">Cliente</dt>
-          <dd class="font-semibold mt-1">{{ ordem.an_cliente }}</dd>
+          <dd class="font-semibold mt-1">{{ order.an_cliente }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Entrada</dt>
-          <dd class="mt-1">{{ formatDateTime(ordem.dt_entrada) }}</dd>
+          <dd class="mt-1">{{ formatDateTime(order.dt_entrada) }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Previsão de entrega</dt>
-          <dd class="mt-1">{{ formatDateTime(ordem.dt_previsao) }}</dd>
+          <dd class="mt-1">{{ formatDateTime(order.dt_previsao) }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Responsável</dt>
-          <dd class="mt-1">{{ ordem.an_responsavel || '—' }}</dd>
+          <dd class="mt-1">{{ order.an_responsavel || '—' }}</dd>
         </div>
       </dl>
     </Fieldset>
@@ -183,31 +185,31 @@ function atualizarVenda(venda: { cn_venda: string }) {
       <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <div>
           <dt class="text-surface-500">Placa</dt>
-          <dd class="font-bold mt-1">{{ ordem.veiculo.an_placa }}</dd>
+          <dd class="font-bold mt-1">{{ order.veiculo.an_placa }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Marca</dt>
-          <dd class="mt-1">{{ ordem.veiculo.an_marca }}</dd>
+          <dd class="mt-1">{{ order.veiculo.an_marca }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Modelo</dt>
-          <dd class="mt-1">{{ ordem.veiculo.an_modelo }}</dd>
+          <dd class="mt-1">{{ order.veiculo.an_modelo }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Ano</dt>
-          <dd class="mt-1">{{ ordem.veiculo.nu_ano ?? '—' }}</dd>
+          <dd class="mt-1">{{ order.veiculo.nu_ano ?? '—' }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Cor</dt>
-          <dd class="mt-1">{{ ordem.veiculo.an_cor || '—' }}</dd>
+          <dd class="mt-1">{{ order.veiculo.an_cor || '—' }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Quilometragem</dt>
           <dd class="mt-1">
             {{
-              ordem.veiculo.qt_quilometragem === null
+              order.veiculo.qt_quilometragem === null
                 ? '—'
-                : formatQuantidade(ordem.veiculo.qt_quilometragem) + ' km'
+                : formatQuantity(order.veiculo.qt_quilometragem) + ' km'
             }}
           </dd>
         </div>
@@ -219,7 +221,7 @@ function atualizarVenda(venda: { cn_venda: string }) {
       </div>
       <DataTable
         :pt="{ emptyMessage: { class: 'hidden' } }"
-        :value="ordem.itens"
+        :value="order.itens"
         rowGroupMode="subheader"
         groupRowsBy="ca_tipo"
         sortField="ca_tipo"
@@ -253,7 +255,7 @@ function atualizarVenda(venda: { cn_venda: string }) {
                 rounded
                 :disabled="data.ca_tipo === 'SERVICO' && data.ca_status_servico !== 'PENDENTE'"
                 aria-label="Remover item"
-                @click="excluirItem(data)"
+                @click="removeOrderItem(data)"
               />
             </div>
           </template>
@@ -268,19 +270,19 @@ function atualizarVenda(venda: { cn_venda: string }) {
           <template #body="{ data }"
             ><TempoServicoItem
               :item="data"
-              :editable="ordem.ca_status === 'EM_ANDAMENTO'"
-              @saved="atualizarTempo"
+              :editable="order.ca_status === 'EM_ANDAMENTO'"
+              @saved="updateItemTime"
           /></template>
         </Column>
         <Column field="ca_unidade" header="Unidade" />
         <Column header="Quantidade">
-          <template #body="{ data }">{{ formatQuantidade(data.qt_quantidade) }}</template>
+          <template #body="{ data }">{{ formatQuantity(data.qt_quantidade) }}</template>
         </Column>
         <Column header="Preço unitário">
-          <template #body="{ data }">{{ formatCurrencyOrdem(data.vl_unitario) }}</template>
+          <template #body="{ data }">{{ formatOrderCurrency(data.vl_unitario) }}</template>
         </Column>
         <Column header="Total">
-          <template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template>
+          <template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
         </Column>
       </DataTable>
     </Fieldset>
@@ -288,15 +290,15 @@ function atualizarVenda(venda: { cn_venda: string }) {
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 border-t border-surface-200 pt-4">
         <div>
           <p class="text-surface-500">Produtos</p>
-          <p class="text-lg font-semibold mt-1">{{ formatCurrencyOrdem(totalProdutos) }}</p>
+          <p class="text-lg font-semibold mt-1">{{ formatOrderCurrency(productsTotal) }}</p>
         </div>
         <div>
           <p class="text-surface-500">Serviços</p>
-          <p class="text-lg font-semibold mt-1">{{ formatCurrencyOrdem(totalServicos) }}</p>
+          <p class="text-lg font-semibold mt-1">{{ formatOrderCurrency(servicesTotal) }}</p>
         </div>
         <div>
           <p class="text-surface-500">Total da ordem</p>
-          <p class="text-xl font-bold mt-1">{{ formatCurrencyOrdem(totalOrdem) }}</p>
+          <p class="text-xl font-bold mt-1">{{ formatOrderCurrency(orderTotal) }}</p>
         </div>
       </div>
     </Fieldset>
@@ -304,39 +306,39 @@ function atualizarVenda(venda: { cn_venda: string }) {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <p class="text-surface-500 mb-2">Solicitação do cliente</p>
-          <p class="whitespace-pre-wrap break-words">{{ ordem.an_solicitacao || '—' }}</p>
+          <p class="whitespace-pre-wrap break-words">{{ order.an_solicitacao || '—' }}</p>
         </div>
         <div>
           <p class="text-surface-500 mb-2">Observações internas</p>
-          <p class="whitespace-pre-wrap break-words">{{ ordem.an_obs || '—' }}</p>
+          <p class="whitespace-pre-wrap break-words">{{ order.an_obs || '—' }}</p>
         </div>
       </div>
     </Fieldset>
-    <ManutOrdemServicoDialog v-model:visible="manutOrdemVisible" :ordem="ordem" />
+    <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="order" />
     <ItemOrdemServicoDialog
-      v-model:visible="itemVisible"
-      :codigoOrdem="ordem.cn_ordem_servico"
+      v-model:visible="itemDialogVisible"
+      :orderCode="order.cn_ordem_servico"
       :item="selectItem"
     />
   </div>
-  <div v-else-if="!ordem" class="flex flex-col items-start gap-4">
+  <div v-else-if="!order" class="flex flex-col items-start gap-4">
     <p>Esta ordem de serviço não está disponível.</p>
     <Button
       label="Voltar ao painel"
       icon="pi pi-arrow-left"
       severity="secondary"
-      @click="voltarPainel"
+      @click="backToPanel"
     />
   </div>
   <MovimentarOrdemServicoDialog
-    v-model:visible="movimentoVisible"
-    :ordem="ordem ?? null"
-    :acao="acao"
+    v-model:visible="orderMovementVisible"
+    :order="order ?? null"
+    :action="action"
   />
   <DetalhesOrdemServicoDialog
-    :visible="!!ordem && ordemEncerrada(ordem)"
-    :ordem="ordem ?? null"
-    @faturada="atualizarVenda"
-    @update:visible="voltarPainel"
+    :visible="!!order && isOrderClosed(order)"
+    :order="order ?? null"
+    @faturada="updateSale"
+    @update:visible="backToPanel"
   />
 </template>

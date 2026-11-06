@@ -1,5 +1,5 @@
-export type TipoPessoa = 'PF' | 'PJ'
-export interface Endereco {
+export type TPersonType = 'PF' | 'PJ'
+export interface IAddress {
   cep: string
   logradouro: string
   numero: string
@@ -9,25 +9,25 @@ export interface Endereco {
   uf: string
 }
 
-interface PessoaBase {
+interface IPersonBase {
   id?: string | number
   bo_categ_cliente: boolean
   bo_categ_func: boolean
   email: string
   telefone: string
   bo_sts_reg: boolean
-  endereco: Endereco
+  endereco: IAddress
   cargo?: string
   comissaoPercentual?: number
 }
 
-export interface PessoaFisica extends PessoaBase {
+export interface IIndividualPerson extends IPersonBase {
   tipo: 'PF'
   nome: string
   cpf: string
 }
 
-export interface PessoaJuridica extends PessoaBase {
+export interface ILegalPerson extends IPersonBase {
   tipo: 'PJ'
   cnpj: string
   razaoSocial: string
@@ -35,4 +35,4 @@ export interface PessoaJuridica extends PessoaBase {
 }
 
 // Modelo do formulário; o serviço converte para os campos da API.
-export type Pessoa = PessoaFisica | PessoaJuridica
+export type Person = IIndividualPerson | ILegalPerson

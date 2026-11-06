@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { UserModel } from '@/models/user.model'
+import type { IFormPageRef } from '@/interface/util'
+import type { IManutUserDialogProps } from '@/interface/interface-pages/UsuarioPage'
 import { computed, ref, watch } from 'vue'
 
 import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
-import ToggleSwitch from 'primevue/toggleswitch'
+import StatusField from '@/components/field/StatusField.vue'
 
 import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IAdmUsuario, IFormUsuario } from '@/interface/interface-pages/UsuarioPage'
+import type { IAdmUsuario, IFormUser } from '@/interface/interface-pages/UsuarioPage'
 import type { TGenericData } from '@/interface/util'
 
 import { validateEmail } from '@/services/util.service'
@@ -19,10 +22,7 @@ import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import DomainField from '../field/DomainField.vue'
 
-const props = defineProps<{
-  visible: boolean
-  user?: IAdmUsuario | null
-}>()
+const props = defineProps<IManutUserDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -35,26 +35,14 @@ const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const formRef = ref<{
-  submit: () => void
-} | null>(null)
+const formRef = ref<IFormPageRef | null>(null)
 const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.user)
 
-function formDataDefault(): IFormUsuario {
-  return {
-    an_nome: '',
-    an_email: '',
-    ca_senha: '',
-    cn_perfil: null,
-    bo_sts_reg: true,
-  }
-}
+const formData = ref<IFormUser>(UserModel.createForm())
 
-const formData = ref<IFormUsuario>(formDataDefault())
-
-async function onSubmit(values: IFormUsuario) {
+async function onSubmit(values: IFormUser) {
   setLoading(true)
 
   const errors: TGenericData = {}
@@ -113,7 +101,7 @@ watch(
           cn_perfil: user.cn_perfil ?? null,
           bo_sts_reg: user.bo_sts_reg ?? true,
         }
-      : formDataDefault()
+      : UserModel.createForm()
     formErrors.value = {}
     isValidated.value = false
     formKey.value++
@@ -137,7 +125,7 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit"
+      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
       @input="isValidated = false"
       @change="isValidated = false"
     >
@@ -157,13 +145,8 @@ watch(
               fluid
             />
           </FieldForm>
-          <FieldForm
-            class="col-span-12 sm:col-span-2"
-            name="bo_sts_reg"
-            label="Status"
-            v-slot="{ field }"
-          >
-            <ToggleSwitch :name="field" />
+          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status">
+            <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
           <FieldForm
             class="col-span-12 sm:col-span-6"

@@ -7,57 +7,65 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import ManutVendaDialog from '@/components/dialogs/ManutVendaDialog.vue'
 import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
-import { usePesquisa } from '@/composables/usePesquisa'
+import { usePesquisa as useSearch } from '@/composables/usePesquisa'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { getVendasPagina, getVenda } from '@/services/faturamento.service'
+import {
+  getVendasPagina as getSalesPage,
+  getVenda as getSale,
+} from '@/services/faturamento.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
-import { formatCurrencyOrdem } from '@/services/ordem-servico.service'
+import { formatCurrencyOrdem as formatOrderCurrency } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import type { IAdmVenda } from '@/interface/interface-pages/VendaPage'
 
 const route = useRoute()
 const {
-  registros: vendas,
+  registros: sales,
   total,
-  primeiroRegistro,
-  limite,
-  filtro,
+  primeiroRegistro: firstRecord,
+  limite: limit,
+  filtro: filter,
   loadingGrid,
   load,
   search,
   changePage,
-} = usePesquisa<IAdmVenda>(getVendasPagina)
-const manutVisible = ref(false)
-const detalhesVisible = ref(false)
-const vendaSelecionada = ref<IAdmVenda | null>(null)
+} = useSearch<IAdmVenda>(getSalesPage)
+const manutSaleVisible = ref(false)
+const saleDetailsVisible = ref(false)
+const selectSale = ref<IAdmVenda | null>(null)
 const { normalizeError } = useUtilStore()
 const toast = useAppToast()
 
-function detalhar(venda: IAdmVenda) {
-  vendaSelecionada.value = venda
-  detalhesVisible.value = true
+function newSale() {
+  selectSale.value = null
+  manutSaleVisible.value = true
 }
 
-async function abrirConsulta() {
+function showSale(sale: IAdmVenda) {
+  selectSale.value = sale
+  saleDetailsVisible.value = true
+}
+
+async function loadSaleDetails() {
   if (typeof route.query.venda !== 'string') return
   try {
-    const { dados } = await getVenda(route.query.venda)
-    detalhar(dados)
+    const { dados: data } = await getSale(route.query.venda)
+    showSale(data)
   } catch (error) {
     toast.error(normalizeError(error))
   }
 }
 
-async function salva(venda: IAdmVenda) {
-  detalhar(venda)
+async function onSaleSaved(sale: IAdmVenda) {
+  showSale(sale)
   await load()
 }
 
-watch(() => route.query.venda, abrirConsulta)
+watch(() => route.query.venda, loadSaleDetails)
 usePageLoad(async () => {
   await load()
-  await abrirConsulta()
+  await loadSaleDetails()
 })
 </script>
 
@@ -69,10 +77,10 @@ usePageLoad(async () => {
           <h1 class="text-xl font-semibold">Faturamento — Vendas</h1>
           <p class="text-surface-500">{{ total }} venda(s)</p>
         </div>
-        <Button label="Nova venda" icon="pi pi-plus" @click="manutVisible = true" />
+        <Button label="Nova venda" icon="pi pi-plus" @click="newSale" />
         <div class="flex gap-2 w-full max-w-xl">
           <InputText
-            v-model="filtro"
+            v-model="filter"
             class="flex-1 min-w-0"
             placeholder="Pesquisar número, cliente ou documento..."
             aria-label="Pesquisar vendas"
@@ -88,7 +96,7 @@ usePageLoad(async () => {
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <DataTable
-          :value="vendas"
+          :value="sales"
           dataKey="cn_venda"
           size="small"
           stripedRows
@@ -97,8 +105,8 @@ usePageLoad(async () => {
           tableStyle="min-width: 58rem"
           lazy
           paginator
-          :first="primeiroRegistro"
-          :rows="limite"
+          :first="firstRecord"
+          :rows="limit"
           :totalRecords="total"
           :loading="loadingGrid"
           @page="changePage"
@@ -112,7 +120,7 @@ usePageLoad(async () => {
                 text
                 rounded
                 aria-label="Detalhar venda"
-                @click="detalhar(data)" /></template
+                @click="showSale(data)" /></template
           ></Column>
           <Column field="nu_numero" header="Número" /><Column
             field="an_cliente"
@@ -127,13 +135,13 @@ usePageLoad(async () => {
             ><template #body="{ data }">{{ formatDateTime(data.dt_venda) }}</template></Column
           >
           <Column header="Total"
-            ><template #body="{ data }">{{ formatCurrencyOrdem(data.vl_total) }}</template></Column
+            ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
           <template #empty>Nenhuma venda encontrada.</template>
         </DataTable>
       </div>
     </div>
   </div>
-  <ManutVendaDialog v-model:visible="manutVisible" @saved="salva" />
-  <DetalhesVendaDialog v-model:visible="detalhesVisible" :venda="vendaSelecionada" />
+  <ManutVendaDialog v-model:visible="manutSaleVisible" @saved="onSaleSaved" />
+  <DetalhesVendaDialog v-model:visible="saleDetailsVisible" :sale="selectSale" />
 </template>

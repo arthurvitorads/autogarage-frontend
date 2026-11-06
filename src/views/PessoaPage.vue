@@ -7,8 +7,8 @@ import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
-import Dialog from 'primevue/dialog'
-import type { Pessoa } from '@/models/pessoa'
+
+import type { Person } from '@/models/pessoa'
 
 import { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
 
@@ -25,15 +25,15 @@ const { normalizeError, setLoading } = useUtilStore()
 const toastService = useAppToast()
 
 // paginacao
-const limite = ref(20)
-const pagina = ref(1)
+const limit = ref(20)
+const page = ref(1)
 const total = ref(0)
 
-const filtro = ref('')
+const filter = ref('')
 
 // skeleton
-const colunasSkeleton = [
-  'Ações',
+const skeletonColumns = [
+  'Editar',
   'Código',
   'Nome',
   'Tipo',
@@ -50,52 +50,46 @@ const loadingGrid = ref(false)
 
 // form
 const manutPersonVisible = ref(false)
-const selectedPerson = ref<Pessoa | null>(null)
-const enderecoVisible = ref(false)
-const pessoaEndereco = ref<ICadPessoa | null>(null)
-function showEndereco(pessoa: ICadPessoa) {
-  pessoaEndereco.value = pessoa
-  enderecoVisible.value = true
-}
+const selectPerson = ref<Person | null>(null)
 
-const personData = ref<ICadPessoa[]>([])
+const people = ref<ICadPessoa[]>([])
 
 function search() {
   if (loadingGrid.value) return
 
-  pagina.value = 1
-  loadPerson()
+  page.value = 1
+  loadPeople()
 }
 
 function changePage(event: DataTablePageEvent) {
   if (loadingGrid.value) return
 
-  pagina.value = event.page + 1
-  limite.value = event.rows
-  loadPerson()
+  page.value = event.page + 1
+  limit.value = event.rows
+  loadPeople()
 }
 
 function newPerson() {
-  selectedPerson.value = null
+  selectPerson.value = null
   manutPersonVisible.value = true
 }
 
-function editPerson(pessoa: ICadPessoa) {
-  selectedPerson.value = personToForm(pessoa)
+function editPerson(person: ICadPessoa) {
+  selectPerson.value = personToForm(person)
   manutPersonVisible.value = true
 }
 
-async function loadPerson() {
+async function loadPeople() {
   loadingGrid.value = true
 
   try {
-    const resultado = await getPerson(pagina.value, limite.value, filtro.value)
+    const result = await getPerson(page.value, limit.value, filter.value)
 
-    personData.value = resultado.dados.pessoa
-    total.value = resultado.dados.pagination.total
+    people.value = result.dados.pessoa
+    total.value = result.dados.pagination.total
   } catch (error) {
     toastService.error(normalizeError(error))
-    personData.value = []
+    people.value = []
     total.value = 0
   } finally {
     loadingGrid.value = false
@@ -106,7 +100,7 @@ onMounted(async () => {
   setLoading(true)
 
   try {
-    await loadPerson()
+    await loadPeople()
   } finally {
     setLoading(false)
   }
@@ -119,7 +113,7 @@ onMounted(async () => {
       <div class="flex justify-between m-5">
         <div class="flex justify-center gap-2 w-140">
           <InputText
-            v-model="filtro"
+            v-model="filter"
             placeholder="Pesquise pelo nome, documento, e-mail..."
             class="flex-1 min-w-0"
             :disabled="loadingGrid"
@@ -136,7 +130,7 @@ onMounted(async () => {
           :pt="{
             emptyMessage: { class: 'hidden' },
           }"
-          :value="personData"
+          :value="people"
           :aria-busy="loadingGrid"
           dataKey="cn_pessoa"
           size="small"
@@ -146,22 +140,22 @@ onMounted(async () => {
           tableStyle="min-width: 50rem"
           lazy
           paginator
-          :first="(pagina - 1) * limite"
-          :rows="limite"
+          :first="(page - 1) * limit"
+          :rows="limit"
           :totalRecords="total"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Total: {totalRecords}"
           @page="changePage"
         >
           <template v-if="loadingGrid">
-            <Column v-for="header in colunasSkeleton" :key="header" :header="header">
+            <Column v-for="header in skeletonColumns" :key="header" :header="header">
               <template #body>
                 <Skeleton height="2.8rem" />
               </template>
             </Column>
           </template>
           <template v-else>
-            <Column header="Ações" class="min-w-5">
+            <Column header="Editar" class="min-w-5">
               <template #body="{ data }">
                 <Button
                   icon="pi pi-pencil"
@@ -169,19 +163,6 @@ onMounted(async () => {
                   text
                   rounded
                   @click="editPerson(data)"
-                />
-              </template>
-            </Column>
-            <Column header="Endereço" class="min-w-20">
-              <template #body="{ data }">
-                <Button
-                  icon="pi pi-info-circle"
-                  severity="info"
-                  text
-                  rounded
-                  aria-label="Consultar endereço"
-                  v-tooltip.top="'Consultar endereço'"
-                  @click="showEndereco(data)"
                 />
               </template>
             </Column>
@@ -238,25 +219,7 @@ onMounted(async () => {
   </div>
   <ManutPessoaDialog
     v-model:visible="manutPersonVisible"
-    :pessoa="selectedPerson"
-    @saved="loadPerson"
+    :person="selectPerson"
+    @saved="loadPeople"
   />
-  <Dialog
-    v-model:visible="enderecoVisible"
-    modal
-    header="Endereço da pessoa"
-    :style="{ width: '40rem', maxWidth: '95vw' }"
-  >
-    <div v-if="pessoaEndereco?.endereco" class="flex flex-col gap-2">
-      <p class="font-semibold">{{ pessoaEndereco.an_nome || pessoaEndereco.an_razao_social }}</p>
-      <p>{{ pessoaEndereco.endereco.an_logradouro }}, {{ pessoaEndereco.endereco.an_numero }}</p>
-      <p v-if="pessoaEndereco.endereco.an_complemento">
-        {{ pessoaEndereco.endereco.an_complemento }}
-      </p>
-      <p>{{ pessoaEndereco.endereco.an_bairro }}</p>
-      <p>{{ pessoaEndereco.endereco.an_cidade }} / {{ pessoaEndereco.endereco.ca_uf }}</p>
-      <p>CEP: {{ pessoaEndereco.endereco.ca_cep }}</p>
-    </div>
-    <p v-else>Endereço não cadastrado.</p>
-  </Dialog>
 </template>

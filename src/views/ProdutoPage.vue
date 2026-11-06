@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { usePesquisa } from '@/composables/usePesquisa'
-import { getProdutosPagina } from '@/services/catalogo.service'
+import { usePesquisa as useSearch } from '@/composables/usePesquisa'
+import { getProdutosPagina as getProductsPage } from '@/services/catalogo.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
@@ -14,46 +13,46 @@ import ManutProdutoDialog from '@/components/dialogs/ManutProdutoDialog.vue'
 
 import type { IAdmProduto } from '@/interface/interface-pages/ProdutoPage'
 
-import { useCatalogoStore } from '@/stores/catalogo.store'
+import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
 // paginação e filtros
 
 // form
 const {
-  registros: produtos,
+  registros: products,
   total,
-  primeiroRegistro,
-  limite,
-  filtro,
+  primeiroRegistro: firstRecord,
+  limite: limit,
+  filtro: filter,
   loadingGrid,
   load,
   search,
   changePage,
-} = usePesquisa<IAdmProduto>(getProdutosPagina)
+} = useSearch<IAdmProduto>(getProductsPage)
 
-const manutProdutoVisible = ref(false)
-const selectProduto = ref<IAdmProduto | null>(null)
+const manutProductVisible = ref(false)
+const selectProduct = ref<IAdmProduto | null>(null)
 
-function newProduto() {
-  selectProduto.value = null
-  manutProdutoVisible.value = true
+function newProduct() {
+  selectProduct.value = null
+  manutProductVisible.value = true
 }
 
-function editProduto(produto: IAdmProduto) {
-  selectProduto.value = produto
-  manutProdutoVisible.value = true
+function editProduct(product: IAdmProduto) {
+  selectProduct.value = product
+  manutProductVisible.value = true
 }
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 }
 
-function formatQuantidade(value: number): string {
+function formatQuantity(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 }
 
 usePageLoad(async () => {
-  await useCatalogoStore().loadCadastros()
+  await useCatalogStore().loadCadastros()
   await load()
 })
 </script>
@@ -65,7 +64,7 @@ usePageLoad(async () => {
         <div class="flex flex-wrap justify-between gap-3">
           <div class="flex gap-2 w-140 max-w-full">
             <InputText
-              v-model="filtro"
+              v-model="filter"
               placeholder="Pesquisar por código, nome ou referência..."
               aria-label="Pesquisar produtos"
               class="flex-1 min-w-0"
@@ -78,13 +77,13 @@ usePageLoad(async () => {
               @click="search"
             />
           </div>
-          <Button label="Novo" icon="pi pi-plus" @click="newProduto" />
+          <Button label="Novo" icon="pi pi-plus" @click="newProduct" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <DataTable
           :pt="{ emptyMessage: { class: 'hidden' } }"
-          :value="produtos"
+          :value="products"
           dataKey="cn_produto"
           size="small"
           stripedRows
@@ -96,8 +95,8 @@ usePageLoad(async () => {
           :totalRecords="total"
           @page="changePage"
           paginator
-          v-model:first="primeiroRegistro"
-          :rows="limite"
+          v-model:first="firstRecord"
+          :rows="limit"
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
           currentPageReportTemplate="Total: {totalRecords}"
         >
@@ -111,7 +110,7 @@ usePageLoad(async () => {
                   rounded
                   aria-label="Editar produto"
                   v-tooltip.top="'Editar produto'"
-                  @click="editProduto(data)"
+                  @click="editProduct(data)"
                 />
               </div>
             </template>
@@ -131,7 +130,7 @@ usePageLoad(async () => {
           <Column header="Estoque">
             <template #body="{ data }">
               <Tag
-                :value="formatQuantidade(data.qt_estoque)"
+                :value="formatQuantity(data.qt_estoque)"
                 :severity="
                   data.qt_estoque === 0
                     ? 'danger'
@@ -143,7 +142,7 @@ usePageLoad(async () => {
             </template>
           </Column>
           <Column header="Mínimo">
-            <template #body="{ data }">{{ formatQuantidade(data.qt_estoque_min) }}</template>
+            <template #body="{ data }">{{ formatQuantity(data.qt_estoque_min) }}</template>
           </Column>
           <Column header="Status">
             <template #body="{ data }">
@@ -158,9 +157,9 @@ usePageLoad(async () => {
     </div>
   </div>
   <ManutProdutoDialog
-    v-model:visible="manutProdutoVisible"
-    :produto="selectProduto"
-    :produtos="produtos"
+    v-model:visible="manutProductVisible"
+    :product="selectProduct"
+    :products="products"
     @saved="load"
   />
 </template>

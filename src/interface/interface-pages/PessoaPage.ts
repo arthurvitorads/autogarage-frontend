@@ -1,7 +1,7 @@
-import type { TipoPessoa } from '@/models/pessoa'
+import type { TPersonType } from '@/models/pessoa'
 import type { IPagination } from '@/services/api.service'
 
-export interface IManutEndereco {
+export interface IManutAddress {
   ca_cep: string
   an_logradouro: string
   an_numero: string
@@ -11,7 +11,7 @@ export interface IManutEndereco {
   ca_uf: string
 }
 
-export interface ICadEndereco extends IManutEndereco {
+export interface ICadEndereco extends IManutAddress {
   cn_endereco: string
   cn_pessoa: string
   bo_sts_reg: boolean
@@ -19,8 +19,8 @@ export interface ICadEndereco extends IManutEndereco {
   dt_alt: string
 }
 
-export interface IManutPessoa {
-  ca_tipo: TipoPessoa
+export interface IManutPerson {
+  ca_tipo: TPersonType
   an_nome: string | null
   ca_cpf: string | null
   ca_cnpj: string | null
@@ -33,18 +33,18 @@ export interface IManutPessoa {
   an_cargo: string
   nm_comissao_percentual: number
   bo_sts_reg: boolean
-  endereco: IManutEndereco
+  endereco: IManutAddress
 }
 
-export interface ICadPessoa extends Omit<IManutPessoa, 'endereco'> {
+export interface ICadPessoa extends Omit<IManutPerson, 'endereco'> {
   cn_pessoa: string
   dt_inc: string
   dt_alt: string
   endereco: ICadEndereco | null
 }
 
-export interface IFormPessoa {
-  tipo: TipoPessoa
+export interface IFormPerson {
+  tipo: TPersonType
   bo_categ_cliente: boolean
   bo_categ_func: boolean
   bo_sts_reg: boolean
@@ -66,7 +66,7 @@ export interface IFormPessoa {
   uf: string
 }
 
-export interface IPessoaResponse {
+export interface IPersonResponse {
   sucesso: boolean
   dados: {
     pessoa: ICadPessoa[]
