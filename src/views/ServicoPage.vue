@@ -117,7 +117,7 @@ usePageLoad(async () => {
           </Column>
           <Column header="Tempo estimado">
             <template #body="{ data }">{{
-              data.nu_tempo_estimado ? data.nu_tempo_estimado + ' min' : '—'
+              data.nu_tempo_estimado ? data.nu_tempo_estimado + ' min' : ''
             }}</template>
           </Column>
           <Column header="Status">

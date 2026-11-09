@@ -101,5 +101,5 @@ async function movimentar(acao: 'INICIAR' | 'PAUSAR' | 'FINALIZAR') {
       />
     </div>
   </div>
-  <span v-else>—</span>
+
 </template>

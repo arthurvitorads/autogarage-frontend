@@ -9,7 +9,9 @@ import InputText from 'primevue/inputtext'
 import Password from 'primevue/password'
 import StatusField from '@/components/field/StatusField.vue'
 
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import { storeToRefs } from 'pinia'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
@@ -32,6 +34,7 @@ const emit = defineEmits<{
 const toast = useAppToast()
 
 const { normalizeError, setLoading } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -111,12 +114,12 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     :header="isEditing ? 'Editar usuário' : 'Novo usuário'"
-    width="64rem"
-    @submit="formRef?.submit()"
+    modal
+    :style="{ width: '64rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <FormPage
       ref="formRef"
@@ -199,5 +202,22 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>

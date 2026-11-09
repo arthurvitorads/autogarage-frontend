@@ -13,10 +13,10 @@ import Textarea from 'primevue/textarea'
 import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
-import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
+import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
 
 import type {
   IAdmServico,
@@ -49,6 +49,7 @@ function selectCategory(auxiliary: IAdmCadastroAuxiliar) {
 }
 
 const { normalizeError, setLoading } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -138,12 +139,12 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     :header="isEditing ? 'Editar serviço' : 'Novo serviço'"
-    width="72rem"
-    @submit="formRef?.submit()"
+    modal
+    :style="{ width: '72rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <FormPage
       ref="formRef"
@@ -245,10 +246,23 @@ watch(
         </FieldForm>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
-  <CadastroAuxiliarDialog
-    v-model:visible="categoryDialogVisible"
-    auxiliaryType="CATEGORIA_SERVICO"
-    @saved="selectCategory"
-  />
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
+  <CategoriaServicoDialog v-model:visible="categoryDialogVisible" @saved="selectCategory" />
 </template>

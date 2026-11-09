@@ -11,7 +11,7 @@ import Button from 'primevue/button'
 import Fieldset from 'primevue/fieldset'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import Dialog from 'primevue/dialog'
 import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
 import type {
@@ -39,6 +39,7 @@ const orderStore = useServiceOrderStore()
 const { produtos: products, servicos: services } = storeToRefs(catalogStore)
 const { clientes: customers, ordens: orders } = storeToRefs(orderStore)
 const { setLoading, normalizeError } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 
 const customer = ref<ICadPessoa | null>(null)
@@ -199,12 +200,11 @@ async function save() {
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     header="Registrar venda"
-    width="82rem"
-    :disabled="saving || loadingData || !!loadError"
-    @submit="save"
+    modal
+    :style="{ width: '82rem', maxWidth: '95vw', maxHeight: '90vh' }"
     @update:visible="emit('update:visible', $event)"
   >
     <div class="flex flex-col gap-4">
@@ -329,5 +329,22 @@ async function save() {
       <label for="venda-observacao">Observações</label
       ><Textarea id="venda-observacao" v-model="notes" rows="2" fluid />
     </div>
-  </CadastroDialog>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="saving || loadingData || !!loadError || loading"
+          :loading="loading"
+          @click="save"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>

@@ -3,20 +3,17 @@ import logoClara from '@/assets/img/logo_clara.png'
 
 import { ref, watch, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
-import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
+import CategoriaProdutoDialog from '@/components/dialogs/CategoriaProdutoDialog.vue'
+import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
+import MarcaDialog from '@/components/dialogs/MarcaDialog.vue'
+import UnidadeDialog from '@/components/dialogs/UnidadeDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
-import type { TAuxiliaryType } from '@/interface/interface-pages/CadastroAuxiliar'
 
-const cadastroVisible = ref(false)
-const classificacaoVisible = ref(false)
-const tipoCadastro = ref<TAuxiliaryType>('MARCA')
-function abrirCadastro(tipo: TAuxiliaryType | 'CLASSIFICACAO') {
-  if (tipo === 'CLASSIFICACAO') classificacaoVisible.value = true
-  else {
-    tipoCadastro.value = tipo
-    cadastroVisible.value = true
-  }
-}
+const productCategoryDialogVisible = ref(false)
+const serviceCategoryDialogVisible = ref(false)
+const brandDialogVisible = ref(false)
+const unitDialogVisible = ref(false)
+const classificationDialogVisible = ref(false)
 
 import PanelMenu, { type PanelMenuPanelOpenEvent } from 'primevue/panelmenu'
 
@@ -48,24 +45,36 @@ const modules = [
         label: 'Classificações de O.S.',
         icon: 'tags',
         route: '',
-        cadastro: 'CLASSIFICACAO',
+        openDialog: () => (classificationDialogVisible.value = true),
       },
       {
         key: 'cadastros:categoria-produto',
         label: 'Categorias de produtos',
         icon: 'list',
         route: '',
-        cadastro: 'CATEGORIA_PRODUTO',
+        openDialog: () => (productCategoryDialogVisible.value = true),
       },
       {
         key: 'cadastros:categoria-servico',
         label: 'Categorias de serviços',
         icon: 'list',
         route: '',
-        cadastro: 'CATEGORIA_SERVICO',
+        openDialog: () => (serviceCategoryDialogVisible.value = true),
       },
-      { key: 'cadastros:marca', label: 'Marcas', icon: 'tag', route: '', cadastro: 'MARCA' },
-      { key: 'cadastros:unidade', label: 'Unidades', icon: 'box', route: '', cadastro: 'UNIDADE' },
+      {
+        key: 'cadastros:marca',
+        label: 'Marcas',
+        icon: 'tag',
+        route: '',
+        openDialog: () => (brandDialogVisible.value = true),
+      },
+      {
+        key: 'cadastros:unidade',
+        label: 'Unidades',
+        icon: 'box',
+        route: '',
+        openDialog: () => (unitDialogVisible.value = true),
+      },
     ],
   },
   {
@@ -178,10 +187,10 @@ onMounted(openCurrentModule)
             </RouterLink>
 
             <button
-              v-else-if="item.cadastro"
+              v-else-if="item.openDialog"
               type="button"
               class="menu-link w-full"
-              @click="abrirCadastro(item.cadastro)"
+              @click="item.openDialog()"
             >
               <i :class="'pi pi-' + item.icon"></i>
               <span>{{ item.label }}</span>
@@ -196,8 +205,11 @@ onMounted(openCurrentModule)
       </nav>
     </div>
   </aside>
-  <CadastroAuxiliarDialog v-model:visible="cadastroVisible" :auxiliaryType="tipoCadastro" />
-  <ClassificacaoOrdemServicoDialog v-model:visible="classificacaoVisible" />
+  <CategoriaProdutoDialog v-model:visible="productCategoryDialogVisible" />
+  <CategoriaServicoDialog v-model:visible="serviceCategoryDialogVisible" />
+  <MarcaDialog v-model:visible="brandDialogVisible" />
+  <UnidadeDialog v-model:visible="unitDialogVisible" />
+  <ClassificacaoOrdemServicoDialog v-model:visible="classificationDialogVisible" />
 </template>
 
 <style scoped>

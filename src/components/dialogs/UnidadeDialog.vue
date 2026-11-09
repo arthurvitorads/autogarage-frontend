@@ -1,98 +1,76 @@
 <script setup lang="ts">
 import { AuxiliaryModel } from '@/models/auxiliary.model'
-import type { IFormPageRef } from '@/interface/util'
-import type { IAuxiliaryDialogProps } from '@/interface/dialog'
-import { computed, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import Button from 'primevue/button'
-
-import Fieldset from 'primevue/fieldset'
-import InputText from 'primevue/inputtext'
-
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
-import FormPage from '@/components/pages/FormPage.vue'
-import FieldForm from '@/components/field/FieldForm.vue'
-
+import type { IDialogProps } from '@/interface/dialog'
+import type { IFormPageRef, TGenericData } from '@/interface/util'
 import type {
   IAdmCadastroAuxiliar,
   IFormAuxiliary,
-  TAuxiliaryType,
 } from '@/interface/interface-pages/CadastroAuxiliar'
-import type { TGenericData } from '@/interface/util'
+import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import Dialog from 'primevue/dialog'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import Button from 'primevue/button'
+import Fieldset from 'primevue/fieldset'
+import InputText from 'primevue/inputtext'
 
+import FormPage from '@/components/pages/FormPage.vue'
+import FieldForm from '@/components/field/FieldForm.vue'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
 
-const props = defineProps<IAuxiliaryDialogProps>()
-
+const props = defineProps<IDialogProps>()
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [cadastro: IAdmCadastroAuxiliar]
+  saved: [unit: IAdmCadastroAuxiliar]
 }>()
 
 const catalogStore = useCatalogStore()
-const { saveCadastroAuxiliar: saveAuxiliary } = catalogStore
 const { cadastrosAuxiliares } = storeToRefs(catalogStore)
 const records = computed(() =>
-  cadastrosAuxiliares.value.filter((item) => item.ca_tipo === props.auxiliaryType),
+  cadastrosAuxiliares.value.filter((record) => record.ca_tipo === 'UNIDADE'),
 )
-const selectedAuxiliary = ref<IAdmCadastroAuxiliar | null>(null)
+const selectedUnit = ref<IAdmCadastroAuxiliar | null>(null)
 const loadingGrid = ref(false)
-const { normalizeError, setLoading } = useUtilStore()
+const utilStore = useUtilStore()
+const { loading } = storeToRefs(utilStore)
+const { normalizeError, setLoading } = utilStore
 const toast = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const header = computed(() =>
-  props.auxiliaryType === 'MARCA'
-    ? 'Marcas'
-    : props.auxiliaryType === 'UNIDADE'
-      ? 'Unidades'
-      : props.auxiliaryType === 'CATEGORIA_PRODUTO'
-        ? 'Categorias de produtos'
-        : 'Categorias de serviços',
-)
+const formData = ref<IFormAuxiliary>(AuxiliaryModel.createForm())
 
-function editAuxiliary(auxiliary: IAdmCadastroAuxiliar | null) {
-  selectedAuxiliary.value = auxiliary
-  formData.value = auxiliary
-    ? { an_descr: auxiliary.an_descr, ca_sigla: auxiliary.ca_sigla }
+function selectUnit(unit: IAdmCadastroAuxiliar | null) {
+  selectedUnit.value = unit
+  formData.value = unit
+    ? { an_descr: unit.an_descr, ca_sigla: unit.ca_sigla }
     : AuxiliaryModel.createForm()
   formErrors.value = {}
   formKey.value++
 }
 
-const formData = ref<IFormAuxiliary>(AuxiliaryModel.createForm())
-
 async function onSubmit(values: IFormAuxiliary) {
   const errors: TGenericData = {}
-
-  if (!values.an_descr.trim()) errors.an_descr = 'Campo obrigatório.'
-
-  if (
-    props.auxiliaryType === 'UNIDADE' &&
-    !/^[A-Z0-9]{1,10}$/.test(values.ca_sigla.trim().toUpperCase())
-  )
+  const description = values.an_descr.trim()
+  const abbreviation = values.ca_sigla.trim().toUpperCase()
+  if (!description) errors.an_descr = 'Campo obrigatório.'
+  if (!/^[A-Z0-9]{1,10}$/.test(abbreviation))
     errors.ca_sigla = 'Informe uma sigla com até 10 letras ou números.'
-
   formErrors.value = errors
-
   if (Object.keys(errors).length) return
 
   setLoading(true)
-
   try {
-    const data = {
-      ...(selectedAuxiliary.value ? { cn_cadastro: selectedAuxiliary.value.cn_cadastro } : {}),
-      ca_tipo: props.auxiliaryType,
-      an_descr: values.an_descr.trim(),
-      ca_sigla: props.auxiliaryType === 'UNIDADE' ? values.ca_sigla.trim().toUpperCase() : '',
-    }
-    const auxiliary = await saveAuxiliary(data)
-    emit('saved', auxiliary)
+    const saved = await catalogStore.saveCadastroAuxiliar({
+      cn_cadastro: selectedUnit.value?.cn_cadastro,
+      ca_tipo: 'UNIDADE',
+      an_descr: description,
+      ca_sigla: abbreviation,
+    })
+    emit('saved', saved)
     toast.success('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
@@ -103,11 +81,11 @@ async function onSubmit(values: IFormAuxiliary) {
 }
 
 watch(
-  [() => props.visible, () => props.auxiliaryType],
-  async ([visible]) => {
+  () => props.visible,
+  async (visible) => {
     if (!visible) return
 
-    editAuxiliary(null)
+    selectUnit(null)
     loadingGrid.value = true
     try {
       await catalogStore.loadCadastros()
@@ -122,15 +100,15 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
-    :header="header"
-    width="42rem"
-    @submit="formRef?.submit()"
+    header="Unidades"
+    modal
+    :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <div class="flex justify-end mb-3">
-      <Button label="Novo" icon="pi pi-plus" @click="editAuxiliary(null)" />
+      <Button label="Nova unidade" icon="pi pi-plus" @click="selectUnit(null)" />
     </div>
     <DataTable
       :value="records"
@@ -140,20 +118,22 @@ watch(
       scrollHeight="14rem"
       class="mb-4"
     >
-      <Column header="Ações"
-        ><template #body="{ data }"
-          ><Button
+      <Column header="Ações">
+        <template #body="{ data }">
+          <Button
             icon="pi pi-pencil"
             severity="secondary"
             text
-            aria-label="Editar cadastro"
-            @click="editAuxiliary(data)" /></template
-      ></Column>
+            aria-label="Editar unidade"
+            @click="selectUnit(data)"
+          />
+        </template>
+      </Column>
       <Column field="an_descr" header="Descrição" />
-      <Column v-if="auxiliaryType === 'UNIDADE'" field="ca_sigla" header="Sigla" />
-      <template #empty>Nenhum cadastro disponível.</template>
+      <Column field="ca_sigla" header="Sigla" />
+      <template #empty>Nenhuma unidade disponível.</template>
     </DataTable>
-    <p class="font-semibold mb-3">{{ selectedAuxiliary ? 'Editar cadastro' : 'Novo cadastro' }}</p>
+    <p class="font-semibold mb-3">{{ selectedUnit ? 'Editar unidade' : 'Nova unidade' }}</p>
     <FormPage
       ref="formRef"
       :key="formKey"
@@ -163,18 +143,10 @@ watch(
       :initialValues="formData"
       @submit="onSubmit(formData)"
     >
-      <Fieldset
-        :legend="
-          auxiliaryType === 'UNIDADE'
-            ? 'Dados da unidade'
-            : auxiliaryType === 'MARCA'
-              ? 'Dados da marca'
-              : 'Dados da categoria'
-        "
-      >
+      <Fieldset legend="Dados da unidade">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
-            :class="auxiliaryType === 'UNIDADE' ? 'col-span-12 sm:col-span-8' : 'col-span-12'"
+            class="col-span-12 sm:col-span-8"
             name="an_descr"
             label="Descrição *"
             v-slot="{ invalid, field }"
@@ -188,7 +160,6 @@ watch(
             />
           </FieldForm>
           <FieldForm
-            v-if="auxiliaryType === 'UNIDADE'"
             class="col-span-12 sm:col-span-4"
             name="ca_sigla"
             label="Sigla *"
@@ -205,5 +176,22 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>

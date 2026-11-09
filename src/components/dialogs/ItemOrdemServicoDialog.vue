@@ -12,7 +12,8 @@ import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import Button from 'primevue/button'
+import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
@@ -45,6 +46,7 @@ const emit = defineEmits<{
 const { produtos: products, servicos: services } = storeToRefs(useCatalogStore())
 const { saveItem } = useServiceOrderStore()
 const { normalizeError, setLoading } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 const confirmAction = useConfirmation()
 const formErrors = ref<TGenericData>({})
@@ -194,12 +196,12 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     :header="item ? 'Editar item da ordem' : 'Adicionar produto ou serviço'"
-    width="64rem"
-    @submit="formRef?.submit()"
+    modal
+    :style="{ width: '64rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <FormPage
       ref="formRef"
@@ -243,7 +245,7 @@ watch(
           <FieldForm class="col-span-12 sm:col-span-3" name="ca_unidade" label="Unidade">
             <InputText
               maxlength="10"
-              :modelValue="selectedReference?.ca_unidade || '—'"
+              :modelValue="selectedReference?.ca_unidade ?? ''"
               readonly
               fluid
             />
@@ -286,7 +288,7 @@ watch(
           <FieldForm class="col-span-12 sm:col-span-4" name="vl_total" label="Total do item">
             <InputText
               maxlength="4000"
-              :modelValue="totalItem === null ? '—' : formatOrderCurrency(totalItem)"
+              :modelValue="totalItem === null ? '' : formatOrderCurrency(totalItem)"
               readonly
               fluid
             />
@@ -294,5 +296,22 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>

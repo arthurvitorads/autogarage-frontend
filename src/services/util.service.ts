@@ -32,13 +32,13 @@ export function normalizeDate(value?: Date | string | null) {
 }
 
 export function formatDate(date: string | Date | null): string {
-  if (!date) return '-'
+  if (!date) return ''
 
   return new Date(date).toLocaleDateString('pt-BR')
 }
 
 export function formatDateTime(date: string | Date | null): string {
-  if (!date) return '-'
+  if (!date) return ''
 
   return new Date(date).toLocaleString('pt-BR')
 }

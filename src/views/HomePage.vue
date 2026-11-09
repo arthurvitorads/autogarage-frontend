@@ -143,7 +143,7 @@ usePageLoad(loadIndicators)
               <i class="pi" :class="indicador.icone" aria-hidden="true"></i>
             </span>
           </div>
-          <strong class="indicator-value">{{ orderCounts[index] ?? '—' }}</strong>
+          <strong class="indicator-value">{{ orderCounts[index] }}</strong>
           <p>{{ indicador.legenda }}</p>
         </RouterLink>
       </div>
@@ -254,6 +254,7 @@ h3 {
   margin-top: 14px;
   font-size: 2.6rem;
   line-height: 1.2;
+  min-height: 1.2em;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }

@@ -12,7 +12,7 @@ import Column from 'primevue/column'
 import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
@@ -39,6 +39,7 @@ const orderStore = useServiceOrderStore()
 const { classificacoes: classifications } = storeToRefs(orderStore)
 const { saveClassificacao: saveClassification } = orderStore
 const { normalizeError, setLoading } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 const selectClassification = ref<TServiceOrderCode | null>(null)
 const isEditing = computed(() => selectClassification.value !== null)
@@ -120,12 +121,12 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     :header="isEditing ? 'Classificações da O.S.' : 'Classificações da O.S.'"
-    width="48rem"
-    @submit="formRef?.submit()"
+    modal
+    :style="{ width: '48rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <div class="flex justify-end mb-3">
       <Button label="Novo" icon="pi pi-plus" @click="newClassification" />
@@ -216,5 +217,22 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
 </template>

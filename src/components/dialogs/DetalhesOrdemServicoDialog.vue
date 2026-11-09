@@ -68,11 +68,11 @@ const classification = computed(() =>
           </div>
           <div>
             <dt class="text-surface-500">Classificação</dt>
-            <dd>{{ classification?.an_descr || '—' }}</dd>
+            <dd>{{ classification?.an_descr }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Responsável</dt>
-            <dd>{{ order.an_responsavel || '—' }}</dd>
+            <dd>{{ order.an_responsavel }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Entrada</dt>
@@ -114,15 +114,15 @@ const classification = computed(() =>
           </div>
           <div>
             <dt class="text-surface-500">Ano</dt>
-            <dd>{{ order.veiculo.nu_ano ?? '—' }}</dd>
+            <dd>{{ order.veiculo.nu_ano }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Cor</dt>
-            <dd>{{ order.veiculo.an_cor || '—' }}</dd>
+            <dd>{{ order.veiculo.an_cor }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Quilometragem</dt>
-            <dd>{{ order.veiculo.qt_quilometragem ?? '—' }}</dd>
+            <dd>{{ order.veiculo.qt_quilometragem }}</dd>
           </div>
         </dl>
       </Fieldset>
@@ -165,9 +165,9 @@ const classification = computed(() =>
       </Fieldset>
       <Fieldset legend="Observações">
         <p class="text-surface-500">Solicitação do cliente</p>
-        <p class="whitespace-pre-wrap break-words mb-3">{{ order.an_solicitacao || '—' }}</p>
+        <p class="whitespace-pre-wrap break-words mb-3">{{ order.an_solicitacao }}</p>
         <p class="text-surface-500">Observações internas</p>
-        <p class="whitespace-pre-wrap break-words">{{ order.an_obs || '—' }}</p>
+        <p class="whitespace-pre-wrap break-words">{{ order.an_obs }}</p>
       </Fieldset>
     </div>
     <template #footer>

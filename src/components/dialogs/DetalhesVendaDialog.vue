@@ -31,8 +31,8 @@ const emit = defineEmits<{ 'update:visible': [value: boolean] }>()
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <p class="font-semibold">{{ sale.an_cliente }}</p>
           <p>{{ sale.ca_documento }}</p>
-          <p>{{ sale.an_email || '—' }}</p>
-          <p>{{ sale.an_telefone || '—' }}</p>
+          <p>{{ sale.an_email }}</p>
+          <p>{{ sale.an_telefone }}</p>
           <p class="sm:col-span-2">{{ sale.an_endereco || 'Endereço não informado' }}</p>
         </div>
       </Fieldset>

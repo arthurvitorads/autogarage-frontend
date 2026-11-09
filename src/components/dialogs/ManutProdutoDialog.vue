@@ -13,20 +13,19 @@ import Textarea from 'primevue/textarea'
 import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
-import CadastroAuxiliarDialog from '@/components/dialogs/CadastroAuxiliarDialog.vue'
+import CategoriaProdutoDialog from '@/components/dialogs/CategoriaProdutoDialog.vue'
+import MarcaDialog from '@/components/dialogs/MarcaDialog.vue'
+import UnidadeDialog from '@/components/dialogs/UnidadeDialog.vue'
 
 import type {
   IAdmProduto,
   IFormProduct,
   IManutProduct,
 } from '@/interface/interface-pages/ProdutoPage'
-import type {
-  IAdmCadastroAuxiliar,
-  TAuxiliaryType,
-} from '@/interface/interface-pages/CadastroAuxiliar'
+import type { IAdmCadastroAuxiliar } from '@/interface/interface-pages/CadastroAuxiliar'
 import type { TGenericData } from '@/interface/util'
 
 import { isQuantidadeValida as isValidQuantity } from '@/services/estoque.service'
@@ -51,35 +50,30 @@ const {
   unidadesProduto: productUnits,
 } = storeToRefs(catalogStore)
 const { normalizeError, setLoading } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 const isValidated = ref(false)
 const isEditing = computed(() => !!props.product)
-const auxiliaryDialogVisible = ref(false)
-const auxiliaryType = ref<TAuxiliaryType>('CATEGORIA_PRODUTO')
+const categoryDialogVisible = ref(false)
+const brandDialogVisible = ref(false)
+const unitDialogVisible = ref(false)
 
-function newAuxiliary(tipo: TAuxiliaryType) {
-  auxiliaryType.value = tipo
-  auxiliaryDialogVisible.value = true
+function selectCategory(category: IAdmCadastroAuxiliar) {
+  formData.value.an_categoria = category.an_descr
+  delete formErrors.value.an_categoria
 }
 
-function selectAuxiliary(auxiliary: IAdmCadastroAuxiliar) {
-  if (auxiliary.ca_tipo === 'CATEGORIA_PRODUTO') {
-    formData.value.an_categoria = auxiliary.an_descr
-    delete formErrors.value.an_categoria
-  }
+function selectBrand(brand: IAdmCadastroAuxiliar) {
+  formData.value.an_marca = brand.an_descr
+  delete formErrors.value.an_marca
+}
 
-  if (auxiliary.ca_tipo === 'MARCA') {
-    formData.value.an_marca = auxiliary.an_descr
-    delete formErrors.value.an_marca
-  }
-
-  if (auxiliary.ca_tipo === 'UNIDADE') {
-    formData.value.ca_unidade = auxiliary.ca_sigla
-    delete formErrors.value.ca_unidade
-  }
+function selectUnit(unit: IAdmCadastroAuxiliar) {
+  formData.value.ca_unidade = unit.ca_sigla
+  delete formErrors.value.ca_unidade
 }
 
 const formData = ref<IFormProduct>(ProductModel.createForm())
@@ -192,12 +186,12 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     :header="isEditing ? 'Editar produto' : 'Novo produto'"
-    width="84rem"
-    @submit="formRef?.submit()"
+    modal
+    :style="{ width: '84rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <FormPage
       ref="formRef"
@@ -269,7 +263,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar categoria"
-                @click="newAuxiliary('CATEGORIA_PRODUTO')"
+                @click="categoryDialogVisible = true"
               />
             </div>
           </FieldForm>
@@ -294,7 +288,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar marca"
-                @click="newAuxiliary('MARCA')"
+                @click="brandDialogVisible = true"
               />
             </div>
           </FieldForm>
@@ -320,7 +314,7 @@ watch(
                 icon="pi pi-plus"
                 severity="secondary"
                 aria-label="Cadastrar unidade"
-                @click="newAuxiliary('UNIDADE')"
+                @click="unitDialogVisible = true"
               />
             </div>
           </FieldForm>
@@ -409,10 +403,25 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
-  <CadastroAuxiliarDialog
-    v-model:visible="auxiliaryDialogVisible"
-    :auxiliaryType="auxiliaryType"
-    @saved="selectAuxiliary"
-  />
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
+  <CategoriaProdutoDialog v-model:visible="categoryDialogVisible" @saved="selectCategory" />
+  <MarcaDialog v-model:visible="brandDialogVisible" @saved="selectBrand" />
+  <UnidadeDialog v-model:visible="unitDialogVisible" @saved="selectUnit" />
 </template>

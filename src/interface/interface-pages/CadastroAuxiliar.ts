@@ -1,7 +1,10 @@
 export type TAuxiliaryType = 'CATEGORIA_PRODUTO' | 'CATEGORIA_SERVICO' | 'MARCA' | 'UNIDADE'
 
-export interface IFormAuxiliary {
+export interface IFormDescription {
   an_descr: string
+}
+
+export interface IFormAuxiliary extends IFormDescription {
   ca_sigla: string
 }
 

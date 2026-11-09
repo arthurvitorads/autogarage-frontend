@@ -161,7 +161,7 @@ function updateSale(sale: { cn_venda: string }) {
       </div>
     </div>
     <Fieldset legend="Dados gerais">
-      <p class="mb-4 text-surface-500">Classificação: {{ classification?.an_descr || '—' }}</p>
+      <p class="mb-4 text-surface-500">Classificação: {{ classification?.an_descr }}</p>
       <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div>
           <dt class="text-surface-500">Cliente</dt>
@@ -177,7 +177,7 @@ function updateSale(sale: { cn_venda: string }) {
         </div>
         <div>
           <dt class="text-surface-500">Responsável</dt>
-          <dd class="mt-1">{{ order.an_responsavel || '—' }}</dd>
+          <dd class="mt-1">{{ order.an_responsavel }}</dd>
         </div>
       </dl>
     </Fieldset>
@@ -197,18 +197,18 @@ function updateSale(sale: { cn_venda: string }) {
         </div>
         <div>
           <dt class="text-surface-500">Ano</dt>
-          <dd class="mt-1">{{ order.veiculo.nu_ano ?? '—' }}</dd>
+          <dd class="mt-1">{{ order.veiculo.nu_ano }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Cor</dt>
-          <dd class="mt-1">{{ order.veiculo.an_cor || '—' }}</dd>
+          <dd class="mt-1">{{ order.veiculo.an_cor }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Quilometragem</dt>
           <dd class="mt-1">
             {{
               order.veiculo.qt_quilometragem === null
-                ? '—'
+                ? ''
                 : formatQuantity(order.veiculo.qt_quilometragem) + ' km'
             }}
           </dd>
@@ -306,11 +306,11 @@ function updateSale(sale: { cn_venda: string }) {
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <p class="text-surface-500 mb-2">Solicitação do cliente</p>
-          <p class="whitespace-pre-wrap break-words">{{ order.an_solicitacao || '—' }}</p>
+          <p class="whitespace-pre-wrap break-words">{{ order.an_solicitacao }}</p>
         </div>
         <div>
           <p class="text-surface-500 mb-2">Observações internas</p>
-          <p class="whitespace-pre-wrap break-words">{{ order.an_obs || '—' }}</p>
+          <p class="whitespace-pre-wrap break-words">{{ order.an_obs }}</p>
         </div>
       </div>
     </Fieldset>

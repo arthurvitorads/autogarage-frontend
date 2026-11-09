@@ -13,7 +13,7 @@ import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import Button from 'primevue/button'
 
-import CadastroDialog from '@/components/dialogs/CadastroDialog.vue'
+import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
@@ -50,6 +50,7 @@ const {
 } = storeToRefs(orderStore)
 const { saveOrdem: saveOrder } = orderStore
 const { normalizeError, setLoading } = useUtilStore()
+const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 const confirmAction = useConfirmation()
 const formErrors = ref<TGenericData>({})
@@ -149,12 +150,12 @@ watch(
 </script>
 
 <template>
-  <CadastroDialog
+  <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
     :header="isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço'"
-    width="96rem"
-    @submit="formRef?.submit()"
+    modal
+    :style="{ width: '96rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <FormPage
       ref="formRef"
@@ -370,7 +371,24 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-  </CadastroDialog>
+    <template #footer>
+      <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
+      </div>
+    </template>
+  </Dialog>
   <ClassificacaoOrdemServicoDialog
     v-model:visible="classificationDialogVisible"
     @saved="selectClassification"

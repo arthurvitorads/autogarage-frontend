@@ -10,7 +10,6 @@ import type {
   TServiceOrderItemType,
 } from '@/interface/interface-pages/OrdemServicoPage'
 import type { IAdmVenda } from '@/interface/interface-pages/VendaPage'
-import type { TAuxiliaryType } from '@/interface/interface-pages/CadastroAuxiliar'
 
 export interface IDialogProps {
   visible: boolean
@@ -42,10 +41,6 @@ export interface IServiceOrderItemDialogProps extends IDialogProps {
   orderCode: TServiceOrderCode
   item?: TItemOrdemServico | null
   itemType?: TServiceOrderItemType
-}
-
-export interface IAuxiliaryDialogProps extends IDialogProps {
-  auxiliaryType: TAuxiliaryType
 }
 
 export interface IMoveServiceOrderDialogProps extends IDialogProps {
