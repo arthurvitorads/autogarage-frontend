@@ -23,7 +23,7 @@ import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
-import { apiRequest } from '@/services/api.service'
+import { getPersonById } from '@/services/person.service'
 import { createVenda as createSale } from '@/services/faturamento.service'
 import {
   calcularTotalItemOrdem as calculateItemTotal,
@@ -95,7 +95,7 @@ watch(personId, async (code) => {
   customer.value = null
   if (!code) return
   try {
-    const { dados: data } = await apiRequest<ICadPessoa>('/pessoa/' + encodeURIComponent(code))
+    const { dados: data } = await getPersonById(code)
     if (requestId === customerRequestId) customer.value = data
   } catch (error) {
     if (requestId === customerRequestId) toast.error(normalizeError(error))

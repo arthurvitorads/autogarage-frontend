@@ -4,13 +4,10 @@ import { getOrdensPagina as getOrdersPage } from '@/services/ordem-api.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import Select from 'primevue/select'
 import FiltroData from '@/components/field/FiltroData.vue'
-import {
-  datasMesAtual as currentMonthDates,
-  intervaloDatas as dateInterval,
-} from '@/services/periodo.service'
+import { currentMonthDates, dateInterval } from '@/services/date-range.service'
 import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
 import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServicoDialog.vue'
 
@@ -38,15 +35,15 @@ import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
 const router = useRouter()
-const route = useRoute()
+const { inicio: start, fim: end, status } = router.options.history.state
 const dates = ref<(Date | null)[]>(currentMonthDates())
-if (typeof route.query.inicio === 'string' && typeof route.query.fim === 'string') {
-  const inicio = new Date(route.query.inicio)
-  const fim = new Date(route.query.fim)
+if (typeof start === 'string' && typeof end === 'string') {
+  const inicio = new Date(start)
+  const fim = new Date(end)
   if (Number.isFinite(inicio.getTime()) && Number.isFinite(fim.getTime()) && inicio <= fim)
     dates.value = [inicio, fim]
 }
-const statusFilter = ref(typeof route.query.status === 'string' ? route.query.status : '')
+const statusFilter = ref(typeof status === 'string' ? status : '')
 const classificationFilter = ref<string | number | null>(null)
 function orderFilters() {
   return {

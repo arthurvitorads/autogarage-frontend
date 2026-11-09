@@ -24,7 +24,6 @@ input {
   font-family: inherit;
 }
 
-/* Keep the table viewport inside the page, with the paginator below it. */
 .grid-page .p-datatable-flex-scrollable {
   height: 100%;
   min-height: 0;

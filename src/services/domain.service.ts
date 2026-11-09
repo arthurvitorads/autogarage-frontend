@@ -62,12 +62,15 @@ export async function getDomainOptions(
 
   const token = await user.getIdToken()
 
-  for (const [key, value] of Object.entries(params)) url.searchParams.set(key, String(value))
+  const values = { ...Object.fromEntries(url.searchParams), ...params }
+  url.search = ''
 
   signal?.throwIfAborted()
 
   const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(values),
     ...(signal ? { signal } : {}),
   })
 

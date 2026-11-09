@@ -10,10 +10,7 @@ import Dialog from 'primevue/dialog'
 import FiltroData from '@/components/field/FiltroData.vue'
 import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
 import { usePageLoad } from '@/composables/usePageLoad'
-import {
-  datasMesAtual as currentMonthDates,
-  intervaloDatas as dateInterval,
-} from '@/services/periodo.service'
+import { currentMonthDates, dateInterval } from '@/services/date-range.service'
 import {
   getRelatorioTempos as getTimeReport,
   getRelatorioVendas as getSalesReport,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import Button from 'primevue/button'
-import { apiRequest } from '@/services/api.service'
+import { updateItemTime } from '@/services/ordem-api.service'
 import { formatTempo } from '@/services/tempo.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
@@ -56,14 +56,8 @@ async function movimentar(acao: 'INICIAR' | 'PAUSAR' | 'FINALIZAR') {
   if (saving.value) return
   saving.value = true
   try {
-    const { dados } = await apiRequest<TItemOrdemServico>(
-      '/ordensServico/' +
-        encodeURIComponent(props.item.cn_ordem_servico) +
-        '/itens/' +
-        encodeURIComponent(props.item.cn_item) +
-        '/tempo',
-      { acao },
-    )
+    const { cn_ordem_servico, cn_item } = props.item
+    const { dados } = await updateItemTime(cn_ordem_servico, cn_item, acao)
     emit('saved', dados)
   } catch (error) {
     toast.error(normalizeError(error))

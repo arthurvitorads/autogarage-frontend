@@ -23,10 +23,11 @@ export async function updateUser(
   if (!user) throw new Error('Usuário não autenticado no Firebase.')
 
   const token = await user.getIdToken()
-  const response = await fetch(`${API_URL}/usuarios/${encodeURIComponent(String(id))}`, {
+  const response = await fetch(`${API_URL}/usuarios/atualizar`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      cn_usuario: String(id),
       an_nome: values.an_nome.trim(),
       cn_perfil: values.cn_perfil ?? null,
       bo_sts_reg: values.bo_sts_reg,
@@ -75,6 +76,7 @@ export async function getInitialMe(): Promise<IMeUser> {
 
   const token = await user.getIdToken()
   const response = await fetch(`${API_URL}/auth/me`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -109,15 +111,13 @@ export async function getUsers(
   }
 
   const token = await user.getIdToken()
-  const params = new URLSearchParams({
-    page: String(ePage),
-    limit: String(eLimit),
-    search,
-  })
-  const response = await fetch(`${API_URL}/usuarios?${params}`, {
+  const response = await fetch(`${API_URL}/usuarios/listar`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ page: ePage, limit: eLimit, search }),
   })
 
   if (!response.ok) {

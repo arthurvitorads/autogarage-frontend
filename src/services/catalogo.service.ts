@@ -7,36 +7,36 @@ import type {
 } from '@/interface/interface-pages/CadastroAuxiliar'
 
 export function getProdutos() {
-  return apiList<IAdmProduto>('/produtos', 'produtos')
+  return apiList<IAdmProduto>('/produtos/listar', 'produtos')
 }
 
 export function getServicos() {
-  return apiList<IAdmServico>('/servicos', 'servicos')
+  return apiList<IAdmServico>('/servicos/listar', 'servicos')
 }
 
 export function getCadastrosAuxiliares() {
   return apiRequest<{
     cadastros: IAdmCadastroAuxiliar[]
-  }>('/cadastrosAuxiliares')
+  }>('/cadastrosAuxiliares/listar')
 }
 
 export function saveProduto(values: IManutProduct) {
   return apiRequest<IAdmProduto>(
-    `/produtos${values.cn_produto === undefined ? '' : '/' + values.cn_produto}`,
+    values.cn_produto === undefined ? '/produtos' : '/produtos/atualizar',
     values,
   )
 }
 
 export function saveServico(values: IManutService) {
   return apiRequest<IAdmServico>(
-    `/servicos${values.cn_servico === undefined ? '' : '/' + values.cn_servico}`,
+    values.cn_servico === undefined ? '/servicos' : '/servicos/atualizar',
     values,
   )
 }
 
 export function saveCadastroAuxiliar(values: IManutAuxiliary) {
   return apiRequest<IAdmCadastroAuxiliar>(
-    '/cadastrosAuxiliares' + (values.cn_cadastro === undefined ? '' : '/' + values.cn_cadastro),
+    values.cn_cadastro === undefined ? '/cadastrosAuxiliares' : '/cadastrosAuxiliares/atualizar',
     values,
   )
 }
@@ -47,7 +47,7 @@ export function getProdutosPagina(
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmProduto>('/produtos', 'produtos', page, limit, search, filters)
+  return apiPage<IAdmProduto>('/produtos/listar', 'produtos', page, limit, search, filters)
 }
 
 export function getServicosPagina(
@@ -56,5 +56,5 @@ export function getServicosPagina(
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmServico>('/servicos', 'servicos', page, limit, search, filters)
+  return apiPage<IAdmServico>('/servicos/listar', 'servicos', page, limit, search, filters)
 }

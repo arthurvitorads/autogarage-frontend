@@ -1,61 +1,72 @@
 <script setup lang="ts">
 import { usePageLoad } from '@/composables/usePageLoad'
-import { computed, ref } from 'vue'
-import { storeToRefs } from 'pinia'
+import { computed, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import FiltroData from '@/components/field/FiltroData.vue'
-import { filtroPeriodo, intervaloDatas as dateInterval } from '@/services/periodo.service'
-import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
+import { dateInterval } from '@/services/date-range.service'
+import { getOrdensPagina as getOrdersPage } from '@/services/ordem-api.service'
+import { useAppToast } from '@/services/toast.service'
+import { useUtilStore } from '@/stores/util.store'
 
-const { ordens: orders } = storeToRefs(useServiceOrderStore())
-const ultimoMes = filtroPeriodo('trinta-dias')
-const dates = ref<(Date | null)[]>([new Date(ultimoMes.inicio), new Date(ultimoMes.fim)])
-const intervalo = computed(() => dateInterval(dates.value))
+const today = new Date()
+const startDate = new Date(today)
+startDate.setDate(today.getDate() - 29)
+const dates = ref<(Date | null)[]>([startDate, today])
+const selectedDates = computed(() => dateInterval(dates.value))
+const orderCounts = ref<number[]>([])
+const loading = ref(false)
+const { normalizeError } = useUtilStore()
+const toast = useAppToast()
 
-const ordensPeriodo = computed(() => {
-  if (!intervalo.value) return []
-  const inicio = new Date(intervalo.value.inicio)
-  const fim = new Date(intervalo.value.fim)
-  return orders.value.filter((order) => {
-    const entrada = new Date(order.dt_entrada).getTime()
-    return entrada >= inicio.getTime() && entrada <= fim.getTime()
-  })
-})
-const indicadores = computed(() =>
-  [
-    {
-      status: 'ABERTO',
-      titulo: 'O.S. abertas',
-      legenda: 'Aguardando início',
-      icone: 'pi-folder-open',
-      cor: 'blue',
-    },
-    {
-      status: 'EM_ANDAMENTO',
-      titulo: 'O.S. em andamento',
-      legenda: 'Serviços em execução',
-      icone: 'pi-wrench',
-      cor: 'purple',
-    },
-    {
-      status: 'FINALIZADO',
-      titulo: 'O.S. finalizadas',
-      legenda: 'Serviços concluídos',
-      icone: 'pi-check-circle',
-      cor: 'green',
-    },
-    {
-      status: 'CANCELADO',
-      titulo: 'O.S. canceladas',
-      legenda: 'Ordens canceladas',
-      icone: 'pi-ban',
-      cor: 'slate',
-    },
-  ].map((item) => ({
-    ...item,
-    valor: ordensPeriodo.value.filter((order) => order.ca_status === item.status).length,
-  })),
-)
+const indicadores = [
+  {
+    status: 'ABERTO',
+    titulo: 'O.S. abertas',
+    legenda: 'Aguardando início',
+    icone: 'pi-folder-open',
+    cor: 'blue',
+  },
+  {
+    status: 'EM_ANDAMENTO',
+    titulo: 'O.S. em andamento',
+    legenda: 'Serviços em execução',
+    icone: 'pi-wrench',
+    cor: 'purple',
+  },
+  {
+    status: 'FINALIZADO',
+    titulo: 'O.S. finalizadas',
+    legenda: 'Serviços concluídos',
+    icone: 'pi-check-circle',
+    cor: 'green',
+  },
+  {
+    status: 'CANCELADO',
+    titulo: 'O.S. canceladas',
+    legenda: 'Ordens canceladas',
+    icone: 'pi-ban',
+    cor: 'slate',
+  },
+]
+
+async function loadIndicators() {
+  const range = selectedDates.value
+  orderCounts.value = []
+  if (!range) return
+  loading.value = true
+  try {
+    orderCounts.value = await Promise.all(
+      indicadores.map(async ({ status }) => {
+        const { total } = await getOrdersPage(1, 1, '', { ...range, status })
+        return total
+      }),
+    )
+  } catch (error) {
+    toast.error(normalizeError(error))
+  } finally {
+    loading.value = false
+  }
+}
 
 const atalhos = [
   {
@@ -82,8 +93,27 @@ const atalhos = [
     icone: 'pi-wrench',
     rota: 'servico',
   },
+  {
+    titulo: 'Vendas',
+    descricao: 'Consulte e registre vendas',
+    icone: 'pi-shopping-cart',
+    rota: 'faturamento-vendas',
+  },
+  {
+    titulo: 'Tempo dos serviços',
+    descricao: 'Consulte os tempos de execução',
+    icone: 'pi-clock',
+    rota: 'relatorio-tempos',
+  },
+  {
+    titulo: 'Relatório de vendas',
+    descricao: 'Consulte as vendas por data',
+    icone: 'pi-chart-line',
+    rota: 'relatorio-vendas',
+  },
 ]
-usePageLoad(() => useServiceOrderStore().load())
+watch(selectedDates, loadIndicators)
+usePageLoad(loadIndicators)
 </script>
 
 <template>
@@ -94,13 +124,16 @@ usePageLoad(() => useServiceOrderStore().load())
           <h2 id="resumo-titulo">Visão geral da oficina</h2>
           <p>O.S. por data de entrada no período selecionado.</p>
         </div>
-        <FiltroData v-model="dates" />
+        <FiltroData v-model="dates" :disabled="loading" />
       </div>
-      <div class="indicators">
+      <div class="indicators" :aria-busy="loading">
         <RouterLink
-          :to="{ name: 'ordem-servico-painel', query: { ...intervalo, status: indicador.status } }"
-          v-for="indicador in indicadores"
-          :key="indicador.titulo"
+          v-for="(indicador, index) in indicadores"
+          :key="indicador.status"
+          :to="{
+            name: 'ordem-servico-painel',
+            state: { ...selectedDates, status: indicador.status },
+          }"
           class="indicator"
           :class="indicador.cor"
         >
@@ -110,7 +143,7 @@ usePageLoad(() => useServiceOrderStore().load())
               <i class="pi" :class="indicador.icone" aria-hidden="true"></i>
             </span>
           </div>
-          <strong class="indicator-value">{{ indicador.valor }}</strong>
+          <strong class="indicator-value">{{ orderCounts[index] ?? '—' }}</strong>
           <p>{{ indicador.legenda }}</p>
         </RouterLink>
       </div>
@@ -166,18 +199,6 @@ p {
   margin: 6px 0 0;
   color: var(--p-text-muted-color);
   line-height: 1.5;
-}
-.period-filter {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.period-filter label {
-  color: var(--p-text-muted-color);
-  font-weight: 600;
-}
-.period-select {
-  min-width: 190px;
 }
 .total {
   padding: 8px 12px;

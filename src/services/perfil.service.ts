@@ -21,16 +21,13 @@ export async function getPerfil(
 
   const token = await user.getIdToken()
 
-  const params = new URLSearchParams({
-    page: String(ePage),
-    limit: String(eLimit),
-    search,
-  })
-
-  const response = await fetch(`${API_URL}/perfil?${params}`, {
+  const response = await fetch(`${API_URL}/perfil/listar`, {
+    method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ page: ePage, limit: eLimit, search }),
   })
 
   if (!response.ok) {
@@ -53,10 +50,11 @@ export async function updatePerfil(
 
   const token = await user.getIdToken()
 
-  const response = await fetch(`${API_URL}/perfil/${encodeURIComponent(String(id))}`, {
+  const response = await fetch(`${API_URL}/perfil/atualizar`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      cn_perfil: String(id),
       an_descr: values.an_descr.trim(),
       bo_sts_reg: values.bo_sts_reg,
     }),

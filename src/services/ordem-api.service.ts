@@ -11,13 +11,13 @@ import type {
 } from '@/interface/interface-pages/OrdemServicoPage'
 
 export function getOrdens() {
-  return apiList<IAdmOrdemServico>('/ordensServico', 'ordens')
+  return apiList<IAdmOrdemServico>('/ordensServico/listar', 'ordens')
 }
 
 export function getClassificacoes() {
   return apiRequest<{
     classificacoes: IClassificacaoOrdemServico[]
-  }>('/classificacoesOrdens')
+  }>('/classificacoesOrdens/listar')
 }
 
 export function getClientes() {
@@ -28,30 +28,41 @@ export function getClientes() {
 
 export function saveOrdem(values: IManutServiceOrder) {
   return apiRequest<IAdmOrdemServico>(
-    `/ordensServico${values.cn_ordem_servico === undefined ? '' : '/' + encodeURIComponent(values.cn_ordem_servico)}`,
+    values.cn_ordem_servico === undefined ? '/ordensServico' : '/ordensServico/atualizar',
     values,
   )
 }
 
 export function saveClassificacao(values: IManutOrderClassification) {
   return apiRequest<IClassificacaoOrdemServico>(
-    `/classificacoesOrdens${values.cn_classificacao === undefined ? '' : '/' + encodeURIComponent(values.cn_classificacao)}`,
+    values.cn_classificacao === undefined
+      ? '/classificacoesOrdens'
+      : '/classificacoesOrdens/atualizar',
     values,
   )
 }
 
 export function saveItem(values: TManutServiceOrderItem) {
   return apiRequest<TItemOrdemServico>(
-    `/ordensServico/${encodeURIComponent(values.cn_ordem_servico)}/itens${values.cn_item === undefined ? '' : '/' + encodeURIComponent(values.cn_item)}`,
+    values.cn_item === undefined ? '/ordensServico/itens' : '/ordensServico/itens/atualizar',
     values,
   )
 }
 
 export function removeItem(ordem: TServiceOrderCode, item: TServiceOrderCode) {
-  return apiRequest(
-    `/ordensServico/${encodeURIComponent(ordem)}/itens/${encodeURIComponent(item)}/remover`,
-    {},
-  )
+  return apiRequest('/ordensServico/itens/remover', { cn_ordem_servico: ordem, cn_item: item })
+}
+
+export function updateItemTime(
+  orderId: TServiceOrderCode,
+  itemId: TServiceOrderCode,
+  action: 'INICIAR' | 'PAUSAR' | 'FINALIZAR',
+) {
+  return apiRequest<TItemOrdemServico>('/ordensServico/itens/tempo', {
+    cn_ordem_servico: orderId,
+    cn_item: itemId,
+    acao: action,
+  })
 }
 
 export function getOrdensPagina(
@@ -60,7 +71,7 @@ export function getOrdensPagina(
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmOrdemServico>('/ordensServico', 'ordens', page, limit, search, filters)
+  return apiPage<IAdmOrdemServico>('/ordensServico/listar', 'ordens', page, limit, search, filters)
 }
 
 export function movimentarOrdem(
@@ -68,8 +79,9 @@ export function movimentarOrdem(
   acao: import('@/interface/interface-pages/OrdemServicoPage').TServiceOrderAction,
   motivo: string,
 ) {
-  return apiRequest<IAdmOrdemServico>(
-    '/ordensServico/' + encodeURIComponent(codigo) + '/movimentar',
-    { acao, an_motivo_cancelamento: motivo },
-  )
+  return apiRequest<IAdmOrdemServico>('/ordensServico/movimentar', {
+    cn_ordem_servico: codigo,
+    acao,
+    an_motivo_cancelamento: motivo,
+  })
 }

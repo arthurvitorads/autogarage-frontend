@@ -7,12 +7,11 @@ import type {
 import type { Person } from '@/models/pessoa'
 
 export function getPerson(ePage = 1, eLimit = 20, search = ''): Promise<IPersonResponse> {
-  const params = new URLSearchParams({
-    page: String(ePage),
-    limit: String(eLimit),
-    search,
-  })
-  return apiRequest(`/pessoa?${params}`)
+  return apiRequest('/pessoa/listar', { page: ePage, limit: eLimit, search })
+}
+
+export function getPersonById(id: string | number) {
+  return apiRequest<ICadPessoa>('/pessoa/detalhar', { cn_pessoa: id })
 }
 
 export function createPerson(values: IManutPerson) {
@@ -20,7 +19,7 @@ export function createPerson(values: IManutPerson) {
 }
 
 export function updatePerson(id: string | number, values: IManutPerson) {
-  return apiRequest<ICadPessoa>(`/pessoa/${encodeURIComponent(id)}`, values)
+  return apiRequest<ICadPessoa>('/pessoa/atualizar', { ...values, cn_pessoa: id })
 }
 
 export function personToForm(pessoa: ICadPessoa): Person {

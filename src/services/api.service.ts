@@ -15,14 +15,14 @@ export interface IPagination {
   hasPreviousPage: boolean
 }
 
-export async function apiRequest<T>(endpoint: string, values?: unknown): Promise<IApiResponse<T>> {
+export async function apiRequest<T>(endpoint: string, values: unknown = {}): Promise<IApiResponse<T>> {
   const user = auth.currentUser
   if (!user) throw new Error('Usuário não autenticado.')
   const token = await user.getIdToken()
   const response = await fetch(`${API_URL}${endpoint}`, {
-    method: values === undefined ? 'GET' : 'POST',
+    method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    ...(values === undefined ? {} : { body: JSON.stringify(values) }),
+    body: JSON.stringify(values),
   })
   const result = await response.json()
   if (!response.ok || !result.sucesso)
@@ -40,7 +40,7 @@ export async function apiList<T>(endpoint: string, key: string): Promise<T[]> {
       Record<string, T[]> & {
         pagination: IPagination
       }
-    >(`${endpoint}?page=${page}&limit=100`)
+    >(endpoint, { page, limit: 100 })
     registros.push(...result.dados[key]!)
     hasNextPage = result.dados.pagination.hasNextPage
     page++
@@ -56,13 +56,12 @@ export function apiPage<T>(
   search: string,
   filters: Record<string, string> = {},
 ) {
-  const query = new URLSearchParams({
-    page: String(page),
-    limit: String(limit),
+  return apiRequest<Record<string, T[]> & { pagination: IPagination }>(endpoint, {
+    page,
+    limit,
     search,
     ...filters,
-  })
-  return apiRequest<Record<string, T[]> & { pagination: IPagination }>(endpoint + '?' + query).then(
+  }).then(
     (resultado) => ({ registros: resultado.dados[key]!, total: resultado.dados.pagination.total }),
   )
 }
