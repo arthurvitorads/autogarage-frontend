@@ -51,7 +51,8 @@ async function save() {
   try {
     const { dados } = await saveProfileAccess(id, access.value)
     const user = utilStore.user
-    if (user && user.cn_perfil === String(id)) utilStore.setUser({ ...user, acessos: dados.acessos })
+    if (user && user.cn_perfil === String(id))
+      utilStore.setUser({ ...user, acessos: dados.acessos })
     toast.success('Acessos do perfil atualizados.')
     emit('update:visible', false)
   } catch (error) {

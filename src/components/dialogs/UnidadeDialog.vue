@@ -133,8 +133,11 @@ watch(
       <Column field="ca_sigla" header="Sigla" />
       <template #empty>Nenhuma unidade disponível.</template>
     </DataTable>
-    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">{{ selectedUnit ? 'Editar unidade' : 'Nova unidade' }}</p>
-    <FormPage v-if="canWrite('CADASTROS')"
+    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">
+      {{ selectedUnit ? 'Editar unidade' : 'Nova unidade' }}
+    </p>
+    <FormPage
+      v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
       novalidate

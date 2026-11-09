@@ -117,7 +117,12 @@ onMounted(async () => {
           <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex">
-          <Button v-if="canWrite('ADMINISTRACAO')" label="Novo" icon="pi pi-plus" @click="newProfile" />
+          <Button
+            v-if="canWrite('ADMINISTRACAO')"
+            label="Novo"
+            icon="pi pi-plus"
+            @click="newProfile"
+          />
         </div>
       </div>
 

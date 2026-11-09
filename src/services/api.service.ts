@@ -15,7 +15,10 @@ export interface IPagination {
   hasPreviousPage: boolean
 }
 
-export async function apiRequest<T>(endpoint: string, values: unknown = {}): Promise<IApiResponse<T>> {
+export async function apiRequest<T>(
+  endpoint: string,
+  values: unknown = {},
+): Promise<IApiResponse<T>> {
   const user = auth.currentUser
   if (!user) throw new Error('Usuário não autenticado.')
   const token = await user.getIdToken()
@@ -61,7 +64,8 @@ export function apiPage<T>(
     limit,
     search,
     ...filters,
-  }).then(
-    (resultado) => ({ registros: resultado.dados[key]!, total: resultado.dados.pagination.total }),
-  )
+  }).then((resultado) => ({
+    registros: resultado.dados[key]!,
+    total: resultado.dados.pagination.total,
+  }))
 }

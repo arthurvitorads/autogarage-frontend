@@ -61,8 +61,10 @@ const itemTypes = [
 const formData = ref<IFormServiceOrderItem>(
   ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO'),
 )
-const options = computed(() =>
-  (formData.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
+const options = computed(
+  () =>
+    (formData.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ??
+    [],
 )
 const selectedReference = computed(() =>
   options.value.find((item) => item.cn_referencia === formData.value.cn_referencia),

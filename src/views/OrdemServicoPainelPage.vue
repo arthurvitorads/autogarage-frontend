@@ -136,7 +136,12 @@ function updateSale(sale: { cn_venda: string }) {
           severity="secondary"
           @click="classificationDialogVisible = true"
         />
-        <Button v-if="canWrite('ORDEM_SERVICO')" label="Nova O.S." icon="pi pi-plus" @click="newOrder" />
+        <Button
+          v-if="canWrite('ORDEM_SERVICO')"
+          label="Nova O.S."
+          icon="pi pi-plus"
+          @click="newOrder"
+        />
       </div>
     </div>
     <div class="flex flex-wrap items-end gap-3">

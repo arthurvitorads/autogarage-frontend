@@ -1,12 +1,18 @@
 import type { IPagination } from '@/services/api.service'
-import type { IAdmOrdemServico, TItemOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type {
+  IAdmOrdemServico,
+  TItemOrdemServico,
+} from '@/interface/interface-pages/OrdemServicoPage'
 import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
 
 export type TBillableOrder = Pick<
   IAdmOrdemServico,
   'cn_ordem_servico' | 'cn_pessoa' | 'nu_numero' | 'an_cliente' | 'ca_status'
 > & {
-  itens: Pick<TItemOrdemServico, 'ca_tipo' | 'an_descr' | 'qt_quantidade' | 'vl_unitario' | 'vl_total'>[]
+  itens: Pick<
+    TItemOrdemServico,
+    'ca_tipo' | 'an_descr' | 'qt_quantidade' | 'vl_unitario' | 'vl_total'
+  >[]
 }
 
 export type TSaleCustomer = Pick<

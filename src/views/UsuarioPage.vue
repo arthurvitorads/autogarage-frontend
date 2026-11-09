@@ -117,7 +117,12 @@ const { canWrite } = useUtilStore()
           <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex">
-          <Button v-if="canWrite('ADMINISTRACAO')" label="Novo" icon="pi pi-plus" @click="newUser" />
+          <Button
+            v-if="canWrite('ADMINISTRACAO')"
+            label="Novo"
+            icon="pi pi-plus"
+            @click="newUser"
+          />
         </div>
       </div>
 

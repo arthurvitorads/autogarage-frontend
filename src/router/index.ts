@@ -171,7 +171,6 @@ router.beforeEach(async (to) => {
     } catch (error) {
       console.error('Erro ao carregar usuário:', error)
 
-
       utilStore.cleanUser()
 
       await signOut(auth)

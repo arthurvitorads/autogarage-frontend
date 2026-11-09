@@ -156,7 +156,11 @@ usePageLoad(loadIndicators)
         </RouterLink>
       </div>
     </section>
-    <section v-if="canRead('GERAL') && visibleShortcuts.length" class="shortcuts-container" aria-labelledby="atalhos-titulo">
+    <section
+      v-if="canRead('GERAL') && visibleShortcuts.length"
+      class="shortcuts-container"
+      aria-labelledby="atalhos-titulo"
+    >
       <div class="section-heading">
         <div>
           <h2 id="atalhos-titulo">Atalhos</h2>

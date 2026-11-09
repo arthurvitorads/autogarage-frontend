@@ -45,9 +45,7 @@ const formData = ref<IFormDescription>(AuxiliaryModel.createDescriptionForm())
 
 function selectBrand(brand: IAdmCadastroAuxiliar | null) {
   selectedBrand.value = brand
-  formData.value = brand
-    ? { an_descr: brand.an_descr }
-    : AuxiliaryModel.createDescriptionForm()
+  formData.value = brand ? { an_descr: brand.an_descr } : AuxiliaryModel.createDescriptionForm()
   formErrors.value = {}
   formKey.value++
 }
@@ -129,8 +127,11 @@ watch(
       <Column field="an_descr" header="Descrição" />
       <template #empty>Nenhuma marca disponível.</template>
     </DataTable>
-    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">{{ selectedBrand ? 'Editar marca' : 'Nova marca' }}</p>
-    <FormPage v-if="canWrite('CADASTROS')"
+    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">
+      {{ selectedBrand ? 'Editar marca' : 'Nova marca' }}
+    </p>
+    <FormPage
+      v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
       novalidate

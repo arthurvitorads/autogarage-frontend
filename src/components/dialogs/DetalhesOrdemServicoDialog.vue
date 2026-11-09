@@ -174,7 +174,12 @@ const classification = computed(() =>
     </div>
     <template #footer>
       <Button
-        v-if="canWrite('FATURAMENTO') && order?.ca_status === 'FINALIZADO' && order.itens.length && !registeredSale"
+        v-if="
+          canWrite('FATURAMENTO') &&
+          order?.ca_status === 'FINALIZADO' &&
+          order.itens.length &&
+          !registeredSale
+        "
         label="Gerar venda"
         icon="pi pi-shopping-cart"
         @click="saleDialogVisible = true"

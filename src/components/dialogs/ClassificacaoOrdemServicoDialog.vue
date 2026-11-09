@@ -154,7 +154,8 @@ watch(
       >
       <template #empty>Nenhuma classificação disponível.</template>
     </DataTable>
-    <FormPage v-if="canWrite('CADASTROS')"
+    <FormPage
+      v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
       novalidate

@@ -129,8 +129,11 @@ watch(
       <Column field="an_descr" header="Descrição" />
       <template #empty>Nenhuma categoria de produto disponível.</template>
     </DataTable>
-    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">{{ selectedCategory ? 'Editar categoria' : 'Nova categoria' }}</p>
-    <FormPage v-if="canWrite('CADASTROS')"
+    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">
+      {{ selectedCategory ? 'Editar categoria' : 'Nova categoria' }}
+    </p>
+    <FormPage
+      v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
       novalidate

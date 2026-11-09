@@ -100,7 +100,12 @@ const { canRead, canWrite } = useUtilStore()
             severity="secondary"
             @click="classificationDialogVisible = true"
           />
-          <Button v-if="canWrite('ORDEM_SERVICO')" label="Novo" icon="pi pi-plus" @click="newOrder" />
+          <Button
+            v-if="canWrite('ORDEM_SERVICO')"
+            label="Novo"
+            icon="pi pi-plus"
+            @click="newOrder"
+          />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">

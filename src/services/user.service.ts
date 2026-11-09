@@ -94,7 +94,6 @@ export async function getInitialMe(): Promise<IMeUser> {
   const utilStore = useUtilStore()
   utilStore.setUser(res.dados)
 
-
   return res.dados
 }
 

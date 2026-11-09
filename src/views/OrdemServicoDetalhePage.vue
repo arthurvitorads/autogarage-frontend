@@ -161,7 +161,12 @@ function updateSale(sale: { cn_venda: string }) {
           icon="pi pi-check"
           @click="moveOrder('FINALIZAR')"
         />
-        <Button v-if="canWrite('ORDEM_SERVICO')" label="Cancelar O.S." severity="secondary" @click="moveOrder('CANCELAR')" />
+        <Button
+          v-if="canWrite('ORDEM_SERVICO')"
+          label="Cancelar O.S."
+          severity="secondary"
+          @click="moveOrder('CANCELAR')"
+        />
       </div>
     </div>
     <Fieldset legend="Dados gerais">

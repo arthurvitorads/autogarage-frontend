@@ -62,7 +62,10 @@ const itemTypes = [
   { label: 'Serviço', value: 'SERVICO' },
 ]
 const availableOrders = computed(() =>
-  orders.value.map((order) => ({ ...order, an_label: 'O.S. ' + order.nu_numero + ' — ' + order.an_cliente })),
+  orders.value.map((order) => ({
+    ...order,
+    an_label: 'O.S. ' + order.nu_numero + ' — ' + order.an_cliente,
+  })),
 )
 const selectedOrder = computed(
   () =>
@@ -70,8 +73,9 @@ const selectedOrder = computed(
     orders.value.find((order) => String(order.cn_ordem_servico) === String(orderId.value)) ??
     null,
 )
-const references = computed(() =>
-  (item.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
+const references = computed(
+  () =>
+    (item.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
 const rows = computed(() =>
   origin.value === 'ORDEM_SERVICO' ? (selectedOrder.value?.itens ?? []) : items.value,
@@ -87,7 +91,7 @@ watch([personId, orderId], async ([code, order]) => {
   try {
     const { dados: data } = await getSaleCustomer(
       code,
-      origin.value === 'ORDEM_SERVICO' ? order ?? undefined : undefined,
+      origin.value === 'ORDEM_SERVICO' ? (order ?? undefined) : undefined,
     )
     if (requestId === customerRequestId) customer.value = data
   } catch (error) {
