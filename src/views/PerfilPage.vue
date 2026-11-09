@@ -178,7 +178,7 @@ onMounted(async () => {
                 />
               </template>
             </Column>
-            <Column class="min-w-30" field="cn_perfil" header="Código" />
+            <Column class="min-w-30" field="cn_perfil" header="Código" :bodyStyle="{ textAlign: 'end' }" />
             <Column field="an_descr" header="Nome" />
             <Column class="min-w-30" field="bo_sts_reg" header="Status">
               <template #body="{ data }">

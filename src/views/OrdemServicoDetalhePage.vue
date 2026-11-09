@@ -287,10 +287,10 @@ function updateSale(sale: { cn_venda: string }) {
         <Column header="Quantidade">
           <template #body="{ data }">{{ formatQuantity(data.qt_quantidade) }}</template>
         </Column>
-        <Column header="Preço unitário">
+        <Column header="Preço unitário" :bodyStyle="{ textAlign: 'end' }">
           <template #body="{ data }">{{ formatOrderCurrency(data.vl_unitario) }}</template>
         </Column>
-        <Column header="Total">
+        <Column header="Total" :bodyStyle="{ textAlign: 'end' }">
           <template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
         </Column>
       </DataTable>

@@ -152,7 +152,7 @@ usePageLoad(() => load())
               aria-label="Consultar intervalos"
               @click="showTimeDetails(data)" /></template
         ></Column>
-        <Column field="nu_ordem" header="O.S." /><Column field="an_descr" header="Serviço" /><Column
+        <Column field="nu_ordem" header="O.S." :bodyStyle="{ textAlign: 'end' }" /><Column field="an_descr" header="Serviço" /><Column
           field="an_cliente"
           header="Cliente"
         />
@@ -193,7 +193,7 @@ usePageLoad(() => load())
               aria-label="Detalhar venda"
               @click="((selectSale = data), (saleDialogVisible = true))" /></template
         ></Column>
-        <Column field="nu_numero" header="Venda" /><Column field="an_cliente" header="Cliente" />
+        <Column field="nu_numero" header="Venda" :bodyStyle="{ textAlign: 'end' }" /><Column field="an_cliente" header="Cliente" />
         <Column header="Origem"
           ><template #body="{ data }">{{
             data.ca_origem === 'DIRETA' ? 'Avulsa' : 'O.S.'
@@ -202,7 +202,7 @@ usePageLoad(() => load())
         <Column header="Data"
           ><template #body="{ data }">{{ formatDateTime(data.dt_venda) }}</template></Column
         >
-        <Column header="Total"
+        <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
           ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
         >
         <template #empty>Nenhuma venda no período.</template>

@@ -153,7 +153,7 @@ const { canRead, canWrite } = useUtilStore()
               </div>
             </template>
           </Column>
-          <Column header="O.S.">
+          <Column header="O.S." :bodyStyle="{ textAlign: 'end' }">
             <template #body="{ data }">{{ String(data.nu_numero).padStart(6, '0') }}</template>
           </Column>
           <Column field="an_cliente" header="Cliente" />
@@ -183,7 +183,7 @@ const { canRead, canWrite } = useUtilStore()
           <Column header="Previsão">
             <template #body="{ data }">{{ formatDateTime(data.dt_previsao) }}</template>
           </Column>
-          <Column header="Total">
+          <Column header="Total" :bodyStyle="{ textAlign: 'end' }">
             <template #body="{ data }">{{
               formatOrderCurrency(calculateOrderTotal(data.itens))
             }}</template>

@@ -128,7 +128,7 @@ const { canWrite } = useUtilStore()
                 aria-label="Detalhar venda"
                 @click="showSale(data)" /></template
           ></Column>
-          <Column field="nu_numero" header="Número" /><Column
+          <Column field="nu_numero" header="Número" :bodyStyle="{ textAlign: 'end' }" /><Column
             field="an_cliente"
             header="Cliente"
           /><Column field="ca_documento" header="Documento" />
@@ -140,7 +140,7 @@ const { canWrite } = useUtilStore()
           <Column header="Data"
             ><template #body="{ data }">{{ formatDateTime(data.dt_venda) }}</template></Column
           >
-          <Column header="Total"
+          <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
             ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
           <template #empty>Nenhuma venda encontrada.</template>

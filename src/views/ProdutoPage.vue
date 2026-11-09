@@ -118,16 +118,16 @@ const { canWrite } = useUtilStore()
               </div>
             </template>
           </Column>
-          <Column field="cn_produto" header="Código" />
+          <Column field="cn_produto" header="Código" :bodyStyle="{ textAlign: 'end' }" />
           <Column field="an_nome" header="Nome" />
           <Column field="an_referencia" header="Referência" />
           <Column field="an_categoria" header="Categoria" />
           <Column field="an_marca" header="Marca" />
           <Column field="ca_unidade" header="Unidade" />
-          <Column header="Custo">
+          <Column header="Custo" :bodyStyle="{ textAlign: 'end' }">
             <template #body="{ data }">{{ formatCurrency(data.vl_custo) }}</template>
           </Column>
-          <Column header="Venda">
+          <Column header="Venda" :bodyStyle="{ textAlign: 'end' }">
             <template #body="{ data }">{{ formatCurrency(data.vl_venda) }}</template>
           </Column>
           <Column header="Estoque">

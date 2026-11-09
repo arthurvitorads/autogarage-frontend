@@ -151,12 +151,12 @@ const classification = computed(() =>
               data.qt_quantidade.toLocaleString('pt-BR')
             }}</template></Column
           >
-          <Column header="Unitário"
+          <Column header="Unitário" :bodyStyle="{ textAlign: 'end' }"
             ><template #body="{ data }">{{
               formatOrderCurrency(data.vl_unitario)
             }}</template></Column
           >
-          <Column header="Total"
+          <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
             ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
           <template #empty>Nenhum item cadastrado.</template>

@@ -41,10 +41,10 @@ const emit = defineEmits<{ 'update:visible': [value: boolean] }>()
           field="ca_tipo"
           header="Tipo"
         /><Column field="qt_quantidade" header="Quantidade" />
-        <Column header="Unitário"
+        <Column header="Unitário" :bodyStyle="{ textAlign: 'end' }"
           ><template #body="{ data }">{{ formatOrderCurrency(data.vl_unitario) }}</template></Column
         >
-        <Column header="Total"
+        <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
           ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
         >
       </DataTable>

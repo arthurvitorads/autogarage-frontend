@@ -20,7 +20,7 @@ import { getPerson, personToForm } from '@/services/person.service'
 import { useAppToast } from '@/services/toast.service'
 import { formatDateTime, maskCpf, maskCnpj, maskTelefone } from '@/services/util.service'
 
-const { normalizeError, setLoading } = useUtilStore()
+const { normalizeError, setLoading, canWrite } = useUtilStore()
 
 const toastService = useAppToast()
 
@@ -105,7 +105,6 @@ onMounted(async () => {
     setLoading(false)
   }
 })
-const { canWrite } = useUtilStore()
 </script>
 <template>
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
@@ -168,7 +167,7 @@ const { canWrite } = useUtilStore()
                 />
               </template>
             </Column>
-            <Column field="cn_pessoa" header="Código" />
+            <Column field="cn_pessoa" header="Código" :bodyStyle="{ textAlign: 'end' }" />
             <Column header="Nome" class="min-w-100">
               <template #body="{ data }">{{
                 data.ca_tipo === 'PF' ? data.an_nome : data.an_razao_social

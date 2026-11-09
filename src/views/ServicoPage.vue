@@ -112,10 +112,10 @@ const { canWrite } = useUtilStore()
               />
             </template>
           </Column>
-          <Column field="cn_servico" header="Código" />
+          <Column field="cn_servico" header="Código" :bodyStyle="{ textAlign: 'end' }" />
           <Column field="an_nome" header="Nome" />
           <Column field="an_categoria" header="Categoria" />
-          <Column header="Preço">
+          <Column header="Preço" :bodyStyle="{ textAlign: 'end' }">
             <template #body="{ data }">{{ formatCurrency(data.vl_preco) }}</template>
           </Column>
           <Column header="Tempo estimado">

@@ -169,7 +169,7 @@ const { canWrite } = useUtilStore()
                 />
               </template>
             </Column>
-            <Column field="cn_usuario" header="Código" />
+            <Column field="cn_usuario" header="Código" :bodyStyle="{ textAlign: 'end' }" />
             <Column field="an_nome" header="Nome" />
             <Column field="an_email" header="E-mail" />
             <Column class="min-w-60" field="an_perfil" header="Perfil" />
