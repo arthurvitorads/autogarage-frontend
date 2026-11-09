@@ -38,7 +38,7 @@ const emit = defineEmits<{
 const orderStore = useServiceOrderStore()
 const { classificacoes: classifications } = storeToRefs(orderStore)
 const { saveClassificacao: saveClassification } = orderStore
-const { normalizeError, setLoading } = useUtilStore()
+const { normalizeError, setLoading, canWrite } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 const selectClassification = ref<TServiceOrderCode | null>(null)
@@ -128,11 +128,11 @@ watch(
     modal
     :style="{ width: '48rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
-    <div class="flex justify-end mb-3">
+    <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
       <Button label="Novo" icon="pi pi-plus" @click="newClassification" />
     </div>
     <DataTable :value="classifications" size="small" scrollable scrollHeight="14rem" class="mb-4">
-      <Column header="Ações"
+      <Column v-if="canWrite('CADASTROS')" header="Ações"
         ><template #body="{ data }"
           ><Button
             icon="pi pi-pencil"
@@ -154,7 +154,7 @@ watch(
       >
       <template #empty>Nenhuma classificação disponível.</template>
     </DataTable>
-    <FormPage
+    <FormPage v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
       novalidate
@@ -217,7 +217,7 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-    <template #footer>
+    <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
         <Button
           type="button"

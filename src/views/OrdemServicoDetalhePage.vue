@@ -4,7 +4,7 @@ import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
 import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServicoDialog.vue'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -39,7 +39,7 @@ const router = useRouter()
 const orderStore = useServiceOrderStore()
 const { ordens: orders, classificacoes: classifications } = storeToRefs(orderStore)
 const { removeItem } = orderStore
-const { normalizeError } = useUtilStore()
+const { normalizeError, canWrite } = useUtilStore()
 const toast = useAppToast()
 const code = computed(() => String(route.params.id))
 const order = computed(() =>
@@ -112,7 +112,11 @@ function formatQuantity(value: number): string {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 }
 
-usePageLoad(() => useServiceOrderStore().load())
+async function loadOrder() {
+  await Promise.all([orderStore.loadOrder(code.value), orderStore.loadParametros()])
+}
+usePageLoad(loadOrder)
+watch(code, () => loadOrder().catch((error) => toast.error(normalizeError(error))))
 function updateSale(sale: { cn_venda: string }) {
   if (order.value) order.value.cn_venda = sale.cn_venda
 }
@@ -146,18 +150,18 @@ function updateSale(sale: { cn_venda: string }) {
           >{{ orderStatus?.label ?? 'Status indisponível' }}</span
         >
         <Button
-          v-if="order.ca_status === 'ABERTO'"
+          v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'ABERTO'"
           label="Iniciar serviço"
           icon="pi pi-play"
           @click="moveOrder('INICIAR')"
         />
         <Button
-          v-if="order.ca_status === 'EM_ANDAMENTO'"
+          v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
           label="Finalizar"
           icon="pi pi-check"
           @click="moveOrder('FINALIZAR')"
         />
-        <Button label="Cancelar O.S." severity="secondary" @click="moveOrder('CANCELAR')" />
+        <Button v-if="canWrite('ORDEM_SERVICO')" label="Cancelar O.S." severity="secondary" @click="moveOrder('CANCELAR')" />
       </div>
     </div>
     <Fieldset legend="Dados gerais">
@@ -216,7 +220,7 @@ function updateSale(sale: { cn_venda: string }) {
       </dl>
     </Fieldset>
     <Fieldset legend="Produtos e serviços">
-      <div class="flex justify-end mb-4">
+      <div v-if="canWrite('ORDEM_SERVICO')" class="flex justify-end mb-4">
         <Button label="Adicionar" icon="pi pi-plus" @click="newItem" />
       </div>
       <DataTable
@@ -237,7 +241,7 @@ function updateSale(sale: { cn_venda: string }) {
             data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços'
           }}</span>
         </template>
-        <Column header="Ações" class="min-w-24">
+        <Column v-if="canWrite('ORDEM_SERVICO')" header="Ações" class="min-w-24">
           <template #body="{ data }">
             <div class="flex">
               <Button
@@ -270,7 +274,7 @@ function updateSale(sale: { cn_venda: string }) {
           <template #body="{ data }"
             ><TempoServicoItem
               :item="data"
-              :editable="order.ca_status === 'EM_ANDAMENTO'"
+              :editable="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
               @saved="updateItemTime"
           /></template>
         </Column>

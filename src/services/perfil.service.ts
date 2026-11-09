@@ -7,6 +7,19 @@ import {
 } from '@/interface/interface-pages/PerfilPage'
 
 import { API_URL } from '@/constants/utils'
+import { apiRequest } from '@/services/api.service'
+import type { TModuleAccess } from '@/interface/access'
+
+export function getProfileAccess(id: string | number) {
+  return apiRequest<{ acessos: TModuleAccess }>('/perfil/acessos/consultar', { cn_perfil: id })
+}
+
+export function saveProfileAccess(id: string | number, access: TModuleAccess) {
+  return apiRequest<{ acessos: TModuleAccess }>('/perfil/acessos/atualizar', {
+    cn_perfil: id,
+    acessos: access,
+  })
+}
 
 export async function getPerfil(
   ePage: number = 1,

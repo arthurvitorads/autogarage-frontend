@@ -24,6 +24,10 @@ export interface IManutProfileDialogProps extends IDialogProps {
   profile?: IAdmPerfil | null
 }
 
+export interface IProfileAccessDialogProps extends IDialogProps {
+  profile: IAdmPerfil | null
+}
+
 export interface IManutProductDialogProps extends IDialogProps {
   product?: IAdmProduto | null
   products: IAdmProduto[]

@@ -36,7 +36,7 @@ const selectedUnit = ref<IAdmCadastroAuxiliar | null>(null)
 const loadingGrid = ref(false)
 const utilStore = useUtilStore()
 const { loading } = storeToRefs(utilStore)
-const { normalizeError, setLoading } = utilStore
+const { normalizeError, setLoading, canWrite } = utilStore
 const toast = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -107,7 +107,7 @@ watch(
     modal
     :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
-    <div class="flex justify-end mb-3">
+    <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
       <Button label="Nova unidade" icon="pi pi-plus" @click="selectUnit(null)" />
     </div>
     <DataTable
@@ -118,7 +118,7 @@ watch(
       scrollHeight="14rem"
       class="mb-4"
     >
-      <Column header="Ações">
+      <Column v-if="canWrite('CADASTROS')" header="Ações">
         <template #body="{ data }">
           <Button
             icon="pi pi-pencil"
@@ -133,8 +133,8 @@ watch(
       <Column field="ca_sigla" header="Sigla" />
       <template #empty>Nenhuma unidade disponível.</template>
     </DataTable>
-    <p class="font-semibold mb-3">{{ selectedUnit ? 'Editar unidade' : 'Nova unidade' }}</p>
-    <FormPage
+    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">{{ selectedUnit ? 'Editar unidade' : 'Nova unidade' }}</p>
+    <FormPage v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
       novalidate
@@ -176,7 +176,7 @@ watch(
         </div>
       </Fieldset>
     </FormPage>
-    <template #footer>
+    <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
         <Button
           type="button"

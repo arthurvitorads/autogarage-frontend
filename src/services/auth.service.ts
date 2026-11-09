@@ -49,7 +49,9 @@ export async function login(value: IFormLogin): Promise<IMeUser> {
   try {
     await signInWithEmailAndPassword(auth, value.an_email.trim(), value.ca_senha)
 
-    return await getInitialMe()
+    const user = await getInitialMe()
+    handleFirstLogin()
+    return user
   } catch (erro) {
     utilStore.cleanUser()
 

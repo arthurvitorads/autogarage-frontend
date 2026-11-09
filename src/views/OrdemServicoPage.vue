@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useUtilStore } from '@/stores/util.store'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
 import { getOrdensPagina as getOrdersPage } from '@/services/ordem-api.service'
 import { usePageLoad } from '@/composables/usePageLoad'
@@ -69,6 +70,7 @@ usePageLoad(async () => {
   await useServiceOrderStore().loadParametros()
   await load()
 })
+const { canRead, canWrite } = useUtilStore()
 </script>
 
 <template>
@@ -92,12 +94,13 @@ usePageLoad(async () => {
         </div>
         <div class="flex gap-2">
           <Button
+            v-if="canRead('CADASTROS')"
             label="Classificações"
             icon="pi pi-cog"
             severity="secondary"
             @click="classificationDialogVisible = true"
           />
-          <Button label="Novo" icon="pi pi-plus" @click="newOrder" />
+          <Button v-if="canWrite('ORDEM_SERVICO')" label="Novo" icon="pi pi-plus" @click="newOrder" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
@@ -128,7 +131,7 @@ usePageLoad(async () => {
                   severity="secondary"
                   text
                   rounded
-                  v-if="!isOrderClosed(data)"
+                  v-if="canWrite('ORDEM_SERVICO') && !isOrderClosed(data)"
                   aria-label="Editar ordem de serviço"
                   v-tooltip.top="'Editar ordem'"
                   @click="editOrder(data)"

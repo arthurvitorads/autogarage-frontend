@@ -9,6 +9,7 @@ import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 
 import ManutPerfilDialog from '@/components/dialogs/ManutPerfilDialog.vue'
+import PerfilAcessosDialog from '@/components/dialogs/PerfilAcessosDialog.vue'
 
 import { IAdmPerfil } from '@/interface/interface-pages/PerfilPage'
 
@@ -18,7 +19,7 @@ import { useAppToast } from '@/services/toast.service'
 import { formatDateTime } from '@/services/util.service'
 import { getPerfil as getProfiles } from '@/services/perfil.service'
 
-const { normalizeError, setLoading } = useUtilStore()
+const { normalizeError, setLoading, canWrite } = useUtilStore()
 
 const toastService = useAppToast()
 
@@ -36,6 +37,8 @@ const loadingGrid = ref(false)
 // form
 const manutProfileVisible = ref(false)
 const selectProfile = ref<IAdmPerfil | null>(null)
+const accessDialogVisible = ref(false)
+const accessProfile = ref<IAdmPerfil | null>(null)
 
 const profile = ref<IAdmPerfil[]>([])
 
@@ -63,6 +66,11 @@ function newProfile() {
 function editProfile(profile: IAdmPerfil) {
   selectProfile.value = profile
   manutProfileVisible.value = true
+}
+
+function openAccess(profile: IAdmPerfil) {
+  accessProfile.value = profile
+  accessDialogVisible.value = true
 }
 
 async function loadProfiles() {
@@ -109,7 +117,7 @@ onMounted(async () => {
           <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex">
-          <Button label="Novo" icon="pi pi-plus" @click="newProfile" />
+          <Button v-if="canWrite('ADMINISTRACAO')" label="Novo" icon="pi pi-plus" @click="newProfile" />
         </div>
       </div>
 
@@ -146,12 +154,22 @@ onMounted(async () => {
             <Column header="Ações" class="min-w-5">
               <template #body="{ data }">
                 <Button
+                  v-if="canWrite('ADMINISTRACAO')"
                   icon="pi pi-pencil"
                   severity="secondary"
                   text
                   rounded
                   v-tooltip.top="'Editar'"
                   @click="editProfile(data)"
+                />
+                <Button
+                  icon="pi pi-lock"
+                  severity="secondary"
+                  text
+                  rounded
+                  aria-label="Acessos do perfil"
+                  v-tooltip.top="'Acessos'"
+                  @click="openAccess(data)"
                 />
               </template>
             </Column>
@@ -185,4 +203,5 @@ onMounted(async () => {
     :profile="selectProfile"
     @saved="loadProfiles"
   />
+  <PerfilAcessosDialog v-model:visible="accessDialogVisible" :profile="accessProfile" />
 </template>

@@ -20,6 +20,13 @@ import { isFirstLogin } from '@/services/auth.service'
 import { getInitialMe } from '@/services/user.service'
 
 import { useUtilStore } from '@/stores/util.store'
+import type { TModule } from '@/interface/access'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    module?: TModule
+  }
+}
 
 const router = createRouter({
   history: createWebHistory(),
@@ -52,6 +59,7 @@ const router = createRouter({
           name: 'pessoa',
           component: PessoaPage,
           meta: {
+            module: 'CADASTROS',
             title: 'Pessoas | AutoGarage',
           },
         },
@@ -60,6 +68,7 @@ const router = createRouter({
           name: 'produto',
           component: ProdutoPage,
           meta: {
+            module: 'CADASTROS',
             title: 'Produtos | AutoGarage',
           },
         },
@@ -68,6 +77,7 @@ const router = createRouter({
           name: 'servico',
           component: ServicoPage,
           meta: {
+            module: 'CADASTROS',
             title: 'Serviços | AutoGarage',
           },
         },
@@ -75,39 +85,40 @@ const router = createRouter({
           path: 'ordem-servico/painel',
           name: 'ordem-servico-painel',
           component: OrdemServicoPainelPage,
-          meta: { title: 'Painel de O.S. | AutoGarage' },
+          meta: { module: 'ORDEM_SERVICO', title: 'Painel de O.S. | AutoGarage' },
         },
         {
           path: 'ordem-servico/painel/:id',
           name: 'ordem-servico-detalhe',
           component: OrdemServicoDetalhePage,
-          meta: { title: 'Ordem de Serviço | AutoGarage' },
+          meta: { module: 'ORDEM_SERVICO', title: 'Ordem de Serviço | AutoGarage' },
         },
         {
           path: 'faturamento/vendas',
           name: 'faturamento-vendas',
           component: VendaPage,
-          meta: { title: 'Vendas | AutoGarage' },
+          meta: { module: 'FATURAMENTO', title: 'Vendas | AutoGarage' },
         },
         {
           path: 'relatorios/tempos',
           name: 'relatorio-tempos',
           component: RelatorioPage,
           props: { reportType: 'tempos' },
-          meta: { title: 'Tempo dos serviços | AutoGarage' },
+          meta: { module: 'RELATORIOS', title: 'Tempo dos serviços | AutoGarage' },
         },
         {
           path: 'relatorios/vendas',
           name: 'relatorio-vendas',
           component: RelatorioPage,
           props: { reportType: 'vendas' },
-          meta: { title: 'Relatório de vendas | AutoGarage' },
+          meta: { module: 'RELATORIOS', title: 'Relatório de vendas | AutoGarage' },
         },
         {
           path: 'usuario',
           name: 'usuario',
           component: UsuarioPage,
           meta: {
+            module: 'ADMINISTRACAO',
             title: 'Usuários | AutoGarage',
           },
         },
@@ -116,6 +127,7 @@ const router = createRouter({
           name: 'perfil',
           component: PerfilPage,
           meta: {
+            module: 'ADMINISTRACAO',
             title: 'Perfil | AutoGarage',
           },
         },
@@ -123,8 +135,6 @@ const router = createRouter({
     },
   ],
 })
-
-let meReload: string | null = null
 
 router.beforeEach(async (to) => {
   const utilStore = useUtilStore()
@@ -140,7 +150,6 @@ router.beforeEach(async (to) => {
 
     if (!user) {
       utilStore.cleanUser()
-      meReload = null
     }
 
     if (requiresAuth && !user) {
@@ -156,22 +165,12 @@ router.beforeEach(async (to) => {
     }
 
     try {
-      await user!.getIdToken()
-
-      if (isFirstLogin()) {
-        return true
-      }
-
-      if (meReload !== user!.uid) {
-        await getInitialMe()
-        meReload = user!.uid
-      }
-
+      if (!isFirstLogin() || !utilStore.user) await getInitialMe()
+      if (to.meta.module && !utilStore.canRead(to.meta.module)) return { name: 'home' }
       return true
     } catch (error) {
       console.error('Erro ao carregar usuário:', error)
 
-      meReload = null
 
       utilStore.cleanUser()
 

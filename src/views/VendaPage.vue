@@ -67,6 +67,7 @@ usePageLoad(async () => {
   await load()
   await loadSaleDetails()
 })
+const { canWrite } = useUtilStore()
 </script>
 
 <template>
@@ -77,7 +78,7 @@ usePageLoad(async () => {
           <h1 class="text-xl font-semibold">Faturamento — Vendas</h1>
           <p class="text-surface-500">{{ total }} venda(s)</p>
         </div>
-        <Button label="Nova venda" icon="pi pi-plus" @click="newSale" />
+        <Button v-if="canWrite('FATURAMENTO')" label="Nova venda" icon="pi pi-plus" @click="newSale" />
         <div class="flex gap-2 w-full max-w-xl">
           <InputText
             v-model="filter"

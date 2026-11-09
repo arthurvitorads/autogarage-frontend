@@ -12,14 +12,12 @@ import type {
 } from '@/interface/interface-pages/OrdemServicoPage'
 import * as ordemService from '@/services/ordem-api.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useCatalogoStore } from '@/stores/catalogo.store'
 
 export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   const ordens = ref<IAdmOrdemServico[]>([])
   const classificacoes = ref<IClassificacaoOrdemServico[]>([])
   const clientes = ref<IClienteOrdemServico[]>([])
   const utilStore = useUtilStore()
-  const catalogoStore = useCatalogoStore()
   let versaoSessao = 0
   const classificacaoPadrao = computed(
     () => classificacoes.value.find((item) => item.bo_padrao) ?? null,
@@ -29,25 +27,20 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     const versao = versaoSessao
     const [listaClassificacoes, listaClientes] = await Promise.all([
       ordemService.getClassificacoes(),
-      ordemService.getClientes(),
+      utilStore.canWrite('ORDEM_SERVICO') ? ordemService.getClientes() : null,
     ])
     if (versao !== versaoSessao) return
     classificacoes.value = listaClassificacoes.dados.classificacoes
-    clientes.value = listaClientes.dados.clientes
+    clientes.value = listaClientes?.dados.clientes ?? []
   }
 
-  async function load() {
+  async function loadOrder(id: TServiceOrderCode) {
     const versao = versaoSessao
-    const [listaOrdens, listaClassificacoes, listaClientes] = await Promise.all([
-      ordemService.getOrdens(),
-      ordemService.getClassificacoes(),
-      ordemService.getClientes(),
-      catalogoStore.load(),
-    ])
+    const { dados } = await ordemService.getOrder(id)
     if (versao !== versaoSessao) return
-    ordens.value = listaOrdens
-    classificacoes.value = listaClassificacoes.dados.classificacoes
-    clientes.value = listaClientes.dados.clientes
+    const index = ordens.value.findIndex((order) => String(order.cn_ordem_servico) === String(id))
+    if (index < 0) ordens.value.push(dados)
+    else ordens.value[index] = dados
   }
   async function saveClassificacao(
     values: IManutOrderClassification,
@@ -118,7 +111,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     classificacoes,
     clientes,
     classificacaoPadrao,
-    load,
+    loadOrder,
     loadParametros,
     saveClassificacao,
     saveOrdem,

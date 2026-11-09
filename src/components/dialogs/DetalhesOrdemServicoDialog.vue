@@ -19,10 +19,12 @@ import {
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
+import { useUtilStore } from '@/stores/util.store'
 
 const props = defineProps<IServiceOrderDetailsDialogProps>()
 const emit = defineEmits<{ 'update:visible': [value: boolean]; faturada: [venda: IAdmVenda] }>()
 const router = useRouter()
+const { canRead, canWrite } = useUtilStore()
 const saleDialogVisible = ref(false)
 const registeredSale = ref<string | null>(null)
 watch(
@@ -172,13 +174,13 @@ const classification = computed(() =>
     </div>
     <template #footer>
       <Button
-        v-if="order?.ca_status === 'FINALIZADO' && order.itens.length && !registeredSale"
+        v-if="canWrite('FATURAMENTO') && order?.ca_status === 'FINALIZADO' && order.itens.length && !registeredSale"
         label="Gerar venda"
         icon="pi pi-shopping-cart"
         @click="saleDialogVisible = true"
       />
       <Button
-        v-if="registeredSale"
+        v-if="canRead('FATURAMENTO') && registeredSale"
         label="Consultar venda"
         icon="pi pi-eye"
         severity="secondary"

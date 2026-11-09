@@ -13,18 +13,24 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
-import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
+
 import type {
   IAdmVenda,
   IFormSaleItem,
   IManutSaleItem,
+  TBillableOrder,
+  TSaleCustomer,
 } from '@/interface/interface-pages/VendaPage'
-import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
-import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
+import { getCatalogItemOptions } from '@/services/catalogo.service'
+import { getClientes } from '@/services/ordem-api.service'
+import type { IClienteOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
-import { getPersonById } from '@/services/person.service'
-import { createVenda as createSale } from '@/services/faturamento.service'
+import {
+  createVenda as createSale,
+  getBillableOrders,
+  getSaleCustomer,
+} from '@/services/faturamento.service'
 import {
   calcularTotalItemOrdem as calculateItemTotal,
   formatCurrencyOrdem as formatOrderCurrency,
@@ -34,15 +40,14 @@ const props = defineProps<IManutSaleDialogProps>()
 const formData = reactive<IFormSale>(SaleModel.createForm())
 const { origin, personId, orderId, notes, requestKey, items } = toRefs(formData)
 const emit = defineEmits<{ 'update:visible': [visible: boolean]; saved: [venda: IAdmVenda] }>()
-const catalogStore = useCatalogStore()
-const orderStore = useServiceOrderStore()
-const { produtos: products, servicos: services } = storeToRefs(catalogStore)
-const { clientes: customers, ordens: orders } = storeToRefs(orderStore)
+const catalog = ref<Awaited<ReturnType<typeof getCatalogItemOptions>>['dados'] | null>(null)
+const customers = ref<IClienteOrdemServico[]>([])
+const orders = ref<TBillableOrder[]>([])
 const { setLoading, normalizeError } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 
-const customer = ref<ICadPessoa | null>(null)
+const customer = ref<TSaleCustomer | null>(null)
 
 const saving = ref(false)
 const loadingData = ref(false)
@@ -57,9 +62,7 @@ const itemTypes = [
   { label: 'Serviço', value: 'SERVICO' },
 ]
 const availableOrders = computed(() =>
-  orders.value
-    .filter((order) => order.ca_status === 'FINALIZADO' && order.itens.length && !order.cn_venda)
-    .map((order) => ({ ...order, an_label: 'O.S. ' + order.nu_numero + ' — ' + order.an_cliente })),
+  orders.value.map((order) => ({ ...order, an_label: 'O.S. ' + order.nu_numero + ' — ' + order.an_cliente })),
 )
 const selectedOrder = computed(
   () =>
@@ -68,21 +71,7 @@ const selectedOrder = computed(
     null,
 )
 const references = computed(() =>
-  item.value.ca_tipo === 'PRODUTO'
-    ? products.value
-        .filter((product) => product.bo_sts_reg)
-        .map((product) => ({
-          cn_referencia: product.cn_produto,
-          an_nome: product.an_nome,
-          vl_preco: product.vl_venda,
-        }))
-    : services.value
-        .filter((service) => service.bo_sts_reg)
-        .map((service) => ({
-          cn_referencia: service.cn_servico,
-          an_nome: service.an_nome,
-          vl_preco: service.vl_preco,
-        })),
+  (item.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
 const rows = computed(() =>
   origin.value === 'ORDEM_SERVICO' ? (selectedOrder.value?.itens ?? []) : items.value,
@@ -91,12 +80,15 @@ const total = computed(
   () => rows.value.reduce((soma, linha) => soma + Math.round(linha.vl_total * 100), 0) / 100,
 )
 let customerRequestId = 0
-watch(personId, async (code) => {
+watch([personId, orderId], async ([code, order]) => {
   const requestId = ++customerRequestId
   customer.value = null
   if (!code) return
   try {
-    const { dados: data } = await getPersonById(code)
+    const { dados: data } = await getSaleCustomer(
+      code,
+      origin.value === 'ORDEM_SERVICO' ? order ?? undefined : undefined,
+    )
     if (requestId === customerRequestId) customer.value = data
   } catch (error) {
     if (requestId === customerRequestId) toast.error(normalizeError(error))
@@ -126,7 +118,15 @@ async function loadData() {
   loadingData.value = true
   loadError.value = ''
   try {
-    await orderStore.load()
+    if (props.order) return
+    const [itemOptions, clientOptions, billableOrders] = await Promise.all([
+      getCatalogItemOptions(),
+      getClientes(),
+      getBillableOrders(),
+    ])
+    catalog.value = itemOptions.dados
+    customers.value = clientOptions.dados.clientes
+    orders.value = billableOrders
   } catch (error) {
     loadError.value = normalizeError(error)
   } finally {

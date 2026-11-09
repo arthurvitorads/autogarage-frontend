@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import logoClara from '@/assets/img/logo_clara.png'
 
-import { ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
 import CategoriaProdutoDialog from '@/components/dialogs/CategoriaProdutoDialog.vue'
 import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
 import MarcaDialog from '@/components/dialogs/MarcaDialog.vue'
 import UnidadeDialog from '@/components/dialogs/UnidadeDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
+import { useUtilStore } from '@/stores/util.store'
+import type { TModule } from '@/interface/access'
 
 const productCategoryDialogVisible = ref(false)
 const serviceCategoryDialogVisible = ref(false)
@@ -22,18 +24,21 @@ defineProps<{
 }>()
 
 const route = useRoute()
+const { canRead } = useUtilStore()
 
 const expandedKeys = ref<Record<string, boolean>>({})
 
 const modules = [
   {
     key: 'geral',
+    access: 'GERAL',
     label: 'Geral',
     icon: 'th-large',
     items: [{ key: 'geral:home', label: 'Home', icon: 'home', route: '/' }],
   },
   {
     key: 'cadastros',
+    access: 'CADASTROS',
     label: 'Cadastros',
     icon: 'folder',
     items: [
@@ -79,6 +84,7 @@ const modules = [
   },
   {
     key: 'ordem-servico',
+    access: 'ORDEM_SERVICO',
     label: 'Ordem de Serviço',
     icon: 'file-edit',
     items: [
@@ -92,6 +98,7 @@ const modules = [
   },
   {
     key: 'faturamento',
+    access: 'FATURAMENTO',
     label: 'Faturamento',
     icon: 'wallet',
     items: [
@@ -105,6 +112,7 @@ const modules = [
   },
   {
     key: 'relatorios',
+    access: 'RELATORIOS',
     label: 'Relatórios',
     icon: 'chart-bar',
     items: [
@@ -124,6 +132,7 @@ const modules = [
   },
   {
     key: 'admin',
+    access: 'ADMINISTRACAO',
     label: 'Administração',
     icon: 'database',
     items: [
@@ -131,14 +140,27 @@ const modules = [
       { key: 'admin:perfil', label: 'Perfil', icon: 'book', route: '/perfil' },
     ],
   },
-]
+] satisfies {
+  key: string
+  access: TModule
+  label: string
+  icon: string
+  items: {
+    key: string
+    label: string
+    icon: string
+    route: string
+    openDialog?: () => void
+  }[]
+}[]
+const visibleModules = computed(() => modules.filter((module) => canRead(module.access)))
 
 function onPanelOpen(event: PanelMenuPanelOpenEvent) {
   expandedKeys.value = { [event.item.key]: true }
 }
 
 function openCurrentModule() {
-  const current = modules.find((m) =>
+  const current = visibleModules.value.find((m) =>
     m.items.some(
       (i) =>
         !!i.route &&
@@ -165,7 +187,7 @@ onMounted(openCurrentModule)
       <nav class="menu-nav">
         <PanelMenu
           class="menu-panel"
-          :model="modules"
+          :model="visibleModules"
           v-model:expandedKeys="expandedKeys"
           @panelOpen="onPanelOpen"
         >

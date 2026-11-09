@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { usePageLoad } from '@/composables/usePageLoad'
 import { computed, ref, watch } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 import FiltroData from '@/components/field/FiltroData.vue'
 import { dateInterval } from '@/services/date-range.service'
 import { getOrdensPagina as getOrdersPage } from '@/services/ordem-api.service'
@@ -15,7 +15,9 @@ const dates = ref<(Date | null)[]>([startDate, today])
 const selectedDates = computed(() => dateInterval(dates.value))
 const orderCounts = ref<number[]>([])
 const loading = ref(false)
-const { normalizeError } = useUtilStore()
+const { normalizeError, canRead } = useUtilStore()
+const router = useRouter()
+const showIndicators = computed(() => canRead('GERAL') && canRead('ORDEM_SERVICO'))
 const toast = useAppToast()
 
 const indicadores = [
@@ -52,7 +54,7 @@ const indicadores = [
 async function loadIndicators() {
   const range = selectedDates.value
   orderCounts.value = []
-  if (!range) return
+  if (!range || !showIndicators.value) return
   loading.value = true
   try {
     orderCounts.value = await Promise.all(
@@ -112,13 +114,19 @@ const atalhos = [
     rota: 'relatorio-vendas',
   },
 ]
-watch(selectedDates, loadIndicators)
+const visibleShortcuts = computed(() =>
+  atalhos.filter((shortcut) => {
+    const module = router.resolve({ name: shortcut.rota }).meta.module
+    return module && canRead(module)
+  }),
+)
+watch([selectedDates, showIndicators], loadIndicators)
 usePageLoad(loadIndicators)
 </script>
 
 <template>
   <div class="dashboard">
-    <section aria-labelledby="resumo-titulo">
+    <section v-if="showIndicators" aria-labelledby="resumo-titulo">
       <div class="section-heading">
         <div>
           <h2 id="resumo-titulo">Visão geral da oficina</h2>
@@ -148,7 +156,7 @@ usePageLoad(loadIndicators)
         </RouterLink>
       </div>
     </section>
-    <section class="shortcuts-container" aria-labelledby="atalhos-titulo">
+    <section v-if="canRead('GERAL') && visibleShortcuts.length" class="shortcuts-container" aria-labelledby="atalhos-titulo">
       <div class="section-heading">
         <div>
           <h2 id="atalhos-titulo">Atalhos</h2>
@@ -156,7 +164,7 @@ usePageLoad(loadIndicators)
       </div>
       <div class="shortcuts">
         <RouterLink
-          v-for="atalho in atalhos"
+          v-for="atalho in visibleShortcuts"
           :key="atalho.rota"
           :to="{ name: atalho.rota }"
           class="shortcut"
@@ -172,6 +180,9 @@ usePageLoad(loadIndicators)
         </RouterLink>
       </div>
     </section>
+    <p v-if="!canRead('GERAL') || (!showIndicators && !visibleShortcuts.length)">
+      Selecione um módulo disponível no menu ou solicite acesso à Administração.
+    </p>
   </div>
 </template>
 

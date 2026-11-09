@@ -99,6 +99,7 @@ onMounted(async () => {
     setLoading(false)
   }
 })
+const { canWrite } = useUtilStore()
 </script>
 <template>
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
@@ -116,7 +117,7 @@ onMounted(async () => {
           <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex">
-          <Button label="Novo" icon="pi pi-plus" @click="newUser" />
+          <Button v-if="canWrite('ADMINISTRACAO')" label="Novo" icon="pi pi-plus" @click="newUser" />
         </div>
       </div>
 
@@ -153,6 +154,7 @@ onMounted(async () => {
             <Column header="Ações" class="min-w-5">
               <template #body="{ data }">
                 <Button
+                  v-if="canWrite('ADMINISTRACAO')"
                   icon="pi pi-pencil"
                   severity="secondary"
                   text

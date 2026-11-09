@@ -49,7 +49,7 @@ const {
   classificacaoPadrao: defaultClassification,
 } = storeToRefs(orderStore)
 const { saveOrdem: saveOrder } = orderStore
-const { normalizeError, setLoading } = useUtilStore()
+const { normalizeError, setLoading, canWrite } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
 const toast = useAppToast()
 const confirmAction = useConfirmation()
@@ -215,6 +215,7 @@ watch(
                 placeholder="Selecione a classificação"
               />
               <Button
+                v-if="canWrite('CADASTROS')"
                 type="button"
                 icon="pi pi-plus"
                 aria-label="Cadastrar classificação"

@@ -1,4 +1,4 @@
-import { apiList, apiPage, apiRequest } from '@/services/api.service'
+import { apiPage, apiRequest } from '@/services/api.service'
 import type {
   IAdmOrdemServico,
   IClienteOrdemServico,
@@ -10,8 +10,8 @@ import type {
   TServiceOrderCode,
 } from '@/interface/interface-pages/OrdemServicoPage'
 
-export function getOrdens() {
-  return apiList<IAdmOrdemServico>('/ordensServico/listar', 'ordens')
+export function getOrder(id: TServiceOrderCode) {
+  return apiRequest<IAdmOrdemServico>('/ordensServico/detalhar', { cn_ordem_servico: id })
 }
 
 export function getClassificacoes() {

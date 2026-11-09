@@ -1,7 +1,6 @@
 import { auth } from './firebase.service'
 
 import { useUtilStore } from '@/stores/util.store'
-import { handleFirstLogin } from './auth.service'
 
 import { IMeResponse, IMeUser } from '@/interface/interface-pages/LoginPage'
 
@@ -94,7 +93,7 @@ export async function getInitialMe(): Promise<IMeUser> {
 
   const utilStore = useUtilStore()
   utilStore.setUser(res.dados)
-  handleFirstLogin()
+
 
   return res.dados
 }

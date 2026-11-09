@@ -1,9 +1,13 @@
+import type { TModuleAccess } from '@/interface/access'
+
 export interface IMeResponse {
   sucesso: boolean
   dados: IMeUser
 }
 export interface IMeUser {
-  cn_usuario?: number
+  cn_usuario?: string
+  cn_perfil?: string
+  acessos: TModuleAccess
   ca_id_firebase?: string
   an_email?: string
   an_nome?: string

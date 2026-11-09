@@ -33,8 +33,10 @@ import {
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
+import { useUtilStore } from '@/stores/util.store'
 
 const router = useRouter()
+const { canRead, canWrite } = useUtilStore()
 const { inicio: start, fim: end, status } = router.options.history.state
 const dates = ref<(Date | null)[]>(currentMonthDates())
 if (typeof start === 'string' && typeof end === 'string') {
@@ -128,12 +130,13 @@ function updateSale(sale: { cn_venda: string }) {
       </div>
       <div class="flex flex-wrap gap-2">
         <Button
+          v-if="canRead('CADASTROS')"
           label="Classificações"
           icon="pi pi-cog"
           severity="secondary"
           @click="classificationDialogVisible = true"
         />
-        <Button label="Nova O.S." icon="pi pi-plus" @click="newOrder" />
+        <Button v-if="canWrite('ORDEM_SERVICO')" label="Nova O.S." icon="pi pi-plus" @click="newOrder" />
       </div>
     </div>
     <div class="flex flex-wrap items-end gap-3">
@@ -236,14 +239,14 @@ function updateSale(sale: { cn_venda: string }) {
             @click="openOrder(order)"
           />
           <Button
-            v-if="!isOrderClosed(order)"
+            v-if="canWrite('ORDEM_SERVICO') && !isOrderClosed(order)"
             icon="pi pi-pencil"
             severity="secondary"
             aria-label="Editar O.S."
             @click="editOrder(order)"
           />
           <Button
-            v-if="order.ca_status === 'ABERTO'"
+            v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'ABERTO'"
             label="Iniciar serviço"
             icon="pi pi-play"
             @click="startOrder(order)"

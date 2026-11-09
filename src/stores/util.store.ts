@@ -6,6 +6,7 @@ import type { ICnpjBrasilApiResponse, IEnderecoViaCep, IViaCepResponse } from '@
 import { unMaskDocument, validateCNPJ } from '@/services/util.service'
 
 import { IMeUser } from '@/interface/interface-pages/LoginPage'
+import type { TModule } from '@/interface/access'
 
 export const useUtilStore = defineStore('util', () => {
   const loadingCount = ref(0)
@@ -20,6 +21,14 @@ export const useUtilStore = defineStore('util', () => {
 
   function cleanUser() {
     user.value = null
+  }
+
+  function canRead(module: TModule) {
+    return (user.value?.acessos?.[module] ?? 3) <= 2
+  }
+
+  function canWrite(module: TModule) {
+    return user.value?.acessos?.[module] === 1
   }
 
   function setLoading(value: boolean) {
@@ -120,6 +129,8 @@ export const useUtilStore = defineStore('util', () => {
     fetchCnpj,
     setUser,
     cleanUser,
+    canRead,
+    canWrite,
     normalizeError,
   }
 })

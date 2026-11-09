@@ -33,7 +33,7 @@ import {
 import { isQuantidadeValida as isValidQuantity } from '@/services/estoque.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
+import { getCatalogItemOptions } from '@/services/catalogo.service'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
 const props = defineProps<IServiceOrderItemDialogProps>()
@@ -43,7 +43,8 @@ const emit = defineEmits<{
   saved: []
 }>()
 
-const { produtos: products, servicos: services } = storeToRefs(useCatalogStore())
+const catalog = ref<Awaited<ReturnType<typeof getCatalogItemOptions>>['dados'] | null>(null)
+const loadingOptions = ref(false)
 const { saveItem } = useServiceOrderStore()
 const { normalizeError, setLoading } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
@@ -61,23 +62,7 @@ const formData = ref<IFormServiceOrderItem>(
   ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO'),
 )
 const options = computed(() =>
-  formData.value.ca_tipo === 'PRODUTO'
-    ? products.value
-        .filter((product) => product.bo_sts_reg)
-        .map((product) => ({
-          cn_referencia: product.cn_produto,
-          an_nome: product.an_nome,
-          ca_unidade: product.ca_unidade,
-          vl_preco: product.vl_venda,
-        }))
-    : services.value
-        .filter((service) => service.bo_sts_reg)
-        .map((service) => ({
-          cn_referencia: service.cn_servico,
-          an_nome: service.an_nome,
-          ca_unidade: '',
-          vl_preco: service.vl_preco,
-        })),
+  (formData.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
 const selectedReference = computed(() =>
   options.value.find((item) => item.cn_referencia === formData.value.cn_referencia),
@@ -190,6 +175,23 @@ watch(
       : ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO')
     formErrors.value = {}
     formKey.value++
+  },
+  { immediate: true },
+)
+watch(
+  () => props.visible,
+  async (visible) => {
+    if (!visible) return
+    catalog.value = null
+    loadingOptions.value = true
+    try {
+      const { dados } = await getCatalogItemOptions()
+      catalog.value = dados
+    } catch (error) {
+      toast.error(normalizeError(error))
+    } finally {
+      loadingOptions.value = false
+    }
   },
   { immediate: true },
 )
@@ -307,8 +309,8 @@ watch(
         <Button
           type="button"
           label="Gravar"
-          :disabled="loading"
-          :loading="loading"
+          :disabled="loading || loadingOptions || !catalog"
+          :loading="loading || loadingOptions"
           @click="formRef?.submit()"
         />
       </div>

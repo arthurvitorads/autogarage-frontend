@@ -6,6 +6,19 @@ import type {
   IManutAuxiliary,
 } from '@/interface/interface-pages/CadastroAuxiliar'
 
+export interface ICatalogItemOption {
+  cn_referencia: number
+  an_nome: string
+  ca_unidade: string
+  vl_preco: number
+}
+
+export function getCatalogItemOptions() {
+  return apiRequest<{ produtos: ICatalogItemOption[]; servicos: ICatalogItemOption[] }>(
+    '/paramCatalogo',
+  )
+}
+
 export function getProdutos() {
   return apiList<IAdmProduto>('/produtos/listar', 'produtos')
 }

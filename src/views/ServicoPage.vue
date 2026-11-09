@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useUtilStore } from '@/stores/util.store'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
 import { getServicosPagina as getServicesPage } from '@/services/catalogo.service'
 import { usePageLoad } from '@/composables/usePageLoad'
@@ -51,6 +52,7 @@ usePageLoad(async () => {
   await useCatalogStore().loadCadastros()
   await load()
 })
+const { canWrite } = useUtilStore()
 </script>
 
 <template>
@@ -73,7 +75,7 @@ usePageLoad(async () => {
               @click="search"
             />
           </div>
-          <Button label="Novo" icon="pi pi-plus" @click="newService" />
+          <Button v-if="canWrite('CADASTROS')" label="Novo" icon="pi pi-plus" @click="newService" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
@@ -99,6 +101,7 @@ usePageLoad(async () => {
           <Column header="Ações" class="min-w-5">
             <template #body="{ data }">
               <Button
+                v-if="canWrite('CADASTROS')"
                 icon="pi pi-pencil"
                 severity="secondary"
                 text
