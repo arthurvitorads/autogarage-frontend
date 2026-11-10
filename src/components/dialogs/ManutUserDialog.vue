@@ -177,7 +177,6 @@ watch(
               v-model="formData.cn_perfil"
               :name="field"
               endpoint="/paramPerfil"
-              optionsPath="dados.perfil"
               :invalid="invalid"
             />
           </FieldForm>

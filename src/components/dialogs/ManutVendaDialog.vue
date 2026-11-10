@@ -22,12 +22,12 @@ import type {
   TSaleCustomer,
 } from '@/interface/interface-pages/VendaPage'
 import { getCatalogItemOptions } from '@/services/catalogo.service'
-import { getClientes } from '@/services/ordem-api.service'
+import { getCustomers } from '@/services/ordem-api.service'
 import type { IClienteOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
 import {
-  createVenda as createSale,
+  createSale,
   getBillableOrders,
   getSaleCustomer,
 } from '@/services/faturamento.service'
@@ -125,11 +125,11 @@ async function loadData() {
     if (props.order) return
     const [itemOptions, clientOptions, billableOrders] = await Promise.all([
       getCatalogItemOptions(),
-      getClientes(),
+      getCustomers(),
       getBillableOrders(),
     ])
     catalog.value = itemOptions.dados
-    customers.value = clientOptions.dados.clientes
+    customers.value = clientOptions.dados
     orders.value = billableOrders
   } catch (error) {
     loadError.value = normalizeError(error)

@@ -1,4 +1,4 @@
-import type { TPersonType } from '@/models/pessoa'
+import type { ITipoPessoa } from '@/interface/enum'
 
 export type TServiceOrderStatus = 'ABERTO' | 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO'
 export type TServiceOrderAction = 'INICIAR' | 'FINALIZAR' | 'CANCELAR'
@@ -9,7 +9,7 @@ export interface IClienteOrdemServico {
   cn_pessoa: string | number
   an_nome: string
   an_documento: string
-  tipo: TPersonType
+  tipo: ITipoPessoa
 }
 
 export interface IFormOrderClassification {

@@ -1,9 +1,5 @@
 import type { TModuleAccess } from '@/interface/access'
 
-export interface IMeResponse {
-  sucesso: boolean
-  dados: IMeUser
-}
 export interface IMeUser {
   cn_usuario?: string
   cn_perfil?: string

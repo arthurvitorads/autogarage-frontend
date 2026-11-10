@@ -1,4 +1,4 @@
-import { auth } from './firebase.service'
+import { apiRequest } from '@/services/api.service'
 
 import { API_URL } from '@/constants/utils'
 
@@ -53,39 +53,9 @@ export async function getDomainOptions(
     throw new Error('O endpoint deve pertencer à API do sistema.')
   }
 
-  await auth.authStateReady()
-  signal?.throwIfAborted()
-
-  const user = auth.currentUser
-
-  if (!user) throw new Error('Usuário não autenticado.')
-
-  const token = await user.getIdToken()
-
   const values = { ...Object.fromEntries(url.searchParams), ...params }
   url.search = ''
+  const response = await apiRequest<unknown>(url, values, signal)
 
-  signal?.throwIfAborted()
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify(values),
-    ...(signal ? { signal } : {}),
-  })
-
-  const body: unknown = await response.json().catch(() => null)
-
-  if (!response.ok || (isRecord(body) && body.sucesso === false)) {
-    const message = isRecord(body) && typeof body.erro === 'string' ? body.erro : undefined
-
-    throw new Error(
-      message ||
-        (response.status === 429
-          ? 'Muitas consultas. Aguarde alguns instantes e tente novamente.'
-          : 'Não foi possível carregar as opções.'),
-    )
-  }
-
-  return extractDomainOptions(body, optionsPath)
+  return extractDomainOptions(response, optionsPath)
 }

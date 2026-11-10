@@ -2,6 +2,7 @@ import { apiList, apiPage, apiRequest } from '@/services/api.service'
 import type {
   IAdmVenda,
   IManutSale,
+  ITimeReport,
   ITimeReportResponse,
   ISaleReportResponse,
   TBillableOrder,
@@ -9,7 +10,7 @@ import type {
 } from '@/interface/interface-pages/VendaPage'
 
 export function getBillableOrders() {
-  return apiList<TBillableOrder>('/faturamento/ordens/listar', 'ordens')
+  return apiList<TBillableOrder>('/faturamento/ordens/listar')
 }
 
 export function getSaleCustomer(id: string | number, orderId?: string | number) {
@@ -19,28 +20,33 @@ export function getSaleCustomer(id: string | number, orderId?: string | number) 
   })
 }
 
-export function getVendasPagina(page: number, limit: number, search: string) {
-  return apiPage<IAdmVenda>('/faturamento/vendas/listar', 'vendas', page, limit, search)
+export function getSalesPage(page: number, limit: number, search: string) {
+  return apiPage<IAdmVenda>('/faturamento/vendas/listar', page, limit, search)
 }
 
-export function getVenda(codigo: string) {
-  return apiRequest<IAdmVenda>('/faturamento/vendas/detalhar', { cn_venda: codigo })
+export function getSale(id: string) {
+  return apiRequest<IAdmVenda>('/faturamento/vendas/detalhar', { cn_venda: id })
 }
 
-export function createVenda(values: IManutSale) {
+export function createSale(values: IManutSale) {
   return apiRequest<IAdmVenda>('/faturamento/vendas', values)
 }
 
-export function getRelatorioTempos(page: number, inicio: string, fim: string, ordem: string) {
-  return apiRequest<ITimeReportResponse>('/relatorios/tempos-servicos', {
+export function getTimeReport(page: number, startDate: string, endDate: string, sortOrder: string) {
+  return apiRequest<ITimeReport[], ITimeReportResponse>('/relatorios/tempos-servicos', {
     page,
     limit: 20,
-    inicio,
-    fim,
-    ordem,
+    inicio: startDate,
+    fim: endDate,
+    ordem: sortOrder,
   })
 }
 
-export function getRelatorioVendas(page: number, inicio: string, fim: string) {
-  return apiRequest<ISaleReportResponse>('/relatorios/vendas', { page, limit: 20, inicio, fim })
+export function getSalesReport(page: number, startDate: string, endDate: string) {
+  return apiRequest<IAdmVenda[], ISaleReportResponse>('/relatorios/vendas', {
+    page,
+    limit: 20,
+    inicio: startDate,
+    fim: endDate,
+  })
 }

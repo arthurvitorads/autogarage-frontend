@@ -19,55 +19,53 @@ export function getCatalogItemOptions() {
   )
 }
 
-export function getProdutos() {
-  return apiList<IAdmProduto>('/produtos/listar', 'produtos')
+export function getProducts() {
+  return apiList<IAdmProduto>('/produtos/listar')
 }
 
-export function getServicos() {
-  return apiList<IAdmServico>('/servicos/listar', 'servicos')
+export function getServices() {
+  return apiList<IAdmServico>('/servicos/listar')
 }
 
-export function getCadastrosAuxiliares() {
-  return apiRequest<{
-    cadastros: IAdmCadastroAuxiliar[]
-  }>('/cadastrosAuxiliares/listar')
+export function getAuxiliaries() {
+  return apiRequest<IAdmCadastroAuxiliar[]>('/cadastrosAuxiliares/listar')
 }
 
-export function saveProduto(values: IManutProduct) {
+export function saveProduct(values: IManutProduct) {
   return apiRequest<IAdmProduto>(
     values.cn_produto === undefined ? '/produtos' : '/produtos/atualizar',
     values,
   )
 }
 
-export function saveServico(values: IManutService) {
+export function saveService(values: IManutService) {
   return apiRequest<IAdmServico>(
     values.cn_servico === undefined ? '/servicos' : '/servicos/atualizar',
     values,
   )
 }
 
-export function saveCadastroAuxiliar(values: IManutAuxiliary) {
+export function saveAuxiliary(values: IManutAuxiliary) {
   return apiRequest<IAdmCadastroAuxiliar>(
     values.cn_cadastro === undefined ? '/cadastrosAuxiliares' : '/cadastrosAuxiliares/atualizar',
     values,
   )
 }
 
-export function getProdutosPagina(
+export function getProductsPage(
   page: number,
   limit: number,
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmProduto>('/produtos/listar', 'produtos', page, limit, search, filters)
+  return apiPage<IAdmProduto>('/produtos/listar', page, limit, search, filters)
 }
 
-export function getServicosPagina(
+export function getServicesPage(
   page: number,
   limit: number,
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmServico>('/servicos/listar', 'servicos', page, limit, search, filters)
+  return apiPage<IAdmServico>('/servicos/listar', page, limit, search, filters)
 }

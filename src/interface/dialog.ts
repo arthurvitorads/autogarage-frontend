@@ -1,4 +1,4 @@
-import type { Person } from '@/models/pessoa'
+import type { Pessoa } from '@/models/pessoa.model'
 import type { IAdmPerfil } from '@/interface/interface-pages/PerfilPage'
 import type { IAdmProduto } from '@/interface/interface-pages/ProdutoPage'
 import type { IAdmServico } from '@/interface/interface-pages/ServicoPage'
@@ -16,8 +16,8 @@ export interface IDialogProps {
 }
 
 export interface IManutPersonDialogProps extends IDialogProps {
-  person?: Person | null
-  people?: Person[]
+  person?: Pessoa | null
+  people?: Pessoa[]
 }
 
 export interface IManutProfileDialogProps extends IDialogProps {

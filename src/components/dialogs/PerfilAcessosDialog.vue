@@ -35,7 +35,7 @@ async function load() {
 
   try {
     const { dados } = await getProfileAccess(id)
-    if (current === requestId) access.value = dados.acessos
+    if (current === requestId) access.value = dados
   } catch (error) {
     if (current === requestId) loadError.value = utilStore.normalizeError(error)
   } finally {
@@ -52,7 +52,7 @@ async function save() {
     const { dados } = await saveProfileAccess(id, access.value)
     const user = utilStore.user
     if (user && user.cn_perfil === String(id))
-      utilStore.setUser({ ...user, acessos: dados.acessos })
+      utilStore.setUser({ ...user, acessos: dados })
     toast.success('Acessos do perfil atualizados.')
     emit('update:visible', false)
   } catch (error) {

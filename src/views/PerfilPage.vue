@@ -17,7 +17,7 @@ import { useUtilStore } from '@/stores/util.store'
 
 import { useAppToast } from '@/services/toast.service'
 import { formatDateTime } from '@/services/util.service'
-import { getPerfil as getProfiles } from '@/services/perfil.service'
+import { getProfiles } from '@/services/perfil.service'
 
 const { normalizeError, setLoading, canWrite } = useUtilStore()
 
@@ -79,8 +79,8 @@ async function loadProfiles() {
   try {
     const result = await getProfiles(page.value, limit.value, filter.value)
 
-    profile.value = result.dados.perfil
-    total.value = result.dados.pagination.total
+    profile.value = result.dados
+    total.value = result.pagination.total
   } catch (error) {
     toastService.error(normalizeError(error))
 

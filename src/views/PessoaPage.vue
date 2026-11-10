@@ -8,7 +8,7 @@ import Button from 'primevue/button'
 import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 
-import type { Person } from '@/models/pessoa'
+import type { Pessoa } from '@/models/pessoa.model'
 
 import { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
 
@@ -16,7 +16,7 @@ import ManutPessoaDialog from '@/components/dialogs/ManutPessoaDialog.vue'
 
 import { useUtilStore } from '@/stores/util.store'
 
-import { getPerson, personToForm } from '@/services/person.service'
+import { getPeople } from '@/services/person.service'
 import { useAppToast } from '@/services/toast.service'
 import { formatDateTime, maskCpf, maskCnpj, maskTelefone } from '@/services/util.service'
 
@@ -28,8 +28,6 @@ const toastService = useAppToast()
 const limit = ref(20)
 const page = ref(1)
 const total = ref(0)
-
-const filter = ref('')
 
 // skeleton
 const skeletonColumns = [
@@ -48,9 +46,11 @@ const skeletonColumns = [
 
 const loadingGrid = ref(false)
 
+const filter = ref('')
+
 // form
-const manutPersonVisible = ref(false)
-const selectPerson = ref<Person | null>(null)
+const manutPessoaVisible = ref(false)
+const selectedPessoa = ref<Pessoa | null>(null)
 
 const people = ref<ICadPessoa[]>([])
 
@@ -69,24 +69,58 @@ function changePage(event: DataTablePageEvent) {
   loadPeople()
 }
 
-function newPerson() {
-  selectPerson.value = null
-  manutPersonVisible.value = true
+function newPessoa() {
+  selectedPessoa.value = null
+  manutPessoaVisible.value = true
 }
 
-function editPerson(person: ICadPessoa) {
-  selectPerson.value = personToForm(person)
-  manutPersonVisible.value = true
-}
+function editPessoa(pessoa: ICadPessoa) {
+  const endereco = pessoa.endereco
+  const dados = {
+    cn_pessoa: pessoa.cn_pessoa,
+    bo_categ_cliente: pessoa.bo_categ_cliente,
+    bo_categ_func: pessoa.bo_categ_func,
+    bo_sts_reg: pessoa.bo_sts_reg,
+    email: pessoa.an_email ?? '',
+    telefone: pessoa.an_telefone ?? '',
+    cargo: pessoa.an_cargo ?? '',
+    nm_comissao_func: pessoa.nm_comissao_func ?? 0,
+    endereco: {
+      cep: endereco?.ca_cep ?? '',
+      logradouro: endereco?.an_logradouro ?? '',
+      numero: endereco?.an_numero ?? '',
+      complemento: endereco?.an_complemento ?? '',
+      bairro: endereco?.an_bairro ?? '',
+      cidade: endereco?.an_cidade ?? '',
+      uf: endereco?.ca_uf ?? '',
+    }
+  }
+
+  selectedPessoa.value = pessoa.ca_tipo === 'PF' ?
+    {
+      ...dados,
+      tipo: 'PF',
+      nome: pessoa.an_nome ?? '',
+      cpf: pessoa.ca_cpf ?? '',
+    } : {
+      ...dados,
+      tipo: 'PJ',
+      razaoSocial: pessoa.an_razao_social ?? '',
+      nomeFantasia: pessoa.an_nome_fantasia ?? '',
+      cnpj: pessoa.ca_cnpj ?? '',
+    }
+
+  manutPessoaVisible.value = true
+  }
 
 async function loadPeople() {
   loadingGrid.value = true
 
   try {
-    const result = await getPerson(page.value, limit.value, filter.value)
+    const result = await getPeople(page.value, limit.value, filter.value)
 
-    people.value = result.dados.pessoa
-    total.value = result.dados.pagination.total
+    people.value = result.dados
+    total.value = result.pagination.total
   } catch (error) {
     toastService.error(normalizeError(error))
     people.value = []
@@ -122,7 +156,7 @@ onMounted(async () => {
           <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
         </div>
         <div class="flex">
-          <Button v-if="canWrite('CADASTROS')" label="Novo" icon="pi pi-plus" @click="newPerson" />
+          <Button v-if="canWrite('CADASTROS')" label="Novo" icon="pi pi-plus" @click="newPessoa" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
@@ -163,7 +197,7 @@ onMounted(async () => {
                   severity="secondary"
                   text
                   rounded
-                  @click="editPerson(data)"
+                  @click="editPessoa(data)"
                 />
               </template>
             </Column>
@@ -219,8 +253,8 @@ onMounted(async () => {
     </div>
   </div>
   <ManutPessoaDialog
-    v-model:visible="manutPersonVisible"
-    :person="selectPerson"
+    v-model:visible="manutPessoaVisible"
+    :person="selectedPessoa"
     @saved="loadPeople"
   />
 </template>

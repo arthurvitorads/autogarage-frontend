@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUtilStore } from '@/stores/util.store'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
-import { getProdutosPagina as getProductsPage } from '@/services/catalogo.service'
+import { getProductsPage } from '@/services/catalogo.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { ref } from 'vue'
 
@@ -20,11 +20,11 @@ import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
 // form
 const {
-  registros: products,
+  records: products,
   total,
-  primeiroRegistro: firstRecord,
-  limite: limit,
-  filtro: filter,
+  firstRecord,
+  limit,
+  filter,
   loadingGrid,
   load,
   search,

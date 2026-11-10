@@ -4,11 +4,6 @@ export interface IUpdateUser {
   cn_perfil?: string | number | null
 }
 
-export interface ICreateUserResponse {
-  sucesso: boolean
-  dados: IAdmUsuario
-}
-
 export interface IFormUser {
   an_nome: string
   an_email: string
@@ -32,19 +27,4 @@ export interface IAdmUsuario {
   bo_sts_reg?: boolean
   dt_inc: Date
   dt_alt: Date
-}
-
-export interface IUserResponse {
-  sucesso: boolean
-  dados: {
-    usuarios: IAdmUsuario[]
-    pagination: {
-      page: number
-      limit: number
-      total: number
-      totalPages: number
-      hasNextPage: boolean
-      hasPreviousPage: boolean
-    }
-  }
 }

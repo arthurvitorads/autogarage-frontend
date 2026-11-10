@@ -10,8 +10,8 @@ import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
 import { usePageLoad } from '@/composables/usePageLoad'
 import {
-  getVendasPagina as getSalesPage,
-  getVenda as getSale,
+  getSalesPage,
+  getSale,
 } from '@/services/faturamento.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
@@ -21,11 +21,11 @@ import type { IAdmVenda } from '@/interface/interface-pages/VendaPage'
 
 const route = useRoute()
 const {
-  registros: sales,
+  records: sales,
   total,
-  primeiroRegistro: firstRecord,
-  limite: limit,
-  filtro: filter,
+  firstRecord,
+  limit,
+  filter,
   loadingGrid,
   load,
   search,

@@ -1,3 +1,4 @@
+import type { IPageResponse } from '@/interface/api-response'
 import { ref } from 'vue'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
@@ -7,31 +8,31 @@ export function usePesquisa<T>(
     page: number,
     limit: number,
     search: string,
-  ) => Promise<{ registros: T[]; total: number }>,
+  ) => Promise<IPageResponse<T>>,
 ) {
-  const registros = ref<T[]>([])
+  const records = ref<T[]>([])
   const total = ref(0)
-  const primeiroRegistro = ref(0)
-  const limite = ref(20)
-  const filtro = ref('')
+  const firstRecord = ref(0)
+  const limit = ref(20)
+  const filter = ref('')
   const loadingGrid = ref(false)
   const { normalizeError } = useUtilStore()
   const toast = useAppToast()
-  let pesquisa = ''
+  let searchText = ''
 
   async function load() {
     if (loadingGrid.value) return
     loadingGrid.value = true
     try {
-      const resultado = await request(
-        Math.floor(primeiroRegistro.value / limite.value) + 1,
-        limite.value,
-        pesquisa,
+      const result = await request(
+        Math.floor(firstRecord.value / limit.value) + 1,
+        limit.value,
+        searchText,
       )
-      registros.value = resultado.registros as typeof registros.value
-      total.value = resultado.total
+      records.value = result.dados as typeof records.value
+      total.value = result.pagination.total
     } catch (error) {
-      registros.value = []
+      records.value = []
       total.value = 0
       toast.error(normalizeError(error))
     } finally {
@@ -41,24 +42,24 @@ export function usePesquisa<T>(
 
   function search() {
     if (loadingGrid.value) return
-    pesquisa = filtro.value.trim()
-    primeiroRegistro.value = 0
+    searchText = filter.value.trim()
+    firstRecord.value = 0
     return load()
   }
 
   function changePage(event: { first: number; rows: number }) {
     if (loadingGrid.value) return
-    primeiroRegistro.value = event.first
-    limite.value = event.rows
+    firstRecord.value = event.first
+    limit.value = event.rows
     return load()
   }
 
   return {
-    registros,
+    records,
     total,
-    primeiroRegistro,
-    limite,
-    filtro,
+    firstRecord,
+    limit,
+    filter,
     loadingGrid,
     load,
     search,

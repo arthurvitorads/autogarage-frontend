@@ -10,7 +10,7 @@ import type {
   TManutServiceOrderItem,
   TServiceOrderCode,
 } from '@/interface/interface-pages/OrdemServicoPage'
-import * as ordemService from '@/services/ordem-api.service'
+import * as orderService from '@/services/ordem-api.service'
 import { useUtilStore } from '@/stores/util.store'
 
 export const useOrdemServicoStore = defineStore('ordem-servico', () => {
@@ -18,26 +18,26 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   const classificacoes = ref<IClassificacaoOrdemServico[]>([])
   const clientes = ref<IClienteOrdemServico[]>([])
   const utilStore = useUtilStore()
-  let versaoSessao = 0
+  let sessionVersion = 0
   const classificacaoPadrao = computed(
     () => classificacoes.value.find((item) => item.bo_padrao) ?? null,
   )
 
   async function loadParametros() {
-    const versao = versaoSessao
-    const [listaClassificacoes, listaClientes] = await Promise.all([
-      ordemService.getClassificacoes(),
-      utilStore.canWrite('ORDEM_SERVICO') ? ordemService.getClientes() : null,
+    const version = sessionVersion
+    const [classificationsResponse, customersResponse] = await Promise.all([
+      orderService.getClassifications(),
+      utilStore.canWrite('ORDEM_SERVICO') ? orderService.getCustomers() : null,
     ])
-    if (versao !== versaoSessao) return
-    classificacoes.value = listaClassificacoes.dados.classificacoes
-    clientes.value = listaClientes?.dados.clientes ?? []
+    if (version !== sessionVersion) return
+    classificacoes.value = classificationsResponse.dados
+    clientes.value = customersResponse?.dados ?? []
   }
 
   async function loadOrder(id: TServiceOrderCode) {
-    const versao = versaoSessao
-    const { dados } = await ordemService.getOrder(id)
-    if (versao !== versaoSessao) return
+    const version = sessionVersion
+    const { dados } = await orderService.getOrder(id)
+    if (version !== sessionVersion) return
     const index = ordens.value.findIndex((order) => String(order.cn_ordem_servico) === String(id))
     if (index < 0) ordens.value.push(dados)
     else ordens.value[index] = dados
@@ -45,7 +45,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   async function saveClassificacao(
     values: IManutOrderClassification,
   ): Promise<IClassificacaoOrdemServico> {
-    const { dados } = await ordemService.saveClassificacao(values)
+    const { dados } = await orderService.saveClassification(values)
     if (dados.bo_padrao)
       classificacoes.value.forEach((item) => {
         item.bo_padrao = false
@@ -58,7 +58,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     return dados
   }
   async function saveOrdem(values: IManutServiceOrder): Promise<IAdmOrdemServico> {
-    const { dados } = await ordemService.saveOrdem(values)
+    const { dados } = await orderService.saveOrder(values)
     const index = ordens.value.findIndex(
       (item) => String(item.cn_ordem_servico) === String(dados.cn_ordem_servico),
     )
@@ -71,7 +71,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     acao: import('@/interface/interface-pages/OrdemServicoPage').TServiceOrderAction,
     motivo: string,
   ) {
-    const { dados } = await ordemService.movimentarOrdem(codigo, acao, motivo)
+    const { dados } = await orderService.moveOrder(codigo, acao, motivo)
     const index = ordens.value.findIndex((item) => String(item.cn_ordem_servico) === String(codigo))
     if (index >= 0) ordens.value[index] = dados
     else ordens.value.push(dados)
@@ -79,7 +79,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   }
 
   async function saveItem(values: TManutServiceOrderItem): Promise<TItemOrdemServico> {
-    const { dados } = await ordemService.saveItem(values)
+    const { dados } = await orderService.saveItem(values)
     const ordem = ordens.value.find(
       (item) => String(item.cn_ordem_servico) === String(values.cn_ordem_servico),
     )
@@ -91,7 +91,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     return dados
   }
   async function removeItem(codigoOrdem: TServiceOrderCode, codigoItem: TServiceOrderCode) {
-    await ordemService.removeItem(codigoOrdem, codigoItem)
+    await orderService.removeItem(codigoOrdem, codigoItem)
     const ordem = ordens.value.find((item) => String(item.cn_ordem_servico) === String(codigoOrdem))
     if (ordem)
       ordem.itens = ordem.itens.filter((item) => String(item.cn_item) !== String(codigoItem))
@@ -99,7 +99,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   watch(
     () => utilStore.user?.cn_usuario,
     () => {
-      versaoSessao++
+      sessionVersion++
       ordens.value = []
       classificacoes.value = []
       clientes.value = []

@@ -1,4 +1,4 @@
-import type { IPagination } from '@/services/api.service'
+import type { IPageResponse } from '@/interface/api-response'
 import type {
   IAdmOrdemServico,
   TItemOrdemServico,
@@ -91,21 +91,17 @@ export interface ITimeReport {
   intervalos: { dt_inicio: string; dt_fim: string; qt_segundos: number; ca_encerramento: string }[]
 }
 
-export interface ITimeReportResponse {
-  servicos: ITimeReport[]
+export interface ITimeReportResponse extends IPageResponse<ITimeReport> {
   resumo: {
     qt_servicos: number
     qt_media_segundos: number
     qt_menor_segundos: number
     qt_maior_segundos: number
   }
-  pagination: IPagination
 }
 
-export interface ISaleReportResponse {
-  vendas: IAdmVenda[]
+export interface ISaleReportResponse extends IPageResponse<IAdmVenda> {
   resumo: { qt_vendas: number; vl_total: number }
-  pagination: IPagination
 }
 export type TSaleOrigin = 'DIRETA' | 'ORDEM_SERVICO'
 

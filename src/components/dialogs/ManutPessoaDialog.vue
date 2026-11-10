@@ -18,8 +18,9 @@ import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { Person, TPersonType } from '@/models/pessoa'
-import { createPerson, updatePerson, personToRequest } from '@/services/person.service'
+import type { Pessoa } from '@/models/pessoa.model'
+import { Estados, type ITipoPessoa } from '@/interface/enum'
+import { createPerson, personToRequest, updatePerson } from '@/services/person.service'
 import type { IFormPerson } from '@/interface/interface-pages/PessoaPage'
 import type { TGenericData } from '@/interface/util'
 
@@ -56,40 +57,10 @@ const isEmployee = computed(() => formData.value.bo_categ_func)
 
 const personTypes: {
   label: string
-  value: TPersonType
+  value: ITipoPessoa
 }[] = [
   { label: 'Pessoa física', value: 'PF' },
   { label: 'Pessoa jurídica', value: 'PJ' },
-]
-
-const states = [
-  'AC',
-  'AL',
-  'AP',
-  'AM',
-  'BA',
-  'CE',
-  'DF',
-  'ES',
-  'GO',
-  'MA',
-  'MT',
-  'MS',
-  'MG',
-  'PA',
-  'PB',
-  'PR',
-  'PE',
-  'PI',
-  'RJ',
-  'RN',
-  'RS',
-  'RO',
-  'RR',
-  'SC',
-  'SP',
-  'SE',
-  'TO',
 ]
 
 const loadingPostalCode = ref(false)
@@ -338,22 +309,22 @@ async function onSubmit(values: IFormPerson) {
 
   if (!values.cidade.trim()) errors.cidade = 'Campo obrigatório.'
 
-  if (!states.includes(values.uf.trim().toUpperCase())) errors.uf = 'Informe uma UF válida.'
+  if (!Estados.includes(values.uf.trim().toUpperCase())) errors.uf = 'Informe uma UF válida.'
 
   if (
     values.bo_categ_func &&
-    (values.comissaoPercentual === null ||
-      !Number.isFinite(values.comissaoPercentual) ||
-      values.comissaoPercentual < 0 ||
-      values.comissaoPercentual > 100)
+    (values.nm_comissao_func === null ||
+      !Number.isFinite(values.nm_comissao_func) ||
+      values.nm_comissao_func < 0 ||
+      values.nm_comissao_func > 100)
   )
-    errors.comissaoPercentual = 'A comissão deve estar entre 0% e 100%.'
+    errors.nm_comissao_func = 'A comissão deve estar entre 0% e 100%.'
 
   const document = unMaskDocument(values.tipo === 'PF' ? values.cpf : values.cnpj).toUpperCase()
   const duplicateDocument = (props.people ?? []).some(
     (person) =>
       person !== props.person &&
-      (props.person?.id === undefined || person.id !== props.person.id) &&
+      (props.person?.cn_pessoa === undefined || person.cn_pessoa !== props.person.cn_pessoa) &&
       unMaskDocument(person.tipo === 'PF' ? person.cpf : person.cnpj).toUpperCase() === document,
   )
 
@@ -368,7 +339,7 @@ async function onSubmit(values: IFormPerson) {
 
   try {
     const personData = {
-      ...(props.person?.id !== undefined ? { id: props.person.id } : {}),
+      ...(props.person?.cn_pessoa !== undefined ? { cn_pessoa: props.person.cn_pessoa } : {}),
       bo_categ_cliente: values.bo_categ_cliente,
       bo_categ_func: values.bo_categ_func,
       bo_sts_reg: values.bo_sts_reg,
@@ -386,11 +357,11 @@ async function onSubmit(values: IFormPerson) {
       ...(values.bo_categ_func
         ? {
             cargo: values.cargo.trim(),
-            comissaoPercentual: values.comissaoPercentual ?? 0,
+            nm_comissao_func: values.nm_comissao_func ?? 0,
           }
         : {}),
     }
-    const person: Person =
+    const person: Pessoa =
       values.tipo === 'PF'
         ? {
             ...personData,
@@ -406,7 +377,7 @@ async function onSubmit(values: IFormPerson) {
             cnpj: document,
           }
 
-    if (props.person?.id !== undefined) await updatePerson(props.person.id, personToRequest(person))
+    if (props.person?.cn_pessoa !== undefined) await updatePerson(props.person.cn_pessoa, personToRequest(person))
     else await createPerson(personToRequest(person))
     toast.success('Pessoa gravada com sucesso.')
     emit('update:visible', false)
@@ -444,7 +415,7 @@ watch(
           email: person.email,
           telefone: person.telefone,
           cargo: person.cargo ?? '',
-          comissaoPercentual: person.comissaoPercentual ?? 0,
+          nm_comissao_func: person.nm_comissao_func ?? 0,
           ...person.endereco,
         }
       : PersonModel.createForm()
@@ -499,7 +470,7 @@ watch(
 
     if (!formData.value.bo_categ_func) {
       delete formErrors.value.cargo
-      delete formErrors.value.comissaoPercentual
+      delete formErrors.value.nm_comissao_func
     }
   },
 )
@@ -843,12 +814,12 @@ watch(
           </FieldForm>
           <FieldForm
             class="col-span-12 sm:col-span-4"
-            name="comissaoPercentual"
+            name="nm_comissao_func"
             label="Comissão (%)"
             v-slot="{ invalid, field }"
           >
             <InputNumber
-              v-model="formData.comissaoPercentual"
+              v-model="formData.nm_comissao_func"
               :name="field"
               :min="0"
               :max="100"

@@ -1,107 +1,34 @@
-import { auth } from './firebase.service'
+import { apiPage, apiRequest } from '@/services/api.service'
 
-import {
-  IFormProfile,
-  IManutProfileResponse,
-  IProfileResponse,
-} from '@/interface/interface-pages/PerfilPage'
-
-import { API_URL } from '@/constants/utils'
-import { apiRequest } from '@/services/api.service'
+import type { IAdmPerfil, IFormProfile } from '@/interface/interface-pages/PerfilPage'
 import type { TModuleAccess } from '@/interface/access'
 
 export function getProfileAccess(id: string | number) {
-  return apiRequest<{ acessos: TModuleAccess }>('/perfil/acessos/consultar', { cn_perfil: id })
+  return apiRequest<TModuleAccess>('/perfil/acessos/consultar', { cn_perfil: id })
 }
 
 export function saveProfileAccess(id: string | number, access: TModuleAccess) {
-  return apiRequest<{ acessos: TModuleAccess }>('/perfil/acessos/atualizar', {
+  return apiRequest<TModuleAccess>('/perfil/acessos/atualizar', {
     cn_perfil: id,
     acessos: access,
   })
 }
 
-export async function getPerfil(
-  ePage: number = 1,
-  eLimit: number = 20,
-  search: string = '',
-): Promise<IProfileResponse> {
-  const user = auth.currentUser
-
-  if (!user) {
-    throw new Error('Usuário não autenticado.')
-  }
-
-  const token = await user.getIdToken()
-
-  const response = await fetch(`${API_URL}/perfil/listar`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ page: ePage, limit: eLimit, search }),
-  })
-
-  if (!response.ok) {
-    if (response.status === 429)
-      throw new Error('Muitas requisições foram registradas. Aguarde alguns instantes!')
-
-    throw new Error('Erro ao carregar perfil.')
-  }
-
-  return (await response.json()) as IProfileResponse
+export function getProfiles(page = 1, limit = 20, search = '') {
+  return apiPage<IAdmPerfil>('/perfil/listar', page, limit, search)
 }
 
-export async function updatePerfil(
-  id: string | number,
-  values: IFormProfile,
-): Promise<IManutProfileResponse> {
-  const user = auth.currentUser
-
-  if (!user) throw new Error('Usuário não autenticado no Firebase.')
-
-  const token = await user.getIdToken()
-
-  const response = await fetch(`${API_URL}/perfil/atualizar`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      cn_perfil: String(id),
-      an_descr: values.an_descr.trim(),
-      bo_sts_reg: values.bo_sts_reg,
-    }),
+export function updateProfile(id: string | number, values: IFormProfile) {
+  return apiRequest<IAdmPerfil>('/perfil/atualizar', {
+    cn_perfil: String(id),
+    an_descr: values.an_descr.trim(),
+    bo_sts_reg: values.bo_sts_reg,
   })
-
-  const result = await response.json()
-
-  if (!response.ok) throw new Error(result.erro || 'Erro ao atualizar perfil.')
-
-  return result as IManutProfileResponse
 }
 
-export async function createPerfil(values: IFormProfile): Promise<IManutProfileResponse> {
-  const user = auth.currentUser
-
-  if (!user) throw new Error('Usuário não autenticado no Firebase.')
-
-  const token = await user.getIdToken()
-
-  const response = await fetch(`${API_URL}/perfil`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      an_descr: values.an_descr.trim(),
-      bo_sts_reg: values.bo_sts_reg,
-    }),
+export function createProfile(values: IFormProfile) {
+  return apiRequest<IAdmPerfil>('/perfil', {
+    an_descr: values.an_descr.trim(),
+    bo_sts_reg: values.bo_sts_reg,
   })
-
-  const result = await response.json()
-
-  if (!response.ok) throw new Error(result.erro || 'Erro ao criar perfil.')
-
-  return result as IManutProfileResponse
 }

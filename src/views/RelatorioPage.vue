@@ -12,8 +12,8 @@ import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { currentMonthDates, dateInterval } from '@/services/date-range.service'
 import {
-  getRelatorioTempos as getTimeReport,
-  getRelatorioVendas as getSalesReport,
+  getTimeReport,
+  getSalesReport,
 } from '@/services/faturamento.service'
 import { formatTempo } from '@/services/tempo.service'
 import { formatDateTime } from '@/services/util.service'
@@ -63,11 +63,11 @@ async function load(reset = false) {
   try {
     const page = Math.floor(firstRecord.value / 20) + 1
     if (props.reportType === 'tempos') {
-      const { dados: data } = await getTimeReport(page, period.inicio, period.fim, sortOrder.value)
-      if (currentRequest === requestId) timeReport.value = data
+      const result = await getTimeReport(page, period.inicio, period.fim, sortOrder.value)
+      if (currentRequest === requestId) timeReport.value = result
     } else {
-      const { dados: data } = await getSalesReport(page, period.inicio, period.fim)
-      if (currentRequest === requestId) sales.value = data
+      const result = await getSalesReport(page, period.inicio, period.fim)
+      if (currentRequest === requestId) sales.value = result
     }
   } catch (error) {
     if (currentRequest === requestId) {
@@ -138,7 +138,7 @@ usePageLoad(() => load())
         </p>
       </div>
       <DataTable
-        :value="timeReport?.servicos ?? []"
+        :value="timeReport?.dados ?? []"
         :loading="loading"
         size="small"
         scrollable
@@ -179,7 +179,7 @@ usePageLoad(() => load())
         </p>
       </div>
       <DataTable
-        :value="sales?.vendas ?? []"
+        :value="sales?.dados ?? []"
         :loading="loading"
         size="small"
         scrollable

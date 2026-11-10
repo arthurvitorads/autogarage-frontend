@@ -15,7 +15,7 @@ export class PersonModel {
       email: '',
       telefone: '',
       cargo: '',
-      comissaoPercentual: 0,
+      nm_comissao_func: 0,
       cep: '',
       logradouro: '',
       numero: '',

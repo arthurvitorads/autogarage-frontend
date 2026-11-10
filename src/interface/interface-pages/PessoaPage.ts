@@ -1,5 +1,4 @@
-import type { TPersonType } from '@/models/pessoa'
-import type { IPagination } from '@/services/api.service'
+import type { ITipoPessoa } from '@/interface/enum'
 
 export interface IManutAddress {
   ca_cep: string
@@ -20,7 +19,7 @@ export interface ICadEndereco extends IManutAddress {
 }
 
 export interface IManutPerson {
-  ca_tipo: TPersonType
+  ca_tipo: ITipoPessoa
   an_nome: string | null
   ca_cpf: string | null
   ca_cnpj: string | null
@@ -31,7 +30,7 @@ export interface IManutPerson {
   bo_categ_cliente: boolean
   bo_categ_func: boolean
   an_cargo: string
-  nm_comissao_percentual: number
+  nm_comissao_func: number
   bo_sts_reg: boolean
   endereco: IManutAddress
 }
@@ -44,7 +43,7 @@ export interface ICadPessoa extends Omit<IManutPerson, 'endereco'> {
 }
 
 export interface IFormPerson {
-  tipo: TPersonType
+  tipo: ITipoPessoa
   bo_categ_cliente: boolean
   bo_categ_func: boolean
   bo_sts_reg: boolean
@@ -56,7 +55,7 @@ export interface IFormPerson {
   email: string
   telefone: string
   cargo: string
-  comissaoPercentual: number | null
+  nm_comissao_func: number | null
   cep: string
   logradouro: string
   numero: string
@@ -64,12 +63,4 @@ export interface IFormPerson {
   bairro: string
   cidade: string
   uf: string
-}
-
-export interface IPersonResponse {
-  sucesso: boolean
-  dados: {
-    pessoa: ICadPessoa[]
-    pagination: IPagination
-  }
 }

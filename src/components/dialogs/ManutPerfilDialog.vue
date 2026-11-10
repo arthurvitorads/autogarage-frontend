@@ -16,7 +16,7 @@ import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
-import { createPerfil, updatePerfil } from '@/services/perfil.service'
+import { createProfile, updateProfile } from '@/services/perfil.service'
 
 const props = defineProps<IManutProfileDialogProps>()
 
@@ -55,9 +55,9 @@ async function onSubmit(values: IFormProfile) {
 
       if (id === undefined) throw new Error('Identificador do usuário inválido.')
 
-      await updatePerfil(id, { an_descr: values.an_descr, bo_sts_reg: values.bo_sts_reg })
+      await updateProfile(id, { an_descr: values.an_descr, bo_sts_reg: values.bo_sts_reg })
     } else {
-      await createPerfil(values)
+      await createProfile(values)
     }
     toast.success('Processo realizado com sucesso.')
 

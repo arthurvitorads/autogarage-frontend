@@ -8,32 +8,29 @@ import type {
   TItemOrdemServico,
   TManutServiceOrderItem,
   TServiceOrderCode,
+  TServiceOrderAction,
 } from '@/interface/interface-pages/OrdemServicoPage'
 
 export function getOrder(id: TServiceOrderCode) {
   return apiRequest<IAdmOrdemServico>('/ordensServico/detalhar', { cn_ordem_servico: id })
 }
 
-export function getClassificacoes() {
-  return apiRequest<{
-    classificacoes: IClassificacaoOrdemServico[]
-  }>('/classificacoesOrdens/listar')
+export function getClassifications() {
+  return apiRequest<IClassificacaoOrdemServico[]>('/classificacoesOrdens/listar')
 }
 
-export function getClientes() {
-  return apiRequest<{
-    clientes: IClienteOrdemServico[]
-  }>('/paramPessoa')
+export function getCustomers() {
+  return apiRequest<IClienteOrdemServico[]>('/paramPessoa')
 }
 
-export function saveOrdem(values: IManutServiceOrder) {
+export function saveOrder(values: IManutServiceOrder) {
   return apiRequest<IAdmOrdemServico>(
     values.cn_ordem_servico === undefined ? '/ordensServico' : '/ordensServico/atualizar',
     values,
   )
 }
 
-export function saveClassificacao(values: IManutOrderClassification) {
+export function saveClassification(values: IManutOrderClassification) {
   return apiRequest<IClassificacaoOrdemServico>(
     values.cn_classificacao === undefined
       ? '/classificacoesOrdens'
@@ -49,8 +46,11 @@ export function saveItem(values: TManutServiceOrderItem) {
   )
 }
 
-export function removeItem(ordem: TServiceOrderCode, item: TServiceOrderCode) {
-  return apiRequest('/ordensServico/itens/remover', { cn_ordem_servico: ordem, cn_item: item })
+export function removeItem(orderId: TServiceOrderCode, itemId: TServiceOrderCode) {
+  return apiRequest<{ cn_item: string }>('/ordensServico/itens/remover', {
+    cn_ordem_servico: orderId,
+    cn_item: itemId,
+  })
 }
 
 export function updateItemTime(
@@ -65,23 +65,23 @@ export function updateItemTime(
   })
 }
 
-export function getOrdensPagina(
+export function getOrdersPage(
   page: number,
   limit: number,
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmOrdemServico>('/ordensServico/listar', 'ordens', page, limit, search, filters)
+  return apiPage<IAdmOrdemServico>('/ordensServico/listar', page, limit, search, filters)
 }
 
-export function movimentarOrdem(
-  codigo: TServiceOrderCode,
-  acao: import('@/interface/interface-pages/OrdemServicoPage').TServiceOrderAction,
-  motivo: string,
+export function moveOrder(
+  orderId: TServiceOrderCode,
+  action: TServiceOrderAction,
+  reason: string,
 ) {
   return apiRequest<IAdmOrdemServico>('/ordensServico/movimentar', {
-    cn_ordem_servico: codigo,
-    acao,
-    an_motivo_cancelamento: motivo,
+    cn_ordem_servico: orderId,
+    acao: action,
+    an_motivo_cancelamento: reason,
   })
 }

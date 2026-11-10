@@ -6,7 +6,7 @@ import type {
   IAdmCadastroAuxiliar,
   IManutAuxiliary,
 } from '@/interface/interface-pages/CadastroAuxiliar'
-import * as catalogoService from '@/services/catalogo.service'
+import * as catalogService from '@/services/catalogo.service'
 import { useUtilStore } from '@/stores/util.store'
 
 export const useCatalogoStore = defineStore('catalogo', () => {
@@ -14,7 +14,7 @@ export const useCatalogoStore = defineStore('catalogo', () => {
   const servicos = ref<IAdmServico[]>([])
   const cadastrosAuxiliares = ref<IAdmCadastroAuxiliar[]>([])
   const utilStore = useUtilStore()
-  let versaoSessao = 0
+  let sessionVersion = 0
   const categoriasProduto = computed(() =>
     cadastrosAuxiliares.value
       .filter((item) => item.ca_tipo === 'CATEGORIA_PRODUTO')
@@ -37,39 +37,39 @@ export const useCatalogoStore = defineStore('catalogo', () => {
   )
 
   async function loadCadastros() {
-    const versao = versaoSessao
-    const resultado = await catalogoService.getCadastrosAuxiliares()
-    if (versao === versaoSessao) cadastrosAuxiliares.value = resultado.dados.cadastros
+    const version = sessionVersion
+    const result = await catalogService.getAuxiliaries()
+    if (version === sessionVersion) cadastrosAuxiliares.value = result.dados
   }
 
   async function load() {
-    const versao = versaoSessao
-    const [listaProdutos, listaServicos, listaCadastros] = await Promise.all([
-      catalogoService.getProdutos(),
-      catalogoService.getServicos(),
-      catalogoService.getCadastrosAuxiliares(),
+    const version = sessionVersion
+    const [products, services, auxiliariesResponse] = await Promise.all([
+      catalogService.getProducts(),
+      catalogService.getServices(),
+      catalogService.getAuxiliaries(),
     ])
-    if (versao !== versaoSessao) return
-    produtos.value = listaProdutos
-    servicos.value = listaServicos
-    cadastrosAuxiliares.value = listaCadastros.dados.cadastros
+    if (version !== sessionVersion) return
+    produtos.value = products
+    servicos.value = services
+    cadastrosAuxiliares.value = auxiliariesResponse.dados
   }
   async function saveProduto(values: IManutProduct): Promise<IAdmProduto> {
-    const { dados } = await catalogoService.saveProduto(values)
+    const { dados } = await catalogService.saveProduct(values)
     const index = produtos.value.findIndex((item) => item.cn_produto === dados.cn_produto)
     if (index < 0) produtos.value.push(dados)
     else produtos.value[index] = dados
     return dados
   }
   async function saveServico(values: IManutService): Promise<IAdmServico> {
-    const { dados } = await catalogoService.saveServico(values)
+    const { dados } = await catalogService.saveService(values)
     const index = servicos.value.findIndex((item) => item.cn_servico === dados.cn_servico)
     if (index < 0) servicos.value.push(dados)
     else servicos.value[index] = dados
     return dados
   }
   async function saveCadastroAuxiliar(values: IManutAuxiliary): Promise<IAdmCadastroAuxiliar> {
-    const { dados } = await catalogoService.saveCadastroAuxiliar(values)
+    const { dados } = await catalogService.saveAuxiliary(values)
     const index = cadastrosAuxiliares.value.findIndex(
       (item) => item.cn_cadastro === dados.cn_cadastro,
     )
@@ -80,7 +80,7 @@ export const useCatalogoStore = defineStore('catalogo', () => {
   watch(
     () => utilStore.user?.cn_usuario,
     () => {
-      versaoSessao++
+      sessionVersion++
       produtos.value = []
       servicos.value = []
       cadastrosAuxiliares.value = []

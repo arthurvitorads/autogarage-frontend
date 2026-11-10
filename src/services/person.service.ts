@@ -1,13 +1,11 @@
-import { apiRequest } from '@/services/api.service'
-import type {
-  ICadPessoa,
-  IPersonResponse,
-  IManutPerson,
-} from '@/interface/interface-pages/PessoaPage'
-import type { Person } from '@/models/pessoa'
+import { apiPage, apiRequest } from '@/services/api.service'
 
-export function getPerson(ePage = 1, eLimit = 20, search = ''): Promise<IPersonResponse> {
-  return apiRequest('/pessoa/listar', { page: ePage, limit: eLimit, search })
+import type { Pessoa } from '@/models/pessoa.model'
+
+import type { ICadPessoa, IManutPerson } from '@/interface/interface-pages/PessoaPage'
+
+export function getPeople(page = 1, limit = 20, search = '') {
+  return apiPage<ICadPessoa>('/pessoa/listar', page, limit, search)
 }
 
 export function getPersonById(id: string | number) {
@@ -22,44 +20,7 @@ export function updatePerson(id: string | number, values: IManutPerson) {
   return apiRequest<ICadPessoa>('/pessoa/atualizar', { ...values, cn_pessoa: id })
 }
 
-export function personToForm(pessoa: ICadPessoa): Person {
-  const endereco = pessoa.endereco
-  const dados = {
-    id: pessoa.cn_pessoa,
-    bo_categ_cliente: pessoa.bo_categ_cliente,
-    bo_categ_func: pessoa.bo_categ_func,
-    bo_sts_reg: pessoa.bo_sts_reg,
-    email: pessoa.an_email ?? '',
-    telefone: pessoa.an_telefone ?? '',
-    cargo: pessoa.an_cargo ?? '',
-    comissaoPercentual: pessoa.nm_comissao_percentual ?? 0,
-    endereco: {
-      cep: endereco?.ca_cep ?? '',
-      logradouro: endereco?.an_logradouro ?? '',
-      numero: endereco?.an_numero ?? '',
-      complemento: endereco?.an_complemento ?? '',
-      bairro: endereco?.an_bairro ?? '',
-      cidade: endereco?.an_cidade ?? '',
-      uf: endereco?.ca_uf ?? '',
-    },
-  }
-  return pessoa.ca_tipo === 'PF'
-    ? {
-        ...dados,
-        tipo: 'PF',
-        nome: pessoa.an_nome ?? '',
-        cpf: pessoa.ca_cpf ?? '',
-      }
-    : {
-        ...dados,
-        tipo: 'PJ',
-        razaoSocial: pessoa.an_razao_social ?? '',
-        nomeFantasia: pessoa.an_nome_fantasia ?? '',
-        cnpj: pessoa.ca_cnpj ?? '',
-      }
-}
-
-export function personToRequest(pessoa: Person): IManutPerson {
+export function personToRequest(pessoa: Pessoa): IManutPerson {
   return {
     ca_tipo: pessoa.tipo,
     an_nome: pessoa.tipo === 'PF' ? pessoa.nome : null,
@@ -73,7 +34,7 @@ export function personToRequest(pessoa: Person): IManutPerson {
     bo_categ_func: pessoa.bo_categ_func,
     bo_sts_reg: pessoa.bo_sts_reg,
     an_cargo: pessoa.cargo ?? '',
-    nm_comissao_percentual: pessoa.comissaoPercentual ?? 0,
+    nm_comissao_func: pessoa.nm_comissao_func ?? 0,
     endereco: {
       ca_cep: pessoa.endereco.cep,
       an_logradouro: pessoa.endereco.logradouro,

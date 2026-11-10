@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useUtilStore } from '@/stores/util.store'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
-import { getOrdensPagina as getOrdersPage } from '@/services/ordem-api.service'
+import { getOrdersPage } from '@/services/ordem-api.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -33,11 +33,11 @@ import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-ser
 const router = useRouter()
 const { classificacoes: classifications } = storeToRefs(useServiceOrderStore())
 const {
-  registros: orders,
+  records: orders,
   total,
-  primeiroRegistro: firstRecord,
-  limite: limit,
-  filtro: filter,
+  firstRecord,
+  limit,
+  filter,
   loadingGrid,
   load,
   search,

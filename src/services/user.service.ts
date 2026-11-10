@@ -1,129 +1,37 @@
-import { auth } from './firebase.service'
-
 import { useUtilStore } from '@/stores/util.store'
+import { apiPage, apiRequest } from '@/services/api.service'
 
-import { IMeResponse, IMeUser } from '@/interface/interface-pages/LoginPage'
+import type { IMeUser } from '@/interface/interface-pages/LoginPage'
+import type { IAdmUsuario, IFormUser, IUpdateUser } from '@/interface/interface-pages/UsuarioPage'
 
-import {
-  IUserResponse,
-  IFormUser,
-  ICreateUserResponse,
-  IUpdateUser,
-} from '@/interface/interface-pages/UsuarioPage'
-
-import { API_URL } from '@/constants/utils'
-
-export async function updateUser(
-  id: string | number,
-  values: IUpdateUser,
-): Promise<ICreateUserResponse> {
-  const user = auth.currentUser
-
-  if (!user) throw new Error('Usuário não autenticado no Firebase.')
-
-  const token = await user.getIdToken()
-  const response = await fetch(`${API_URL}/usuarios/atualizar`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      cn_usuario: String(id),
-      an_nome: values.an_nome.trim(),
-      cn_perfil: values.cn_perfil ?? null,
-      bo_sts_reg: values.bo_sts_reg,
-    }),
+export function updateUser(id: string | number, values: IUpdateUser) {
+  return apiRequest<IAdmUsuario>('/usuarios/atualizar', {
+    cn_usuario: String(id),
+    an_nome: values.an_nome.trim(),
+    cn_perfil: values.cn_perfil ?? null,
+    bo_sts_reg: values.bo_sts_reg,
   })
-  const result = await response.json()
-
-  if (!response.ok) throw new Error(result.erro || 'Erro ao atualizar usuário.')
-
-  return result as ICreateUserResponse
 }
 
-export async function createUser(values: IFormUser): Promise<ICreateUserResponse> {
-  const user = auth.currentUser
-
-  if (!user) throw new Error('Usuário não autenticado no Firebase.')
-
-  const token = await user.getIdToken()
-  const response = await fetch(`${API_URL}/usuarios`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      an_nome: values.an_nome.trim(),
-      an_email: values.an_email.trim().toLowerCase(),
-      ca_senha: values.ca_senha,
-      cn_perfil: values.cn_perfil ?? null,
-      bo_sts_reg: values.bo_sts_reg,
-    }),
+export function createUser(values: IFormUser) {
+  return apiRequest<IAdmUsuario>('/usuarios', {
+    an_nome: values.an_nome.trim(),
+    an_email: values.an_email.trim().toLowerCase(),
+    ca_senha: values.ca_senha,
+    cn_perfil: values.cn_perfil ?? null,
+    bo_sts_reg: values.bo_sts_reg,
   })
-  const result = await response.json()
-
-  if (!response.ok) throw new Error(result.erro || 'Erro ao criar usuário.')
-
-  return result as ICreateUserResponse
 }
 
 export async function getInitialMe(): Promise<IMeUser> {
-  const user = auth.currentUser
-
-  if (!user) {
-    throw new Error('Usuário não autenticado no Firebase.')
-  }
-
-  const token = await user.getIdToken()
-  const response = await fetch(`${API_URL}/auth/me`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-
-  if (!response.ok) {
-    throw new Error(`Falha ao validar a sessão (${response.status}).`)
-  }
-
-  const res = (await response.json()) as IMeResponse
-
-  if (!res.dados.cn_usuario) {
-    throw new Error('Sessão inválida.')
-  }
+  const { dados: user } = await apiRequest<IMeUser>('/auth/me')
+  if (!user?.cn_usuario) throw new Error('Sessão inválida.')
 
   const utilStore = useUtilStore()
-  utilStore.setUser(res.dados)
-
-  return res.dados
+  utilStore.setUser(user)
+  return user
 }
 
-export async function getUsers(
-  ePage: number = 1,
-  eLimit: number = 20,
-  search: string = '',
-): Promise<IUserResponse> {
-  const user = auth.currentUser
-
-  if (!user) {
-    throw new Error('Usuário não autenticado.')
-  }
-
-  const token = await user.getIdToken()
-  const response = await fetch(`${API_URL}/usuarios/listar`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ page: ePage, limit: eLimit, search }),
-  })
-
-  if (!response.ok) {
-    if (response.status === 429)
-      throw new Error('Muitas requisições foram registradas. Aguarde alguns instantes!')
-
-    throw new Error('Erro ao carregar usuários.')
-  }
-
-  return (await response.json()) as IUserResponse
+export function getUsers(page = 1, limit = 20, search = '') {
+  return apiPage<IAdmUsuario>('/usuarios/listar', page, limit, search)
 }

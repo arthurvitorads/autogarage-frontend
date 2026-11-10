@@ -78,8 +78,8 @@ async function loadUsers() {
   try {
     const result = await getUsers(page.value, limit.value, filter.value)
 
-    users.value = result.dados.usuarios
-    total.value = result.dados.pagination.total
+    users.value = result.dados
+    total.value = result.pagination.total
   } catch (error) {
     toastService.error(normalizeError(error))
 

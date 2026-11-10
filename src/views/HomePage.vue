@@ -4,7 +4,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import FiltroData from '@/components/field/FiltroData.vue'
 import { dateInterval } from '@/services/date-range.service'
-import { getOrdensPagina as getOrdersPage } from '@/services/ordem-api.service'
+import { getOrdersPage } from '@/services/ordem-api.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
@@ -59,8 +59,8 @@ async function loadIndicators() {
   try {
     orderCounts.value = await Promise.all(
       indicadores.map(async ({ status }) => {
-        const { total } = await getOrdersPage(1, 1, '', { ...range, status })
-        return total
+        const { pagination } = await getOrdersPage(1, 1, '', { ...range, status })
+        return pagination.total
       }),
     )
   } catch (error) {
