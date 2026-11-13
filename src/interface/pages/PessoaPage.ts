@@ -1,3 +1,7 @@
+import { IDialogProps } from '../dialog'
+
+import { Pessoa } from '@/models/pessoa.model'
+
 import type { ITipoPessoa } from '@/interface/enum'
 
 export interface IManutAddress {
@@ -76,3 +80,11 @@ export interface IFormPerson {
   cidade: string
   cn_estado: string
 }
+
+// Manut
+
+export interface IManutPersonDialogProps extends IDialogProps {
+  person?: Pessoa | null
+  people?: Pessoa[]
+}
+

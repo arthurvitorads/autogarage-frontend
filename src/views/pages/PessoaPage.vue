@@ -9,7 +9,7 @@ import ManutPessoaDialog from '@/components/dialogs/ManutPessoaDialog.vue'
 
 import type { Pessoa } from '@/models/pessoa.model'
 
-import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
+import type { ICadPessoa } from '@/interface/pages/PessoaPage'
 
 import { IGridActionEvent } from '@/interface/util'
 
@@ -69,18 +69,18 @@ function openEdit(pessoa: ICadPessoa) {
   selectedPessoa.value =
     pessoa.ca_tipo === 'PF'
       ? {
-          ...dados,
-          tipo: 'PF',
-          nome: pessoa.an_nome ?? '',
-          cpf: pessoa.ca_cpf ?? '',
-        }
+        ...dados,
+        tipo: 'PF',
+        nome: pessoa.an_nome ?? '',
+        cpf: pessoa.ca_cpf ?? '',
+      }
       : {
-          ...dados,
-          tipo: 'PJ',
-          razaoSocial: pessoa.an_razao_social ?? '',
-          nomeFantasia: pessoa.an_nome_fantasia ?? '',
-          cnpj: pessoa.ca_cnpj ?? '',
-        }
+        ...dados,
+        tipo: 'PJ',
+        razaoSocial: pessoa.an_razao_social ?? '',
+        nomeFantasia: pessoa.an_nome_fantasia ?? '',
+        cnpj: pessoa.ca_cnpj ?? '',
+      }
 
   manutPessoaVisible.value = true
 }
@@ -94,40 +94,20 @@ onMounted(() => {
     <div class="flex flex-col flex-1 min-h-0 min-w-0 border border-surface-200 rounded-xl">
       <div class="flex justify-between m-5">
         <div class="flex justify-center gap-2 w-140">
-          <InputText
-            v-model="filter"
-            placeholder="Pesquise pelo nome, documento, e-mail..."
-            class="flex-1 min-w-0"
-            :disabled="grid?.loading"
-            @keyup.enter="grid?.loadGrid(filter)"
-          />
+          <InputText v-model="filter" placeholder="Pesquise pelo nome, documento, e-mail..." class="flex-1 min-w-0"
+            :disabled="grid?.loading" @keyup.enter="grid?.loadGrid(filter)" />
           <Button icon="pi pi-search" :disabled="grid?.loading" @click="grid?.loadGrid(filter)" />
         </div>
         <div class="flex">
-          <Button
-            v-if="canWrite('CADASTROS')"
-            label="Novo"
-            icon="pi pi-plus"
-            @click="openNewForm"
-          />
+          <Button v-if="canWrite('CADASTROS')" label="Novo" icon="pi pi-plus" @click="openNewForm" />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
-        <GridPage
-          ref="grid"
-          :fetchPage="getPeople"
-          :data-key="config.dataKey"
-          :columns="config.columns"
-          :actions="canWrite('CADASTROS') ? config.actions : []"
-          :actionHeader="config.actionHeader"
-          @action="onGridAction"
-        />
+        <GridPage ref="grid" :fetchPage="getPeople" :data-key="config.dataKey" :columns="config.columns"
+          :actions="canWrite('CADASTROS') ? config.actions : []" :actionHeader="config.actionHeader"
+          @action="onGridAction" />
       </div>
     </div>
   </div>
-  <ManutPessoaDialog
-    v-model:visible="manutPessoaVisible"
-    :person="selectedPessoa"
-    @saved="grid?.loadGrid()"
-  />
+  <ManutPessoaDialog v-model:visible="manutPessoaVisible" :person="selectedPessoa" @saved="grid?.loadGrid()" />
 </template>

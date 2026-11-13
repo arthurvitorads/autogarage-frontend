@@ -9,7 +9,7 @@ import type {
   TItemOrdemServico,
   TManutServiceOrderItem,
   TServiceOrderCode,
-} from '@/interface/interface-pages/OrdemServicoPage'
+} from '@/interface/pages/OrdemServicoPage'
 import * as orderService from '@/services/ordem-api.service'
 import { useUtilStore } from '@/stores/util.store'
 
@@ -68,7 +68,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   }
   async function movimentar(
     codigo: TServiceOrderCode,
-    acao: import('@/interface/interface-pages/OrdemServicoPage').TServiceOrderAction,
+    acao: import('@/interface/pages/OrdemServicoPage').TServiceOrderAction,
     motivo: string,
   ) {
     const { dados } = await orderService.moveOrder(codigo, acao, motivo)

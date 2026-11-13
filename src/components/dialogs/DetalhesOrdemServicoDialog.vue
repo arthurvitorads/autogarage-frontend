@@ -4,14 +4,14 @@ import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import ManutVendaDialog from '@/components/dialogs/ManutVendaDialog.vue'
 import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
-import type { IAdmVenda } from '@/interface/interface-pages/VendaPage'
+import type { IAdmVenda } from '@/interface/pages/VendaPage'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
 import Fieldset from 'primevue/fieldset'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IAdmOrdemServico } from '@/interface/pages/OrdemServicoPage'
 import {
   getStatusOrdem as getOrderStatus,
   calcularTotalOrdem as calculateOrderTotal,
@@ -50,13 +50,8 @@ const classification = computed(() =>
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    header="Detalhes da O.S."
-    modal
-    :style="{ width: '76rem', maxWidth: '95vw', maxHeight: '90vh' }"
-  >
+  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)" header="Detalhes da O.S." modal
+    :style="{ width: '76rem', maxWidth: '95vw', maxHeight: '90vh' }">
     <div v-if="order" class="flex flex-col gap-4">
       <h2 class="text-xl font-semibold">
         O.S. #{{ String(order.nu_numero).padStart(6, '0') }} —
@@ -129,36 +124,23 @@ const classification = computed(() =>
         </dl>
       </Fieldset>
       <Fieldset legend="Produtos e serviços">
-        <DataTable
-          :value="order.itens"
-          rowGroupMode="subheader"
-          groupRowsBy="ca_tipo"
-          sortField="ca_tipo"
-          :sortOrder="1"
-          size="small"
-          scrollable
-        >
-          <template #groupheader="{ data }"
-            ><strong>{{ data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços' }}</strong></template
-          >
+        <DataTable :value="order.itens" rowGroupMode="subheader" groupRowsBy="ca_tipo" sortField="ca_tipo"
+          :sortOrder="1" size="small" scrollable>
+          <template #groupheader="{ data }"><strong>{{ data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços'
+              }}</strong></template>
           <Column field="an_descr" header="Descrição" />
-          <Column header="Tempo de serviço"
-            ><template #body="{ data }"><TempoServicoItem :item="data" /></template
-          ></Column>
+          <Column header="Tempo de serviço"><template #body="{ data }">
+              <TempoServicoItem :item="data" />
+            </template></Column>
           <Column field="ca_unidade" header="Unidade" />
-          <Column header="Quantidade"
-            ><template #body="{ data }">{{
-              data.qt_quantidade.toLocaleString('pt-BR')
-            }}</template></Column
-          >
-          <Column header="Unitário" :bodyStyle="{ textAlign: 'end' }"
-            ><template #body="{ data }">{{
-              formatOrderCurrency(data.vl_unitario)
-            }}</template></Column
-          >
-          <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
-            ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
-          >
+          <Column header="Quantidade"><template #body="{ data }">{{
+            data.qt_quantidade.toLocaleString('pt-BR')
+              }}</template></Column>
+          <Column header="Unitário" :bodyStyle="{ textAlign: 'end' }"><template #body="{ data }">{{
+            formatOrderCurrency(data.vl_unitario)
+              }}</template></Column>
+          <Column header="Total" :bodyStyle="{ textAlign: 'end' }"><template #body="{ data }">{{
+            formatOrderCurrency(data.vl_total) }}</template></Column>
           <template #empty>Nenhum item cadastrado.</template>
         </DataTable>
         <p class="text-right font-bold mt-4">
@@ -173,32 +155,16 @@ const classification = computed(() =>
       </Fieldset>
     </div>
     <template #footer>
-      <Button
-        v-if="
-          canWrite('FATURAMENTO') &&
-          order?.ca_status === 'FINALIZADO' &&
-          order.itens.length &&
-          !registeredSale
-        "
-        label="Gerar venda"
-        icon="pi pi-shopping-cart"
-        @click="saleDialogVisible = true"
-      />
-      <Button
-        v-if="canRead('FATURAMENTO') && registeredSale"
-        label="Consultar venda"
-        icon="pi pi-eye"
-        severity="secondary"
-        @click="viewSale"
-      />
-      <Button
-        v-if="order?.ca_status === 'CANCELADO'"
-        label="Reabrir O.S."
-        icon="pi pi-replay"
-        disabled
-        severity="secondary"
-        title="Disponível em uma próxima etapa"
-      />
+      <Button v-if="
+        canWrite('FATURAMENTO') &&
+        order?.ca_status === 'FINALIZADO' &&
+        order.itens.length &&
+        !registeredSale
+      " label="Gerar venda" icon="pi pi-shopping-cart" @click="saleDialogVisible = true" />
+      <Button v-if="canRead('FATURAMENTO') && registeredSale" label="Consultar venda" icon="pi pi-eye"
+        severity="secondary" @click="viewSale" />
+      <Button v-if="order?.ca_status === 'CANCELADO'" label="Reabrir O.S." icon="pi pi-replay" disabled
+        severity="secondary" title="Disponível em uma próxima etapa" />
       <Button label="Fechar" @click="emit('update:visible', false)" />
     </template>
   </Dialog>

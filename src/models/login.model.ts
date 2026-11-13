@@ -1,4 +1,4 @@
-import type { IFormLogin } from '@/interface/interface-pages/LoginPage'
+import type { IFormLogin } from '@/interface/pages/LoginPage'
 
 export class LoginModel {
   static createForm(): IFormLogin {

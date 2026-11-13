@@ -1,23 +1,18 @@
 import type { Pessoa } from '@/models/pessoa.model'
-import type { IAdmPerfil } from '@/interface/interface-pages/PerfilPage'
-import type { IAdmProduto } from '@/interface/interface-pages/ProdutoPage'
-import type { IAdmServico } from '@/interface/interface-pages/ServicoPage'
+import type { IAdmPerfil } from '@/interface/pages/PerfilPage'
+import type { IAdmProduto } from '@/interface/pages/ProdutoPage'
+import type { IAdmServico } from '@/interface/pages/ServicoPage'
 import type {
   IAdmOrdemServico,
   TServiceOrderAction,
   TServiceOrderCode,
   TItemOrdemServico,
   TServiceOrderItemType,
-} from '@/interface/interface-pages/OrdemServicoPage'
-import type { IAdmVenda } from '@/interface/interface-pages/VendaPage'
+} from '@/interface/pages/OrdemServicoPage'
+import type { IAdmVenda } from '@/interface/pages/VendaPage'
 
 export interface IDialogProps {
   visible: boolean
-}
-
-export interface IManutPersonDialogProps extends IDialogProps {
-  person?: Pessoa | null
-  people?: Pessoa[]
 }
 
 export interface IManutProfileDialogProps extends IDialogProps {

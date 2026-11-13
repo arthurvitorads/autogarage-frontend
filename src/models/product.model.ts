@@ -1,4 +1,4 @@
-import type { IFormProduct } from '@/interface/interface-pages/ProdutoPage'
+import type { IFormProduct } from '@/interface/pages/ProdutoPage'
 
 export class ProductModel {
   static createForm(): IFormProduct {

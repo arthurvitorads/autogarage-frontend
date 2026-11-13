@@ -6,7 +6,7 @@ import type { IFormPageRef, TGenericData } from '@/interface/util'
 import type {
   IAdmCadastroAuxiliar,
   IFormDescription,
-} from '@/interface/interface-pages/CadastroAuxiliar'
+} from '@/interface/pages/CadastroAuxiliar'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
@@ -98,33 +98,16 @@ watch(
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    header="Categorias de produtos"
-    modal
-    :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
-  >
+  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)" header="Categorias de produtos" modal
+    :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }">
     <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
       <Button label="Nova categoria" icon="pi pi-plus" @click="selectCategory(null)" />
     </div>
-    <DataTable
-      :value="records"
-      :loading="loadingGrid"
-      size="small"
-      scrollable
-      scrollHeight="14rem"
-      class="mb-4"
-    >
+    <DataTable :value="records" :loading="loadingGrid" size="small" scrollable scrollHeight="14rem" class="mb-4">
       <Column v-if="canWrite('CADASTROS')" header="Ações">
         <template #body="{ data }">
-          <Button
-            icon="pi pi-pencil"
-            severity="secondary"
-            text
-            aria-label="Editar categoria"
-            @click="selectCategory(data)"
-          />
+          <Button icon="pi pi-pencil" severity="secondary" text aria-label="Editar categoria"
+            @click="selectCategory(data)" />
         </template>
       </Column>
       <Column field="an_descr" header="Descrição" />
@@ -133,28 +116,14 @@ watch(
     <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">
       {{ selectedCategory ? 'Editar categoria' : 'Nova categoria' }}
     </p>
-    <FormPage
-      v-if="canWrite('CADASTROS')"
-      ref="formRef"
-      :key="formKey"
-      novalidate
-      class="flex flex-col gap-4"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      @submit="onSubmit(formData)"
-    >
+    <FormPage v-if="canWrite('CADASTROS')" ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4"
+      v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit(formData)">
       <Fieldset legend="Dados da categoria">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="m-[4px] col-span-12" name="an_descr" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="CategoriaProdutoDialog-an_descr"
-                maxlength="4000"
-                v-model="formData.an_descr"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText id="CategoriaProdutoDialog-an_descr" maxlength="4000" v-model="formData.an_descr" :name="field"
+                :invalid="invalid" fluid />
               <label for="CategoriaProdutoDialog-an_descr">Descrição *</label>
             </FloatLabel>
           </FieldForm>
@@ -163,19 +132,8 @@ watch(
     </FormPage>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          @click="emit('update:visible', false)"
-        />
-        <Button
-          type="button"
-          label="Gravar"
-          :disabled="loading"
-          :loading="loading"
-          @click="formRef?.submit()"
-        />
+        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button type="button" label="Gravar" :disabled="loading" :loading="loading" @click="formRef?.submit()" />
       </div>
     </template>
   </Dialog>

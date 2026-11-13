@@ -13,7 +13,7 @@ import { useAppToast } from '@/services/toast.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
-import { IFormLogin } from '@/interface/interface-pages/LoginPage'
+import { IFormLogin } from '@/interface/pages/LoginPage'
 
 import { TGenericData } from '@/interface/util'
 
@@ -65,25 +65,14 @@ async function onSubmit(values: IFormLogin) {
           </div>
         </template>
 
-        <FormPage
-          class="flex flex-col w-100"
-          v-model:errors="formErrors"
-          :initialValues="formData"
-          @submit="onSubmit"
-        >
+        <FormPage class="flex flex-col w-100" v-model:errors="formErrors" :initialValues="formData" @submit="onSubmit">
           <FieldForm name="an_email" label="E-mail" v-slot="{ invalid, field }">
             <InputText :name="field" placeholder="Digite seu e-mail" :invalid="invalid" />
           </FieldForm>
 
           <FieldForm name="ca_senha" label="Senha" v-slot="{ invalid, field }">
-            <Password
-              :name="field"
-              placeholder="Digite sua senha"
-              :feedback="false"
-              toggleMask
-              fluid
-              :invalid="invalid"
-            />
+            <Password :name="field" placeholder="Digite sua senha" :feedback="false" toggleMask fluid
+              :invalid="invalid" />
           </FieldForm>
 
           <Button type="submit" label="Entrar" icon="pi pi-arrow-right" />

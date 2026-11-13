@@ -2,7 +2,7 @@
 import FloatLabel from 'primevue/floatlabel'
 import { UserModel } from '@/models/user.model'
 import type { IFormPageRef } from '@/interface/util'
-import type { IManutUserDialogProps } from '@/interface/interface-pages/UsuarioPage'
+import type { IManutUserDialogProps } from '@/interface/pages/UsuarioPage'
 import { computed, ref, watch } from 'vue'
 
 import Fieldset from 'primevue/fieldset'
@@ -16,7 +16,7 @@ import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IAdmUsuario, IFormUser } from '@/interface/interface-pages/UsuarioPage'
+import type { IAdmUsuario, IFormUser } from '@/interface/pages/UsuarioPage'
 import type { TGenericData } from '@/interface/util'
 
 import { validateEmail } from '@/services/util.service'
@@ -99,12 +99,12 @@ watch(
 
     formData.value = user
       ? {
-          an_nome: user.an_nome ?? '',
-          an_email: user.an_email ?? '',
-          ca_senha: '',
-          cn_perfil: user.cn_perfil ?? null,
-          bo_sts_reg: user.bo_sts_reg ?? true,
-        }
+        an_nome: user.an_nome ?? '',
+        an_email: user.an_email ?? '',
+        ca_senha: '',
+        cn_perfil: user.cn_perfil ?? null,
+        bo_sts_reg: user.bo_sts_reg ?? true,
+      }
       : UserModel.createForm()
     formErrors.value = {}
     isValidated.value = false
@@ -115,96 +115,41 @@ watch(
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar usuário' : 'Novo usuário'"
-    modal
-    :style="{ width: '64rem', maxWidth: '95vw', maxHeight: '90vh' }"
-  >
-    <FormPage
-      ref="formRef"
-      :key="formKey"
-      novalidate
-      class="flex flex-col gap-4"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
-      @input="isValidated = false"
-      @change="isValidated = false"
-    >
+  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar usuário' : 'Novo usuário'" modal
+    :style="{ width: '64rem', maxWidth: '95vw', maxHeight: '90vh' }">
+    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4" v-model:errors="formErrors"
+      :initialValues="formData" @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
+      @input="isValidated = false" @change="isValidated = false">
       <Fieldset legend="Usuário">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-10"
-            name="an_nome"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-10" name="an_nome" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutUserDialog-an_nome"
-                maxlength="4000"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText id="ManutUserDialog-an_nome" maxlength="4000" :name="field" :invalid="invalid" fluid />
               <label for="ManutUserDialog-an_nome">Nome</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-2" name="bo_sts_reg">
             <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6"
-            name="an_email"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-6" name="an_email" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutUserDialog-an_email"
-                maxlength="4000"
-                :name="field"
-                type="email"
-                :invalid="invalid"
-                fluid
-                :readonly="isEditing"
-              />
+              <InputText id="ManutUserDialog-an_email" maxlength="4000" :name="field" type="email" :invalid="invalid"
+                fluid :readonly="isEditing" />
               <label for="ManutUserDialog-an_email">E-mail</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6"
-            name="cn_perfil"
-            label="Perfil"
-            v-slot="{ invalid, field }"
-          >
-            <DomainField
-              v-model="formData.cn_perfil"
-              :name="field"
-              endpoint="/paramPerfil"
-              :invalid="invalid"
-            />
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-6" name="cn_perfil" label="Perfil"
+            v-slot="{ invalid, field }">
+            <DomainField v-model="formData.cn_perfil" :name="field" endpoint="/paramPerfil" :invalid="invalid" />
           </FieldForm>
-          <FieldForm
-            v-if="!isEditing"
-            class="m-[4px] col-span-12"
-            name="ca_senha"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="!isEditing" class="m-[4px] col-span-12" name="ca_senha" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <Password
-                inputId="ManutUserDialog-ca_senha"
-                :inputProps="{ maxlength: 128 }"
-                :name="field"
-                :feedback="false"
-                toggleMask
-                fluid
-                autocomplete="new-password"
-                :invalid="invalid"
-              />
+              <Password inputId="ManutUserDialog-ca_senha" :inputProps="{ maxlength: 128 }" :name="field"
+                :feedback="false" toggleMask fluid autocomplete="new-password" :invalid="invalid" />
               <label for="ManutUserDialog-ca_senha">{{
                 isEditing ? 'Nova senha (opcional)' : 'Senha'
-              }}</label>
+                }}</label>
             </FloatLabel>
           </FieldForm>
         </div>
@@ -212,19 +157,8 @@ watch(
     </FormPage>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          @click="emit('update:visible', false)"
-        />
-        <Button
-          type="button"
-          label="Gravar"
-          :disabled="loading"
-          :loading="loading"
-          @click="formRef?.submit()"
-        />
+        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button type="button" label="Gravar" :disabled="loading" :loading="loading" @click="formRef?.submit()" />
       </div>
     </template>
   </Dialog>

@@ -1,10 +1,10 @@
 import { apiList, apiPage, apiRequest } from '@/services/api.service'
-import type { IAdmProduto, IManutProduct } from '@/interface/interface-pages/ProdutoPage'
-import type { IAdmServico, IManutService } from '@/interface/interface-pages/ServicoPage'
+import type { IAdmProduto, IManutProduct } from '@/interface/pages/ProdutoPage'
+import type { IAdmServico, IManutService } from '@/interface/pages/ServicoPage'
 import type {
   IAdmCadastroAuxiliar,
   IManutAuxiliary,
-} from '@/interface/interface-pages/CadastroAuxiliar'
+} from '@/interface/pages/CadastroAuxiliar'
 
 export interface ICatalogItemOption {
   cn_referencia: number

@@ -1,4 +1,4 @@
-import type { IFormPerson } from '@/interface/interface-pages/PessoaPage'
+import type { IFormPerson } from '@/interface/pages/PessoaPage'
 
 export class PersonModel {
   static createForm(): IFormPerson {

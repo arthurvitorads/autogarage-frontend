@@ -1,4 +1,4 @@
-import type { IFormService } from '@/interface/interface-pages/ServicoPage'
+import type { IFormService } from '@/interface/pages/ServicoPage'
 
 export class ServiceModel {
   static createForm(): IFormService {

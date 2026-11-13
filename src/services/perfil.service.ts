@@ -1,6 +1,6 @@
 import { apiPage, apiRequest } from '@/services/api.service'
 
-import type { IAdmPerfil, IFormProfile } from '@/interface/interface-pages/PerfilPage'
+import type { IAdmPerfil, IFormProfile } from '@/interface/pages/PerfilPage'
 import type { TModuleAccess } from '@/interface/access'
 
 export function getProfileAccess(id: string | number) {

@@ -21,7 +21,7 @@ import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoO
 import type {
   IAdmOrdemServico,
   TServiceOrderCode,
-} from '@/interface/interface-pages/OrdemServicoPage'
+} from '@/interface/pages/OrdemServicoPage'
 
 import {
   calcularTotalOrdem as calculateOrderTotal,
@@ -129,88 +129,41 @@ function updateSale(sale: { cn_venda: string }) {
         <p class="text-surface-500 mt-1">{{ total }} ordem(ns)</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <Button
-          v-if="canRead('CADASTROS')"
-          label="Classificações"
-          icon="pi pi-cog"
-          severity="secondary"
-          @click="classificationDialogVisible = true"
-        />
-        <Button
-          v-if="canWrite('ORDEM_SERVICO')"
-          label="Nova O.S."
-          icon="pi pi-plus"
-          @click="newOrder"
-        />
+        <Button v-if="canRead('CADASTROS')" label="Classificações" icon="pi pi-cog" severity="secondary"
+          @click="classificationDialogVisible = true" />
+        <Button v-if="canWrite('ORDEM_SERVICO')" label="Nova O.S." icon="pi pi-plus" @click="newOrder" />
       </div>
     </div>
     <div class="flex flex-wrap items-end gap-3">
       <FiltroData v-model="dates" :disabled="loadingGrid" />
-      <Select
-        v-model="statusFilter"
-        :options="orderStatuses"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Todos os status"
-        showClear
-        :disabled="loadingGrid"
-        aria-label="Filtrar status"
-      />
-      <Select
-        v-model="classificationFilter"
-        :options="classifications"
-        optionLabel="an_descr"
-        optionValue="cn_classificacao"
-        placeholder="Todas as classificações"
-        showClear
-        :disabled="loadingGrid"
-        aria-label="Filtrar classificação"
-      />
+      <Select v-model="statusFilter" :options="orderStatuses" optionLabel="label" optionValue="value"
+        placeholder="Todos os status" showClear :disabled="loadingGrid" aria-label="Filtrar status" />
+      <Select v-model="classificationFilter" :options="classifications" optionLabel="an_descr"
+        optionValue="cn_classificacao" placeholder="Todas as classificações" showClear :disabled="loadingGrid"
+        aria-label="Filtrar classificação" />
       <div class="flex gap-2 flex-1 min-w-64">
-        <InputText
-          v-model="filter"
-          placeholder="Pesquisar por número, cliente ou veículo..."
-          aria-label="Pesquisar ordens no painel"
-          class="flex-1 min-w-0"
-          @keyup.enter="search"
-        />
-        <Button
-          icon="pi pi-search"
-          aria-label="Pesquisar"
-          :disabled="loadingGrid"
-          @click="search"
-        />
+        <InputText v-model="filter" placeholder="Pesquisar por número, cliente ou veículo..."
+          aria-label="Pesquisar ordens no painel" class="flex-1 min-w-0" @keyup.enter="search" />
+        <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="loadingGrid" @click="search" />
       </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
-      <article
-        v-for="order in orders"
-        :key="order.cn_ordem_servico"
+      <article v-for="order in orders" :key="order.cn_ordem_servico"
         class="flex flex-col gap-4 rounded-xl border border-surface-200 border-l-4 bg-white p-5 text-left cursor-pointer transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
-        :style="{ borderLeftColor: getOrderStatus(order.ca_status).cor ?? '#64748b' }"
-      >
+        :style="{ borderLeftColor: getOrderStatus(order.ca_status).cor ?? '#64748b' }">
         <div class="flex flex-wrap items-start justify-between gap-2">
-          <span class="font-semibold text-surface-500"
-            >O.S. #{{ String(order.nu_numero).padStart(6, '0') }}</span
-          >
-          <span
-            class="max-w-full rounded-full px-3 py-1 text-xs font-semibold break-words"
-            :style="{
-              backgroundColor: getOrderStatus(order.ca_status).cor ?? '#64748b',
-              color: statusTextColor(getOrderStatus(order.ca_status).cor ?? '#64748b'),
-            }"
-            >{{ getOrderStatus(order.ca_status).label }}</span
-          >
+          <span class="font-semibold text-surface-500">O.S. #{{ String(order.nu_numero).padStart(6, '0') }}</span>
+          <span class="max-w-full rounded-full px-3 py-1 text-xs font-semibold break-words" :style="{
+            backgroundColor: getOrderStatus(order.ca_status).cor ?? '#64748b',
+            color: statusTextColor(getOrderStatus(order.ca_status).cor ?? '#64748b'),
+          }">{{ getOrderStatus(order.ca_status).label }}</span>
         </div>
         <p class="text-sm text-surface-500">
           {{ getClassification(order.cn_classificacao)?.an_descr || 'Sem classificação' }}
         </p>
         <div class="min-w-0">
           <p class="text-2xl font-bold tracking-wide">{{ order.veiculo.an_placa }}</p>
-          <p
-            class="text-surface-600 mt-1 truncate"
-            :title="order.veiculo.an_marca + ' ' + order.veiculo.an_modelo"
-          >
+          <p class="text-surface-600 mt-1 truncate" :title="order.veiculo.an_marca + ' ' + order.veiculo.an_modelo">
             {{ order.veiculo.an_marca }} {{ order.veiculo.an_modelo }}
           </p>
         </div>
@@ -228,58 +181,28 @@ function updateSale(sale: { cn_venda: string }) {
             <p>{{ formatDateTime(order.dt_previsao) }}</p>
           </div>
         </div>
-        <div
-          class="flex justify-between items-center gap-2 mt-auto border-t border-surface-100 pt-3"
-        >
+        <div class="flex justify-between items-center gap-2 mt-auto border-t border-surface-100 pt-3">
           <span class="text-surface-500 text-sm">{{ order.itens.length }} item(ns)</span>
           <span class="font-bold text-lg">{{
             formatOrderCurrency(calculateOrderTotal(order.itens))
-          }}</span>
+            }}</span>
         </div>
         <div class="flex flex-wrap gap-2">
-          <Button
-            label="Detalhes"
-            icon="pi pi-eye"
-            severity="secondary"
-            @click="openOrder(order)"
-          />
-          <Button
-            v-if="canWrite('ORDEM_SERVICO') && !isOrderClosed(order)"
-            icon="pi pi-pencil"
-            severity="secondary"
-            aria-label="Editar O.S."
-            @click="editOrder(order)"
-          />
-          <Button
-            v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'ABERTO'"
-            label="Iniciar serviço"
-            icon="pi pi-play"
-            @click="startOrder(order)"
-          />
+          <Button label="Detalhes" icon="pi pi-eye" severity="secondary" @click="openOrder(order)" />
+          <Button v-if="canWrite('ORDEM_SERVICO') && !isOrderClosed(order)" icon="pi pi-pencil" severity="secondary"
+            aria-label="Editar O.S." @click="editOrder(order)" />
+          <Button v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'ABERTO'" label="Iniciar serviço"
+            icon="pi pi-play" @click="startOrder(order)" />
         </div>
       </article>
     </div>
-    <Paginator
-      v-if="total > limit"
-      :first="firstRecord"
-      :rows="limit"
-      :totalRecords="total"
+    <Paginator v-if="total > limit" :first="firstRecord" :rows="limit" :totalRecords="total"
       template="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-      currentPageReportTemplate="Total: {totalRecords}"
-      @page="changePage"
-    />
+      currentPageReportTemplate="Total: {totalRecords}" @page="changePage" />
   </div>
   <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="selectOrder" @saved="load" />
   <ClassificacaoOrdemServicoDialog v-model:visible="classificationDialogVisible" />
-  <MovimentarOrdemServicoDialog
-    v-model:visible="orderMovementVisible"
-    :order="movementOrder"
-    action="INICIAR"
-    @saved="load"
-  />
-  <DetalhesOrdemServicoDialog
-    v-model:visible="orderDetailsVisible"
-    :order="detailOrder"
-    @faturada="updateSale"
-  />
+  <MovimentarOrdemServicoDialog v-model:visible="orderMovementVisible" :order="movementOrder" action="INICIAR"
+    @saved="load" />
+  <DetalhesOrdemServicoDialog v-model:visible="orderDetailsVisible" :order="detailOrder" @faturada="updateSale" />
 </template>

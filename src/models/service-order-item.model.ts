@@ -1,4 +1,4 @@
-import type { IFormServiceOrderItem } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IFormServiceOrderItem } from '@/interface/pages/OrdemServicoPage'
 
 export class ServiceOrderItemModel {
   static createForm(itemType: 'PRODUTO' | 'SERVICO' = 'PRODUTO'): IFormServiceOrderItem {

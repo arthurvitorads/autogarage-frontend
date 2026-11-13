@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import FloatLabel from 'primevue/floatlabel'
 import { SaleModel } from '@/models/sale.model'
-import type { IFormSale } from '@/interface/interface-pages/VendaPage'
+import type { IFormSale } from '@/interface/pages/VendaPage'
 import type { IManutSaleDialogProps } from '@/interface/dialog'
 import { computed, reactive, ref, toRefs, watch } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -13,7 +13,7 @@ import Fieldset from 'primevue/fieldset'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
-import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IAdmOrdemServico } from '@/interface/pages/OrdemServicoPage'
 
 import type {
   IAdmVenda,
@@ -21,10 +21,10 @@ import type {
   IManutSaleItem,
   TBillableOrder,
   TSaleCustomer,
-} from '@/interface/interface-pages/VendaPage'
+} from '@/interface/pages/VendaPage'
 import { getCatalogItemOptions } from '@/services/catalogo.service'
 import { getCustomers } from '@/services/ordem-api.service'
-import type { IClienteOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IClienteOrdemServico } from '@/interface/pages/OrdemServicoPage'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
 import { createSale, getBillableOrders, getSaleCustomer } from '@/services/faturamento.service'
@@ -201,13 +201,8 @@ async function save() {
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    header="Registrar venda"
-    modal
-    :style="{ width: '82rem', maxWidth: '95vw', maxHeight: '90vh' }"
-    @update:visible="emit('update:visible', $event)"
-  >
+  <Dialog :visible="visible" header="Registrar venda" modal
+    :style="{ width: '82rem', maxWidth: '95vw', maxHeight: '90vh' }" @update:visible="emit('update:visible', $event)">
     <div class="flex flex-col gap-4">
       <p v-if="loadingData">Carregando dados da venda...</p>
       <div v-if="loadError" role="alert" class="flex gap-3 items-center">
@@ -216,42 +211,18 @@ async function save() {
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <FloatLabel variant="on" class="m-[4px]">
-          <Select
-            inputId="venda-origin"
-            v-model="origin"
-            :options="originOptions"
-            optionLabel="label"
-            optionValue="value"
-            :disabled="!!order || saving"
-            aria-label="Origem da venda"
-            fluid
-          />
+          <Select inputId="venda-origin" v-model="origin" :options="originOptions" optionLabel="label"
+            optionValue="value" :disabled="!!order || saving" aria-label="Origem da venda" fluid />
           <label for="venda-origin">Origem da venda</label>
         </FloatLabel>
         <FloatLabel variant="on" class="m-[4px]" v-if="origin === 'ORDEM_SERVICO' && !order">
-          <Select
-            inputId="venda-orderId"
-            v-model="orderId"
-            :options="availableOrders"
-            optionLabel="an_label"
-            optionValue="cn_ordem_servico"
-            filter
-            aria-label="Ordem de serviço"
-            fluid
-          />
+          <Select inputId="venda-orderId" v-model="orderId" :options="availableOrders" optionLabel="an_label"
+            optionValue="cn_ordem_servico" filter aria-label="Ordem de serviço" fluid />
           <label for="venda-orderId">Ordem de serviço</label>
         </FloatLabel>
         <FloatLabel variant="on" class="m-[4px]" v-if="origin === 'DIRETA'">
-          <Select
-            inputId="venda-personId"
-            v-model="personId"
-            :options="customers"
-            optionLabel="an_nome"
-            optionValue="cn_pessoa"
-            filter
-            aria-label="Cliente da venda"
-            fluid
-          />
+          <Select inputId="venda-personId" v-model="personId" :options="customers" optionLabel="an_nome"
+            optionValue="cn_pessoa" filter aria-label="Cliente da venda" fluid />
           <label for="venda-personId">Cliente da venda</label>
         </FloatLabel>
       </div>
@@ -272,79 +243,38 @@ async function save() {
       <Fieldset legend="Itens">
         <div v-if="origin === 'DIRETA'" class="flex flex-wrap gap-2 mb-4 items-end">
           <FloatLabel variant="on" class="m-[4px]">
-            <Select
-              inputId="venda-item-ca_tipo"
-              v-model="item.ca_tipo"
-              :options="itemTypes"
-              optionLabel="label"
-              optionValue="value"
-              aria-label="Tipo do item"
-              fluid
-            />
+            <Select inputId="venda-item-ca_tipo" v-model="item.ca_tipo" :options="itemTypes" optionLabel="label"
+              optionValue="value" aria-label="Tipo do item" fluid />
             <label for="venda-item-ca_tipo">Tipo do item</label>
           </FloatLabel>
           <FloatLabel variant="on" class="m-[4px] min-w-64">
-            <Select
-              inputId="venda-item-cn_referencia"
-              v-model="item.cn_referencia"
-              :options="references"
-              optionLabel="an_nome"
-              optionValue="cn_referencia"
-              filter
-              aria-label="Produto ou serviço"
-              fluid
-            />
+            <Select inputId="venda-item-cn_referencia" v-model="item.cn_referencia" :options="references"
+              optionLabel="an_nome" optionValue="cn_referencia" filter aria-label="Produto ou serviço" fluid />
             <label for="venda-item-cn_referencia">Produto ou serviço</label>
           </FloatLabel>
           <FloatLabel variant="on" class="m-[4px]">
-            <InputNumber
-              inputId="venda-quantidade"
-              v-model="item.qt_quantidade"
-              :min="0.001"
-              :maxFractionDigits="3"
-              class="w-32"
-              aria-label="Quantidade"
-            />
+            <InputNumber inputId="venda-quantidade" v-model="item.qt_quantidade" :min="0.001" :maxFractionDigits="3"
+              class="w-32" aria-label="Quantidade" />
             <label for="venda-quantidade">Quantidade</label>
           </FloatLabel>
           <FloatLabel variant="on" class="m-[4px]">
-            <InputNumber
-              inputId="venda-preco-unitario"
-              v-model="item.vl_unitario"
-              :min="0"
-              :max="999999999.99"
-              mode="currency"
-              currency="BRL"
-              locale="pt-BR"
-              class="w-40"
-              aria-label="Preço unitário"
-            />
+            <InputNumber inputId="venda-preco-unitario" v-model="item.vl_unitario" :min="0" :max="999999999.99"
+              mode="currency" currency="BRL" locale="pt-BR" class="w-40" aria-label="Preço unitário" />
             <label for="venda-preco-unitario">Preço unitário</label>
           </FloatLabel>
           <Button icon="pi pi-plus" label="Adicionar" @click="addItem" />
         </div>
         <DataTable :value="rows" size="small" scrollable tableStyle="min-width: 45rem">
-          <Column field="an_descr" header="Descrição" /><Column
-            field="ca_tipo"
-            header="Tipo"
-          /><Column field="qt_quantidade" header="Quantidade" />
-          <Column header="Unitário" :bodyStyle="{ textAlign: 'end' }"
-            ><template #body="{ data }">{{
-              formatOrderCurrency(data.vl_unitario)
-            }}</template></Column
-          >
-          <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
-            ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
-          >
-          <Column v-if="origin === 'DIRETA'" header="Ações"
-            ><template #body="{ index }"
-              ><Button
-                icon="pi pi-trash"
-                text
-                severity="danger"
-                aria-label="Remover item"
-                @click="items.splice(index, 1)" /></template
-          ></Column>
+          <Column field="an_descr" header="Descrição" />
+          <Column field="ca_tipo" header="Tipo" />
+          <Column field="qt_quantidade" header="Quantidade" />
+          <Column header="Unitário" :bodyStyle="{ textAlign: 'end' }"><template #body="{ data }">{{
+            formatOrderCurrency(data.vl_unitario)
+              }}</template></Column>
+          <Column header="Total" :bodyStyle="{ textAlign: 'end' }"><template #body="{ data }">{{
+            formatOrderCurrency(data.vl_total) }}</template></Column>
+          <Column v-if="origin === 'DIRETA'" header="Ações"><template #body="{ index }"><Button icon="pi pi-trash" text
+                severity="danger" aria-label="Remover item" @click="items.splice(index, 1)" /></template></Column>
           <template #empty>Nenhum item adicionado.</template>
         </DataTable>
         <p class="text-right font-bold mt-3">Total: {{ formatOrderCurrency(total) }}</p>
@@ -356,19 +286,9 @@ async function save() {
     </div>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          @click="emit('update:visible', false)"
-        />
-        <Button
-          type="button"
-          label="Gravar"
-          :disabled="saving || loadingData || !!loadError || loading"
-          :loading="loading"
-          @click="save"
-        />
+        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button type="button" label="Gravar" :disabled="saving || loadingData || !!loadError || loading"
+          :loading="loading" @click="save" />
       </div>
     </template>
   </Dialog>

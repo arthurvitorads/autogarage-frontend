@@ -2,7 +2,7 @@ import type {
   IAdmOrdemServico,
   IFormServiceOrder,
   TItemOrdemServico,
-} from '@/interface/interface-pages/OrdemServicoPage'
+} from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import { isQuantidadeValida } from '@/services/estoque.service'

@@ -1,4 +1,4 @@
-import type { IFormProfile } from '@/interface/interface-pages/PerfilPage'
+import type { IFormProfile } from '@/interface/pages/PerfilPage'
 
 export class ProfileModel {
   static createForm(): IFormProfile {

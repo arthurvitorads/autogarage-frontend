@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { IMeUser } from '@/interface/interface-pages/LoginPage'
+import { IMeUser } from '@/interface/pages/LoginPage'
 import type { TModule } from '@/interface/access'
 
 export const useUtilStore = defineStore('util', () => {

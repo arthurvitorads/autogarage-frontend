@@ -2,8 +2,8 @@ import type { IPageResponse } from '@/interface/api-response'
 import type {
   IAdmOrdemServico,
   TItemOrdemServico,
-} from '@/interface/interface-pages/OrdemServicoPage'
-import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
+} from '@/interface/pages/OrdemServicoPage'
+import type { ICadPessoa } from '@/interface/pages/PessoaPage'
 
 export type TBillableOrder = Pick<
   IAdmOrdemServico,

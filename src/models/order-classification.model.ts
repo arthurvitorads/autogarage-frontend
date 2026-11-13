@@ -1,4 +1,4 @@
-import type { IFormOrderClassification } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IFormOrderClassification } from '@/interface/pages/OrdemServicoPage'
 
 export class OrderClassificationModel {
   static createForm(isFirst = false): IFormOrderClassification {

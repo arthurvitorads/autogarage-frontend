@@ -24,7 +24,7 @@ import type {
   IFormServiceOrder,
   IManutServiceOrder,
   IClassificacaoOrdemServico,
-} from '@/interface/interface-pages/OrdemServicoPage'
+} from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import {
@@ -133,15 +133,15 @@ watch(
 
     formData.value = order
       ? {
-          cn_pessoa: order.cn_pessoa,
-          cn_classificacao: order.cn_classificacao,
-          dt_entrada: localDateTime(order.dt_entrada),
-          dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
-          an_responsavel: order.an_responsavel,
-          ...order.veiculo,
-          an_solicitacao: order.an_solicitacao,
-          an_obs: order.an_obs,
-        }
+        cn_pessoa: order.cn_pessoa,
+        cn_classificacao: order.cn_classificacao,
+        dt_entrada: localDateTime(order.dt_entrada),
+        dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
+        an_responsavel: order.an_responsavel,
+        ...order.veiculo,
+        an_solicitacao: order.an_solicitacao,
+        an_obs: order.an_obs,
+      }
       : ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null)
     formErrors.value = {}
     formKey.value++
@@ -151,135 +151,59 @@ watch(
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço'"
-    modal
-    :style="{ width: '96rem', maxWidth: '95vw', maxHeight: '90vh' }"
-  >
-    <FormPage
-      ref="formRef"
-      :key="formKey"
-      novalidate
-      class="flex flex-col gap-4"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      @submit="onSubmit(formData)"
-    >
+  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço'" modal
+    :style="{ width: '96rem', maxWidth: '95vw', maxHeight: '90vh' }">
+    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4" v-model:errors="formErrors"
+      :initialValues="formData" @submit="onSubmit(formData)">
       <Fieldset legend="Dados gerais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="m-[4px] col-span-12 sm:col-span-3" name="nu_numero">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-nu_numero"
-                maxlength="4000"
-                :modelValue="order ? String(order.nu_numero).padStart(6, '0') : 'Automático'"
-                readonly
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-nu_numero" maxlength="4000"
+                :modelValue="order ? String(order.nu_numero).padStart(6, '0') : 'Automático'" readonly fluid />
               <label for="ManutOrdemServicoDialog-nu_numero">Número</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6"
-            name="cn_pessoa"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-6" name="cn_pessoa" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <Select
-                inputId="ManutOrdemServicoDialog-cn_pessoa"
-                v-model="formData.cn_pessoa"
-                :name="field"
-                :options="customerOptions"
-                optionLabel="an_label"
-                optionValue="cn_pessoa"
-                :invalid="invalid"
-                filter
-                fluid
-                emptyMessage="Nenhum cliente disponível."
-                emptyFilterMessage="Nenhum cliente corresponde à pesquisa."
-              />
+              <Select inputId="ManutOrdemServicoDialog-cn_pessoa" v-model="formData.cn_pessoa" :name="field"
+                :options="customerOptions" optionLabel="an_label" optionValue="cn_pessoa" :invalid="invalid" filter
+                fluid emptyMessage="Nenhum cliente disponível."
+                emptyFilterMessage="Nenhum cliente corresponde à pesquisa." />
               <label for="ManutOrdemServicoDialog-cn_pessoa">Cliente *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-3"
-            name="cn_classificacao"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-3" name="cn_classificacao" v-slot="{ invalid, field }">
             <div class="flex gap-2">
               <FloatLabel variant="on" class="flex-1 min-w-0">
-                <Select
-                  inputId="ManutOrdemServicoDialog-cn_classificacao"
-                  v-model="formData.cn_classificacao"
-                  :name="field"
-                  :options="classifications"
-                  optionLabel="an_descr"
-                  optionValue="cn_classificacao"
-                  :invalid="invalid"
-                  fluid
-                />
+                <Select inputId="ManutOrdemServicoDialog-cn_classificacao" v-model="formData.cn_classificacao"
+                  :name="field" :options="classifications" optionLabel="an_descr" optionValue="cn_classificacao"
+                  :invalid="invalid" fluid />
                 <label for="ManutOrdemServicoDialog-cn_classificacao">Classificação *</label>
               </FloatLabel>
-              <Button
-                v-if="canWrite('CADASTROS')"
-                type="button"
-                icon="pi pi-plus"
-                aria-label="Cadastrar classificação"
-                @click="classificationDialogVisible = true"
-              />
+              <Button v-if="canWrite('CADASTROS')" type="button" icon="pi pi-plus" aria-label="Cadastrar classificação"
+                @click="classificationDialogVisible = true" />
             </div>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="dt_entrada"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="dt_entrada" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-dt_entrada"
-                maxlength="4000"
-                v-model="formData.dt_entrada"
-                :name="field"
-                type="datetime-local"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-dt_entrada" maxlength="4000" v-model="formData.dt_entrada"
+                :name="field" type="datetime-local" :invalid="invalid" fluid />
               <label for="ManutOrdemServicoDialog-dt_entrada">Entrada *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="dt_previsao"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="dt_previsao" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-dt_previsao"
-                maxlength="4000"
-                v-model="formData.dt_previsao"
-                :name="field"
-                type="datetime-local"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-dt_previsao" maxlength="4000" v-model="formData.dt_previsao"
+                :name="field" type="datetime-local" :invalid="invalid" fluid />
               <label for="ManutOrdemServicoDialog-dt_previsao">Previsão de entrega</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="an_responsavel"
-            v-slot="{ field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="an_responsavel" v-slot="{ field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_responsavel"
-                maxlength="4000"
-                v-model="formData.an_responsavel"
-                :name="field"
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-an_responsavel" maxlength="4000" v-model="formData.an_responsavel"
+                :name="field" fluid />
               <label for="ManutOrdemServicoDialog-an_responsavel">Responsável</label>
             </FloatLabel>
           </FieldForm>
@@ -287,105 +211,46 @@ watch(
       </Fieldset>
       <Fieldset legend="Dados do veículo">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-3"
-            name="an_placa"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-3" name="an_placa" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_placa"
-                v-model="formData.an_placa"
-                :name="field"
-                :invalid="invalid"
-                maxlength="8"
-                fluid
-                @update:modelValue="formData.an_placa = ($event ?? '').toUpperCase()"
-              />
+              <InputText id="ManutOrdemServicoDialog-an_placa" v-model="formData.an_placa" :name="field"
+                :invalid="invalid" maxlength="8" fluid
+                @update:modelValue="formData.an_placa = ($event ?? '').toUpperCase()" />
               <label for="ManutOrdemServicoDialog-an_placa">Placa *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="an_marca"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="an_marca" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_marca"
-                maxlength="4000"
-                v-model="formData.an_marca"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-an_marca" maxlength="4000" v-model="formData.an_marca"
+                :name="field" :invalid="invalid" fluid />
               <label for="ManutOrdemServicoDialog-an_marca">Marca *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-5"
-            name="an_modelo"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-5" name="an_modelo" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_modelo"
-                maxlength="4000"
-                v-model="formData.an_modelo"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-an_modelo" maxlength="4000" v-model="formData.an_modelo"
+                :name="field" :invalid="invalid" fluid />
               <label for="ManutOrdemServicoDialog-an_modelo">Modelo *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="nu_ano"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="nu_ano" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutOrdemServicoDialog-nu_ano"
-                v-model="formData.nu_ano"
-                :name="field"
-                :invalid="invalid"
-                :min="1900"
-                :max="maxYear"
-                :useGrouping="false"
-                fluid
-              />
+              <InputNumber inputId="ManutOrdemServicoDialog-nu_ano" v-model="formData.nu_ano" :name="field"
+                :invalid="invalid" :min="1900" :max="maxYear" :useGrouping="false" fluid />
               <label for="ManutOrdemServicoDialog-nu_ano">Ano</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="an_cor" v-slot="{ field }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_cor"
-                maxlength="4000"
-                v-model="formData.an_cor"
-                :name="field"
-                fluid
-              />
+              <InputText id="ManutOrdemServicoDialog-an_cor" maxlength="4000" v-model="formData.an_cor" :name="field"
+                fluid />
               <label for="ManutOrdemServicoDialog-an_cor">Cor</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="qt_quilometragem"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="qt_quilometragem" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutOrdemServicoDialog-qt_quilometragem"
-                v-model="formData.qt_quilometragem"
-                :name="field"
-                :invalid="invalid"
-                :min="0"
-                :max="9999999"
-                locale="pt-BR"
-                fluid
-              />
+              <InputNumber inputId="ManutOrdemServicoDialog-qt_quilometragem" v-model="formData.qt_quilometragem"
+                :name="field" :invalid="invalid" :min="0" :max="9999999" locale="pt-BR" fluid />
               <label for="ManutOrdemServicoDialog-qt_quilometragem">Quilometragem</label>
             </FloatLabel>
           </FieldForm>
@@ -393,33 +258,17 @@ watch(
       </Fieldset>
       <Fieldset legend="Observações">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6"
-            name="an_solicitacao"
-            v-slot="{ field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-6" name="an_solicitacao" v-slot="{ field }">
             <FloatLabel variant="on">
-              <Textarea
-                id="ManutOrdemServicoDialog-an_solicitacao"
-                maxlength="4000"
-                v-model="formData.an_solicitacao"
-                :name="field"
-                rows="2"
-                fluid
-              />
+              <Textarea id="ManutOrdemServicoDialog-an_solicitacao" maxlength="4000" v-model="formData.an_solicitacao"
+                :name="field" rows="2" fluid />
               <label for="ManutOrdemServicoDialog-an_solicitacao">Solicitação do cliente</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-6" name="an_obs" v-slot="{ field }">
             <FloatLabel variant="on">
-              <Textarea
-                id="ManutOrdemServicoDialog-an_obs"
-                maxlength="4000"
-                v-model="formData.an_obs"
-                :name="field"
-                rows="2"
-                fluid
-              />
+              <Textarea id="ManutOrdemServicoDialog-an_obs" maxlength="4000" v-model="formData.an_obs" :name="field"
+                rows="2" fluid />
               <label for="ManutOrdemServicoDialog-an_obs">Observações internas</label>
             </FloatLabel>
           </FieldForm>
@@ -428,24 +277,10 @@ watch(
     </FormPage>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          @click="emit('update:visible', false)"
-        />
-        <Button
-          type="button"
-          label="Gravar"
-          :disabled="loading"
-          :loading="loading"
-          @click="formRef?.submit()"
-        />
+        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button type="button" label="Gravar" :disabled="loading" :loading="loading" @click="formRef?.submit()" />
       </div>
     </template>
   </Dialog>
-  <ClassificacaoOrdemServicoDialog
-    v-model:visible="classificationDialogVisible"
-    @saved="selectClassification"
-  />
+  <ClassificacaoOrdemServicoDialog v-model:visible="classificationDialogVisible" @saved="selectClassification" />
 </template>

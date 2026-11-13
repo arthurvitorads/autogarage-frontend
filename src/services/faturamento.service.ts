@@ -4,7 +4,7 @@ import type {
   IManutSale,
   TBillableOrder,
   TSaleCustomer,
-} from '@/interface/interface-pages/VendaPage'
+} from '@/interface/pages/VendaPage'
 
 export function getBillableOrders() {
   return apiList<TBillableOrder>('/faturamento/ordens/listar')

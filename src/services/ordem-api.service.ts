@@ -9,7 +9,7 @@ import type {
   TManutServiceOrderItem,
   TServiceOrderCode,
   TServiceOrderAction,
-} from '@/interface/interface-pages/OrdemServicoPage'
+} from '@/interface/pages/OrdemServicoPage'
 
 export function getOrder(id: TServiceOrderCode) {
   return apiRequest<IAdmOrdemServico>('/ordensServico/detalhar', { cn_ordem_servico: id })

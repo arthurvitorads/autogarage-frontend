@@ -1,5 +1,5 @@
-import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
-import type { IFormSale, IFormSaleItem } from '@/interface/interface-pages/VendaPage'
+import type { IAdmOrdemServico } from '@/interface/pages/OrdemServicoPage'
+import type { IFormSale, IFormSaleItem } from '@/interface/pages/VendaPage'
 
 export class SaleModel {
   static createForm(order?: IAdmOrdemServico | null): IFormSale {

@@ -1,4 +1,4 @@
-import type { IFormServiceOrder } from '@/interface/interface-pages/OrdemServicoPage'
+import type { IFormServiceOrder } from '@/interface/pages/OrdemServicoPage'
 import { dataHoraLocal } from '@/services/ordem-servico.service'
 
 export class ServiceOrderModel {

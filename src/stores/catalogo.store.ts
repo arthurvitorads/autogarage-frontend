@@ -1,11 +1,11 @@
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { IAdmProduto, IManutProduct } from '@/interface/interface-pages/ProdutoPage'
-import type { IAdmServico, IManutService } from '@/interface/interface-pages/ServicoPage'
+import type { IAdmProduto, IManutProduct } from '@/interface/pages/ProdutoPage'
+import type { IAdmServico, IManutService } from '@/interface/pages/ServicoPage'
 import type {
   IAdmCadastroAuxiliar,
   IManutAuxiliary,
-} from '@/interface/interface-pages/CadastroAuxiliar'
+} from '@/interface/pages/CadastroAuxiliar'
 import * as catalogService from '@/services/catalogo.service'
 import { useUtilStore } from '@/stores/util.store'
 

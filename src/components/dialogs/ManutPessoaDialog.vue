@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { PersonModel } from '@/models/person.model'
-import type { IFormPageRef } from '@/interface/util'
-import type { IManutPersonDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
 import FloatLabel from 'primevue/floatlabel'
@@ -10,11 +8,17 @@ import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
-import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 import Message from 'primevue/message'
 
-import { storeToRefs } from 'pinia'
+import StatusField from '@/components/field/StatusField.vue'
+
+import type { IManutPersonDialogProps } from '@/interface/pages/PessoaPage'
+
+import { PersonModel } from '@/models/person.model'
+import type { IFormPageRef } from '@/interface/util'
+
+
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
@@ -23,7 +27,7 @@ import type { Pessoa } from '@/models/pessoa.model'
 import { TipoPessoa } from '@/interface/enum'
 import { getStates, type IEndEstado } from '@/services/address.service'
 import { createPerson, personToRequest, updatePerson } from '@/services/person.service'
-import type { IFormPerson } from '@/interface/interface-pages/PessoaPage'
+import type { IFormPerson } from '@/interface/pages/PessoaPage'
 import type { TGenericData } from '@/interface/util'
 
 import {
@@ -416,26 +420,26 @@ async function onSubmit(values: IFormPerson) {
       },
       ...(values.bo_categ_func
         ? {
-            cargo: values.cargo.trim(),
-            nm_comissao_func: values.nm_comissao_func ?? 0,
-          }
+          cargo: values.cargo.trim(),
+          nm_comissao_func: values.nm_comissao_func ?? 0,
+        }
         : {}),
     }
     const person: Pessoa =
       values.tipo === 'PF'
         ? {
-            ...personData,
-            tipo: 'PF',
-            nome: values.nome.trim(),
-            cpf: document,
-          }
+          ...personData,
+          tipo: 'PF',
+          nome: values.nome.trim(),
+          cpf: document,
+        }
         : {
-            ...personData,
-            tipo: 'PJ',
-            razaoSocial: values.razaoSocial.trim(),
-            nomeFantasia: values.nomeFantasia.trim(),
-            cnpj: document,
-          }
+          ...personData,
+          tipo: 'PJ',
+          razaoSocial: values.razaoSocial.trim(),
+          nomeFantasia: values.nomeFantasia.trim(),
+          cnpj: document,
+        }
 
     if (props.person?.cn_pessoa !== undefined)
       await updatePerson(props.person.cn_pessoa, personToRequest(person))
@@ -463,23 +467,23 @@ watch(
 
     formData.value = person
       ? {
-          ...PersonModel.createForm(),
-          tipo: person.tipo,
-          bo_categ_cliente: person.bo_categ_cliente,
-          bo_categ_func: person.bo_categ_func,
-          bo_sts_reg: person.bo_sts_reg,
-          nome: person.tipo === 'PF' ? person.nome : '',
-          cpf: person.tipo === 'PF' ? maskCpf(person.cpf) : '',
-          cnpj: person.tipo === 'PJ' ? maskCnpj(person.cnpj) : '',
-          razaoSocial: person.tipo === 'PJ' ? person.razaoSocial : '',
-          nomeFantasia: person.tipo === 'PJ' ? person.nomeFantasia : '',
-          email: person.email,
-          telefone: maskPersonPhone(person.telefone),
-          cargo: person.cargo ?? '',
-          nm_comissao_func: person.nm_comissao_func ?? 0,
-          ...person.endereco,
-          cep: maskCep(person.endereco.cep),
-        }
+        ...PersonModel.createForm(),
+        tipo: person.tipo,
+        bo_categ_cliente: person.bo_categ_cliente,
+        bo_categ_func: person.bo_categ_func,
+        bo_sts_reg: person.bo_sts_reg,
+        nome: person.tipo === 'PF' ? person.nome : '',
+        cpf: person.tipo === 'PF' ? maskCpf(person.cpf) : '',
+        cnpj: person.tipo === 'PJ' ? maskCnpj(person.cnpj) : '',
+        razaoSocial: person.tipo === 'PJ' ? person.razaoSocial : '',
+        nomeFantasia: person.tipo === 'PJ' ? person.nomeFantasia : '',
+        email: person.email,
+        telefone: maskPersonPhone(person.telefone),
+        cargo: person.cargo ?? '',
+        nm_comissao_func: person.nm_comissao_func ?? 0,
+        ...person.endereco,
+        cep: maskCep(person.endereco.cep),
+      }
       : PersonModel.createForm()
     formErrors.value = {}
     isValidated.value = false
@@ -547,225 +551,95 @@ watch(
 </script>
 
 <template>
-  <Dialog
-    :visible="visible"
-    @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'"
-    modal
-    :style="{ width: '96rem', maxWidth: '95vw', maxHeight: '90vh' }"
-  >
-    <FormPage
-      ref="formRef"
-      :key="formKey"
-      novalidate
-      class="flex flex-col gap-4"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      @submit="onSubmit(formData)"
-      @input="isValidated = false"
-      @change="isValidated = false"
-    >
+  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar pessoa' : 'Cadastrar pessoa'" modal
+    :style="{ width: '96rem', maxWidth: '95vw', maxHeight: '90vh' }">
+    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4" v-model:errors="formErrors"
+      :initialValues="formData" @submit="onSubmit(formData)" @input="isValidated = false" @change="isValidated = false">
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-4 col-start-9 row-start-1 lg:col-span-2 lg:col-start-11 flex items-end"
-            name="bo_sts_reg"
-          >
+          <FieldForm class="m-[4px] col-span-4 col-start-9 row-start-1 lg:col-span-2 lg:col-start-11 flex items-end"
+            name="bo_sts_reg">
             <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-8 col-start-1 row-start-1 lg:col-span-10"
-            name="bo_categ_cliente"
-            label="Categorias"
-            v-slot="{ invalid }"
-          >
-            <SelectButton
-              v-model="selectedCategories"
-              :options="personCategories"
-              optionLabel="label"
-              optionValue="value"
-              aria-label="Categorias"
-              :invalid="invalid"
-              :allowEmpty="false"
-              multiple
-            />
+          <FieldForm class="m-[4px] col-span-8 col-start-1 row-start-1 lg:col-span-10" name="bo_categ_cliente"
+            label="Categorias" v-slot="{ invalid }">
+            <SelectButton v-model="selectedCategories" :options="personCategories" optionLabel="label"
+              optionValue="value" aria-label="Categorias" :invalid="invalid" :allowEmpty="false" multiple />
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-2"
-            name="tipo"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-2" name="tipo" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <Select
-                v-model="formData.tipo"
-                inputId="tipo-pessoa"
-                aria-label="Tipo de pessoa"
-                :options="personTypes"
-                :invalid
-                optionLabel="label"
-                optionValue="value"
-                fluid
-              />
+              <Select v-model="formData.tipo" inputId="tipo-pessoa" aria-label="Tipo de pessoa" :options="personTypes"
+                :invalid optionLabel="label" optionValue="value" fluid />
               <label :for="`person-${field}`">Tipo de pessoa</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PF'"
-            class="m-[4px] col-span-12 sm:col-span-2"
-            name="cpf"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PF'" class="m-[4px] col-span-12 sm:col-span-2" name="cpf"
+            v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                v-model="formData.cpf"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                maxlength="14"
-                @update:modelValue="formData.cpf = maskCpf($event ?? '')"
-              />
+              <InputText :id="`person-${field}`" v-model="formData.cpf" :name="field" :invalid="invalid" fluid
+                maxlength="14" @update:modelValue="formData.cpf = maskCpf($event ?? '')" />
               <label :for="`person-${field}`">CPF</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PJ'"
-            class="m-[4px] col-span-12 sm:col-span-2"
-            name="cnpj"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PJ'" class="m-[4px] col-span-12 sm:col-span-2" name="cnpj"
+            v-slot="{ invalid, field }">
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
-                <InputText
-                  :id="`person-${field}`"
-                  :modelValue="formData.cnpj"
-                  :name="field"
-                  :invalid="invalid"
-                  maxlength="18"
-                  fluid
-                  @update:modelValue="onCnpjChange"
-                  @blur="queryCnpj()"
-                />
+                <InputText :id="`person-${field}`" :modelValue="formData.cnpj" :name="field" :invalid="invalid"
+                  maxlength="18" fluid @update:modelValue="onCnpjChange" @blur="queryCnpj()" />
                 <label :for="`person-${field}`">CNPJ</label>
               </FloatLabel>
-              <Button
-                type="button"
-                icon="pi pi-search"
-                aria-label="Consultar CNPJ"
-                :loading="loadingCnpj"
-                @click="queryCnpj(true)"
-              />
+              <Button type="button" icon="pi pi-search" aria-label="Consultar CNPJ" :loading="loadingCnpj"
+                @click="queryCnpj(true)" />
             </div>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PF'"
-            class="m-[4px] col-span-12 sm:col-span-8"
-            name="nome"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PF'" class="m-[4px] col-span-12 sm:col-span-8" name="nome"
+            v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.nome"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.nome" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Nome completo</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PJ'"
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="razaoSocial"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PJ'" class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="razaoSocial" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.razaoSocial"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.razaoSocial" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Razão social</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PJ'"
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="nomeFantasia"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PJ'" class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="nomeFantasia" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.nomeFantasia"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.nomeFantasia" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Nome fantasia</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PJ'"
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="telefone"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PJ'" class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="telefone" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="15"
-                v-model="formData.telefone"
-                @update:modelValue="formData.telefone = maskPersonPhone($event ?? '')"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                type="tel"
-              />
+              <InputText :id="`person-${field}`" maxlength="15" v-model="formData.telefone"
+                @update:modelValue="formData.telefone = maskPersonPhone($event ?? '')" :name="field" :invalid="invalid"
+                fluid type="tel" />
               <label :for="`person-${field}`">Telefone</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="email"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4" name="email" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.email"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                type="email"
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.email" :name="field"
+                :invalid="invalid" fluid type="email" />
               <label :for="`person-${field}`">E-mail</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            v-if="formData.tipo === 'PF'"
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="telefone"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm v-if="formData.tipo === 'PF'" class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="telefone" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="15"
-                v-model="formData.telefone"
-                @update:modelValue="formData.telefone = maskPersonPhone($event ?? '')"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                type="tel"
-              />
+              <InputText :id="`person-${field}`" maxlength="15" v-model="formData.telefone"
+                @update:modelValue="formData.telefone = maskPersonPhone($event ?? '')" :name="field" :invalid="invalid"
+                fluid type="tel" />
               <label :for="`person-${field}`">Telefone</label>
             </FloatLabel>
           </FieldForm>
@@ -775,138 +649,62 @@ watch(
         <div class="grid grid-cols-12 gap-x-4">
           <Message v-if="postalCodeMessage" severity="warn" class="col-span-12 mb-3">{{
             postalCodeMessage
-          }}</Message>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3"
-            name="cep"
-            v-slot="{ invalid, field }"
-          >
+            }}</Message>
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3" name="cep" v-slot="{ invalid, field }">
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
-                <InputText
-                  :id="`person-${field}`"
-                  v-model="formData.cep"
-                  @update:modelValue="formData.cep = maskCep($event ?? '')"
-                  inputmode="numeric"
-                  :name="field"
-                  maxlength="9"
-                  :invalid="invalid"
-                  fluid
-                  @blur="queryPostalCode()"
-                />
+                <InputText :id="`person-${field}`" v-model="formData.cep"
+                  @update:modelValue="formData.cep = maskCep($event ?? '')" inputmode="numeric" :name="field"
+                  maxlength="9" :invalid="invalid" fluid @blur="queryPostalCode()" />
                 <label :for="`person-${field}`">CEP</label>
               </FloatLabel>
-              <Button
-                type="button"
-                icon="pi pi-search"
-                aria-label="Consultar CEP"
-                :loading="loadingPostalCode"
-                @click="queryPostalCode()"
-              />
+              <Button type="button" icon="pi pi-search" aria-label="Consultar CEP" :loading="loadingPostalCode"
+                @click="queryPostalCode()" />
             </div>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-8 lg:col-span-7"
-            name="logradouro"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-8 lg:col-span-7" name="logradouro"
+            v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.logradouro"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.logradouro" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Logradouro</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2"
-            name="numero"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2" name="numero" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.numero"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.numero" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Número</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-9 lg:col-span-3"
-            name="complemento"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-9 lg:col-span-3" name="complemento"
+            v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.complemento"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.complemento" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Complemento</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-5 lg:col-span-4"
-            name="bairro"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-5 lg:col-span-4" name="bairro" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.bairro"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.bairro" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Bairro</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3"
-            name="cidade"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3" name="cidade" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.cidade"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.cidade" :name="field"
+                :invalid="invalid" fluid />
               <label :for="`person-${field}`">Cidade</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2"
-            name="cn_estado"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2" name="cn_estado"
+            v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <Select
-                v-model="formData.cn_estado"
-                :name="field"
-                :options="states"
-                optionLabel="ca_uf"
-                optionValue="cn_estado"
-                :invalid="invalid"
-                :loading="loadingStates"
-                :disabled="loadingStates || !states.length"
-                fluid
-              >
+              <Select v-model="formData.cn_estado" :name="field" :options="states" optionLabel="ca_uf"
+                optionValue="cn_estado" :invalid="invalid" :loading="loadingStates"
+                :disabled="loadingStates || !states.length" fluid>
                 <template #option="{ option }">
                   {{ option.an_descr }}
                 </template>
@@ -920,33 +718,14 @@ watch(
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm class="m-[4px] col-span-12 sm:col-span-8" name="cargo" v-slot="{ field }">
             <FloatLabel variant="on">
-              <InputText
-                :id="`person-${field}`"
-                maxlength="4000"
-                v-model="formData.cargo"
-                :name="field"
-                fluid
-              />
+              <InputText :id="`person-${field}`" maxlength="4000" v-model="formData.cargo" :name="field" fluid />
               <label :for="`person-${field}`">Cargo</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="nm_comissao_func"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="nm_comissao_func" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
-              <InputNumber
-                :inputId="`person-${field}`"
-                v-model="formData.nm_comissao_func"
-                :name="field"
-                :min="0"
-                :max="100"
-                :maxFractionDigits="2"
-                locale="pt-BR"
-                :invalid="invalid"
-                fluid
-              />
+              <InputNumber :inputId="`person-${field}`" v-model="formData.nm_comissao_func" :name="field" :min="0"
+                :max="100" :maxFractionDigits="2" locale="pt-BR" :invalid="invalid" fluid />
               <label :for="`person-${field}`">Comissão (%)</label>
             </FloatLabel>
           </FieldForm>
@@ -955,19 +734,10 @@ watch(
     </FormPage>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button
-          type="button"
-          label="Cancelar"
-          severity="secondary"
-          @click="emit('update:visible', false)"
-        />
-        <Button
-          type="button"
-          label="Gravar"
-          :disabled="loadingPostalCode || loadingCnpj || loadingStates || !states.length || loading"
-          :loading="loading"
-          @click="formRef?.submit()"
-        />
+        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button type="button" label="Gravar"
+          :disabled="loadingPostalCode || loadingCnpj || loadingStates || !states.length || loading" :loading="loading"
+          @click="formRef?.submit()" />
       </div>
     </template>
   </Dialog>

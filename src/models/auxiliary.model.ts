@@ -1,4 +1,4 @@
-import type { IFormAuxiliary, IFormDescription } from '@/interface/interface-pages/CadastroAuxiliar'
+import type { IFormAuxiliary, IFormDescription } from '@/interface/pages/CadastroAuxiliar'
 
 export class AuxiliaryModel {
   static createDescriptionForm(): IFormDescription {
