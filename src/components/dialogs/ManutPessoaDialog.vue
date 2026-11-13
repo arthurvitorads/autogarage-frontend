@@ -8,6 +8,7 @@ import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import SelectButton from 'primevue/selectbutton'
+import Select from 'primevue/select'
 import Checkbox from 'primevue/checkbox'
 import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
@@ -19,7 +20,8 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type { Pessoa } from '@/models/pessoa.model'
-import { Estados, type ITipoPessoa } from '@/interface/enum'
+import type { ITipoPessoa } from '@/interface/enum'
+import { getStates, type IEndEstado } from '@/services/address.service'
 import { createPerson, personToRequest, updatePerson } from '@/services/person.service'
 import type { IFormPerson } from '@/interface/interface-pages/PessoaPage'
 import type { TGenericData } from '@/interface/util'
@@ -84,12 +86,34 @@ const companyFields = [
   'complemento',
   'bairro',
   'cidade',
-  'uf',
+  'cn_estado',
 ] as const
 type TCampoCnpj = (typeof companyFields)[number]
 let filledCompanyFields: Partial<Record<TCampoCnpj, string>> = {}
 
 const formData = ref<IFormPerson>(PersonModel.createForm())
+const states = ref<IEndEstado[]>([])
+let statesRequest: Promise<void> | undefined
+const loadingStates = ref(false)
+
+function stateIdForUf(uf: string) {
+  return states.value.find((state) => state.ca_uf === uf.trim().toUpperCase())?.cn_estado ?? ''
+}
+
+async function loadStates() {
+  if (loadingStates.value) return
+
+  loadingStates.value = true
+  states.value = []
+  try {
+    states.value = (await getStates()).filter((state) => state.ca_pais === 'BR')
+    if (!states.value.length) showError('Nenhuma UF brasileira foi cadastrada.')
+  } catch (error) {
+    showError(normalizeError(error))
+  } finally {
+    loadingStates.value = false
+  }
+}
 
 function resetCnpjQuery(clearFields = false) {
   cnpjRequestId++
@@ -143,6 +167,7 @@ async function queryCnpj(forceQuery = false) {
 
   try {
     const company = await fetchCnpj(cnpj)
+    await statesRequest
 
     if (currentRequest !== cnpjRequestId) return
 
@@ -174,7 +199,7 @@ async function queryCnpj(forceQuery = false) {
       complemento: getCnpjText(company.complemento),
       bairro: getCnpjText(company.bairro),
       cidade: getCnpjText(company.municipio),
-      uf: getCnpjText(company.uf),
+      cn_estado: stateIdForUf(getCnpjText(company.uf)),
     }
 
     if (companyData.cep && formData.value.cep === previousValues.cep) {
@@ -222,6 +247,7 @@ async function queryPostalCode(fillOnlyEmpty = false) {
 
   try {
     const address = await fetchCep(postalCode)
+    await statesRequest
 
     if (currentRequest !== postalCodeRequestId) return
 
@@ -243,13 +269,14 @@ async function queryPostalCode(fillOnlyEmpty = false) {
       if (fillOnlyEmpty) filledCompanyFields.cidade = address.localidade
     }
 
-    if (!fillOnlyEmpty || !formData.value.uf) {
-      formData.value.uf = address.uf
+    const stateId = stateIdForUf(address.uf)
+    if (stateId && (!fillOnlyEmpty || !formData.value.cn_estado)) {
+      formData.value.cn_estado = stateId
 
-      if (fillOnlyEmpty) filledCompanyFields.uf = address.uf
+      if (fillOnlyEmpty) filledCompanyFields.cn_estado = stateId
     }
 
-    for (const field of ['cep', 'logradouro', 'bairro', 'cidade', 'uf'])
+    for (const field of ['cep', 'logradouro', 'bairro', 'cidade', 'cn_estado'])
       delete formErrors.value[field]
   } catch (error) {
     if (currentRequest !== postalCodeRequestId) return
@@ -265,7 +292,8 @@ async function queryPostalCode(fillOnlyEmpty = false) {
 }
 
 async function onSubmit(values: IFormPerson) {
-  if (loadingPostalCode.value || loadingCnpj.value) return
+  if (loadingPostalCode.value || loadingCnpj.value || loadingStates.value || !states.value.length)
+    return
 
   const errors: TGenericData = {}
 
@@ -309,7 +337,8 @@ async function onSubmit(values: IFormPerson) {
 
   if (!values.cidade.trim()) errors.cidade = 'Campo obrigatório.'
 
-  if (!Estados.includes(values.uf.trim().toUpperCase())) errors.uf = 'Informe uma UF válida.'
+  if (!states.value.some((state) => state.cn_estado === values.cn_estado))
+    errors.cn_estado = 'Selecione uma UF válida.'
 
   if (
     values.bo_categ_func &&
@@ -352,7 +381,7 @@ async function onSubmit(values: IFormPerson) {
         complemento: values.complemento.trim(),
         bairro: values.bairro.trim(),
         cidade: values.cidade.trim(),
-        uf: values.uf.trim().toUpperCase(),
+        cn_estado: values.cn_estado,
       },
       ...(values.bo_categ_func
         ? {
@@ -425,6 +454,14 @@ watch(
     postalCodeMessage.value = ''
     queriedPostalCode.value = person ? onlyNumbers(person.endereco.cep) : ''
     formKey.value++
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible && !loadingStates.value) statesRequest = loadStates()
   },
   { immediate: true },
 )
@@ -774,7 +811,7 @@ watch(
             />
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-5 lg:col-span-4"
+            class="col-span-12 sm:col-span-4 lg:col-span-3"
             name="cidade"
             label="Cidade *"
             v-slot="{ invalid, field }"
@@ -788,12 +825,26 @@ watch(
             />
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-2 lg:col-span-1"
-            name="uf"
+            class="col-span-12 sm:col-span-3 lg:col-span-2"
+            name="cn_estado"
             label="UF *"
             v-slot="{ invalid, field }"
           >
-            <InputText v-model="formData.uf" :name="field" :invalid="invalid" fluid maxlength="2" />
+            <Select
+              v-model="formData.cn_estado"
+              :name="field"
+              :options="states"
+              optionLabel="ca_uf"
+              optionValue="cn_estado"
+              :invalid="invalid"
+              :loading="loadingStates"
+              :disabled="loadingStates || !states.length"
+              fluid
+            >
+              <template #option="{ option }">
+                {{ option.ca_uf }} — {{ option.an_descr }}
+              </template>
+            </Select>
           </FieldForm>
         </div>
       </Fieldset>
@@ -844,7 +895,7 @@ watch(
         <Button
           type="button"
           label="Gravar"
-          :disabled="loadingPostalCode || loadingCnpj || loading"
+          :disabled="loadingPostalCode || loadingCnpj || loadingStates || !states.length || loading"
           :loading="loading"
           @click="formRef?.submit()"
         />

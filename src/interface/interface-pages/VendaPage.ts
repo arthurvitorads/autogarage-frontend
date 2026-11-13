@@ -21,8 +21,8 @@ export type TSaleCustomer = Pick<
 > & {
   endereco: Pick<
     NonNullable<ICadPessoa['endereco']>,
-    'an_logradouro' | 'an_numero' | 'an_cidade' | 'ca_uf'
-  > | null
+    'an_logradouro' | 'an_numero' | 'an_cidade'
+  > & { estado: { ca_uf: string } | null } | null
 }
 
 export interface IItemVenda {

@@ -46,7 +46,7 @@ export function personToRequest(pessoa: Pessoa): IManutPerson {
       an_complemento: pessoa.endereco.complemento,
       an_bairro: pessoa.endereco.bairro,
       an_cidade: pessoa.endereco.cidade,
-      ca_uf: pessoa.endereco.uf,
+      cn_estado: pessoa.endereco.cn_estado,
     },
   }
 }

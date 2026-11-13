@@ -7,11 +7,12 @@ export interface IManutAddress {
   an_complemento: string
   an_bairro: string
   an_cidade: string
-  ca_uf: string
+  cn_estado: string
 }
 
-export interface ICadEndereco extends IManutAddress {
+export interface ICadEndereco extends Omit<IManutAddress, 'cn_estado'> {
   cn_endereco: string
+  cn_estado: string | null
   cn_pessoa: string
   bo_sts_reg: boolean
   dt_inc: string
@@ -73,5 +74,5 @@ export interface IFormPerson {
   complemento: string
   bairro: string
   cidade: string
-  uf: string
+  cn_estado: string
 }

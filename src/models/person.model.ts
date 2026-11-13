@@ -22,7 +22,7 @@ export class PersonModel {
       complemento: '',
       bairro: '',
       cidade: '',
-      uf: '',
+      cn_estado: '',
     }
   }
 }

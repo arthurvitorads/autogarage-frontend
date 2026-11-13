@@ -54,7 +54,7 @@ function editPessoa(pessoa: ICadPessoa) {
       complemento: endereco?.an_complemento ?? '',
       bairro: endereco?.an_bairro ?? '',
       cidade: endereco?.an_cidade ?? '',
-      uf: endereco?.ca_uf ?? '',
+      cn_estado: endereco?.cn_estado ?? '',
     },
   }
 

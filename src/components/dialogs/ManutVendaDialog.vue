@@ -251,7 +251,7 @@ async function save() {
           <p>{{ customer.an_telefone }}</p>
           <p v-if="customer.endereco" class="sm:col-span-2">
             {{ customer.endereco.an_logradouro }}, {{ customer.endereco.an_numero }} —
-            {{ customer.endereco.an_cidade }}/{{ customer.endereco.ca_uf }}
+            {{ customer.endereco.an_cidade }}{{ customer.endereco.estado ? '/' + customer.endereco.estado.ca_uf : '' }}
           </p>
         </div>
         <p v-else>Selecione um cliente para conferir as informações.</p>

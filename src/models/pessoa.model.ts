@@ -5,7 +5,7 @@ export interface IEndereco {
   complemento: string
   bairro: string
   cidade: string
-  uf: string
+  cn_estado: string
 }
 
 interface IPessoaBase {
