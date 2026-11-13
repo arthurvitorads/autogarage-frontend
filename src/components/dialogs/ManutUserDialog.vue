@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { UserModel } from '@/models/user.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IManutUserDialogProps } from '@/interface/interface-pages/UsuarioPage'
@@ -135,40 +136,44 @@ watch(
       <Fieldset legend="Usuário">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
-            class="col-span-12 sm:col-span-10"
+            class="m-[4px] col-span-12 sm:col-span-10"
             name="an_nome"
-            label="Nome"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              maxlength="4000"
-              :name="field"
-              placeholder="Digite o nome"
-              :invalid="invalid"
-              fluid
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="ManutUserDialog-an_nome"
+                maxlength="4000"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
+              <label for="ManutUserDialog-an_nome">Nome</label>
+            </FloatLabel>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status">
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-2" name="bo_sts_reg">
             <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-6"
+            class="m-[4px] col-span-12 sm:col-span-6"
             name="an_email"
-            label="E-mail"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              maxlength="4000"
-              :name="field"
-              type="email"
-              placeholder="Digite o e-mail"
-              :invalid="invalid"
-              fluid
-              :readonly="isEditing"
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="ManutUserDialog-an_email"
+                maxlength="4000"
+                :name="field"
+                type="email"
+                :invalid="invalid"
+                fluid
+                :readonly="isEditing"
+              />
+              <label for="ManutUserDialog-an_email">E-mail</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-6"
+            class="m-[4px] col-span-12 sm:col-span-6"
             name="cn_perfil"
             label="Perfil"
             v-slot="{ invalid, field }"
@@ -182,21 +187,25 @@ watch(
           </FieldForm>
           <FieldForm
             v-if="!isEditing"
-            class="col-span-12"
+            class="m-[4px] col-span-12"
             name="ca_senha"
-            :label="isEditing ? 'Nova senha (opcional)' : 'Senha'"
             v-slot="{ invalid, field }"
           >
-            <Password
-              :inputProps="{ maxlength: 128 }"
-              :name="field"
-              placeholder="Digite a senha"
-              :feedback="false"
-              toggleMask
-              fluid
-              autocomplete="new-password"
-              :invalid="invalid"
-            />
+            <FloatLabel variant="on">
+              <Password
+                inputId="ManutUserDialog-ca_senha"
+                :inputProps="{ maxlength: 128 }"
+                :name="field"
+                :feedback="false"
+                toggleMask
+                fluid
+                autocomplete="new-password"
+                :invalid="invalid"
+              />
+              <label for="ManutUserDialog-ca_senha">{{
+                isEditing ? 'Nova senha (opcional)' : 'Senha'
+              }}</label>
+            </FloatLabel>
           </FieldForm>
         </div>
       </Fieldset>

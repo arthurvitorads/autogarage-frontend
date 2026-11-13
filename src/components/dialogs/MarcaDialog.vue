@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { AuxiliaryModel } from '@/models/auxiliary.model'
 import type { IDialogProps } from '@/interface/dialog'
 import type { IFormPageRef, TGenericData } from '@/interface/util'
@@ -142,19 +143,18 @@ watch(
     >
       <Fieldset legend="Dados da marca">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="col-span-12"
-            name="an_descr"
-            label="Descrição *"
-            v-slot="{ invalid, field }"
-          >
-            <InputText
-              maxlength="4000"
-              v-model="formData.an_descr"
-              :name="field"
-              :invalid="invalid"
-              fluid
-            />
+          <FieldForm class="m-[4px] col-span-12" name="an_descr" v-slot="{ invalid, field }">
+            <FloatLabel variant="on">
+              <InputText
+                id="MarcaDialog-an_descr"
+                maxlength="4000"
+                v-model="formData.an_descr"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
+              <label for="MarcaDialog-an_descr">Descrição *</label>
+            </FloatLabel>
           </FieldForm>
         </div>
       </Fieldset>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { ProfileModel } from '@/models/profile.model'
 import type { IManutProfileDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
@@ -107,16 +108,19 @@ watch(
       @input="isValidated = false"
       @change="isValidated = false"
     >
-      <FieldForm class="col-span-8" name="an_descr" label="Descrição" v-slot="{ invalid, field }">
-        <InputText
-          maxlength="4000"
-          :name="field"
-          placeholder="Digite a descrição"
-          :invalid="invalid"
-          fluid
-        />
+      <FieldForm class="m-[4px] col-span-8" name="an_descr" v-slot="{ invalid, field }">
+        <FloatLabel variant="on">
+          <InputText
+            id="ManutPerfilDialog-an_descr"
+            maxlength="4000"
+            :name="field"
+            :invalid="invalid"
+            fluid
+          />
+          <label for="ManutPerfilDialog-an_descr">Descrição</label>
+        </FloatLabel>
       </FieldForm>
-      <FieldForm class="col-span-4 flex items-start ml-2" name="bo_sts_reg" label="Status">
+      <FieldForm class="m-[4px] col-span-4 flex items-start ml-2" name="bo_sts_reg">
         <StatusField v-model="formData.bo_sts_reg" />
       </FieldForm>
       <div class="col-span-12 flex justify-end gap-2 mt-4">

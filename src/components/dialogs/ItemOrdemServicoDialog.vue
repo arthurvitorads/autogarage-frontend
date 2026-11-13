@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { ServiceOrderItemModel } from '@/models/service-order-item.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IServiceOrderItemDialogProps } from '@/interface/dialog'
@@ -217,7 +218,7 @@ watch(
     >
       <Fieldset legend="Dados do item">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="col-span-12" name="ca_tipo" label="Tipo">
+          <FieldForm class="m-[4px] col-span-12" name="ca_tipo" label="Tipo">
             <SelectButton
               v-model="formData.ca_tipo"
               :options="itemTypes"
@@ -228,74 +229,92 @@ watch(
             />
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-9"
+            class="m-[4px] col-span-12 sm:col-span-9"
             name="cn_referencia"
-            :label="formData.ca_tipo === 'PRODUTO' ? 'Produto *' : 'Serviço *'"
             v-slot="{ invalid, field }"
           >
-            <Select
-              v-model="formData.cn_referencia"
-              :name="field"
-              :options="options"
-              optionLabel="an_nome"
-              optionValue="cn_referencia"
-              placeholder="Selecione"
-              :invalid="invalid"
-              filter
-              fluid
-              @change="loadPrice"
-            />
+            <FloatLabel variant="on">
+              <Select
+                inputId="ItemOrdemServicoDialog-cn_referencia"
+                v-model="formData.cn_referencia"
+                :name="field"
+                :options="options"
+                optionLabel="an_nome"
+                optionValue="cn_referencia"
+                :invalid="invalid"
+                filter
+                fluid
+                @change="loadPrice"
+              />
+              <label for="ItemOrdemServicoDialog-cn_referencia">{{
+                formData.ca_tipo === 'PRODUTO' ? 'Produto *' : 'Serviço *'
+              }}</label>
+            </FloatLabel>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-3" name="ca_unidade" label="Unidade">
-            <InputText
-              maxlength="10"
-              :modelValue="selectedReference?.ca_unidade ?? ''"
-              readonly
-              fluid
-            />
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-3" name="ca_unidade">
+            <FloatLabel variant="on">
+              <InputText
+                id="ItemOrdemServicoDialog-ca_unidade"
+                maxlength="10"
+                :modelValue="selectedReference?.ca_unidade ?? ''"
+                readonly
+                fluid
+              />
+              <label for="ItemOrdemServicoDialog-ca_unidade">Unidade</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-4"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="qt_quantidade"
-            label="Quantidade *"
             v-slot="{ invalid, field }"
           >
-            <InputNumber
-              v-model="formData.qt_quantidade"
-              :name="field"
-              :invalid="invalid"
-              :min="0"
-              :max="999999999.999"
-              :maxFractionDigits="3"
-              locale="pt-BR"
-              fluid
-            />
+            <FloatLabel variant="on">
+              <InputNumber
+                inputId="ItemOrdemServicoDialog-qt_quantidade"
+                v-model="formData.qt_quantidade"
+                :name="field"
+                :invalid="invalid"
+                :min="0"
+                :max="999999999.999"
+                :maxFractionDigits="3"
+                locale="pt-BR"
+                fluid
+              />
+              <label for="ItemOrdemServicoDialog-qt_quantidade">Quantidade *</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-4"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="vl_unitario"
-            label="Preço unitário *"
             v-slot="{ invalid, field }"
           >
-            <InputNumber
-              v-model="formData.vl_unitario"
-              :name="field"
-              :invalid="invalid"
-              :min="0"
-              :max="999999999.99"
-              mode="currency"
-              currency="BRL"
-              locale="pt-BR"
-              fluid
-            />
+            <FloatLabel variant="on">
+              <InputNumber
+                inputId="ItemOrdemServicoDialog-vl_unitario"
+                v-model="formData.vl_unitario"
+                :name="field"
+                :invalid="invalid"
+                :min="0"
+                :max="999999999.99"
+                mode="currency"
+                currency="BRL"
+                locale="pt-BR"
+                fluid
+              />
+              <label for="ItemOrdemServicoDialog-vl_unitario">Preço unitário *</label>
+            </FloatLabel>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-4" name="vl_total" label="Total do item">
-            <InputText
-              maxlength="4000"
-              :modelValue="totalItem === null ? '' : formatOrderCurrency(totalItem)"
-              readonly
-              fluid
-            />
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="vl_total">
+            <FloatLabel variant="on">
+              <InputText
+                id="ItemOrdemServicoDialog-vl_total"
+                maxlength="4000"
+                :modelValue="totalItem === null ? '' : formatOrderCurrency(totalItem)"
+                readonly
+                fluid
+              />
+              <label for="ItemOrdemServicoDialog-vl_total">Total do item</label>
+            </FloatLabel>
           </FieldForm>
         </div>
       </Fieldset>

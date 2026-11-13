@@ -3,7 +3,9 @@ import logoClara from '@/assets/img/logo_clara.png'
 </script>
 
 <template>
-  <main class="flex min-h-screen flex-col items-center justify-center bg-neutral-900 px-6 text-center text-white">
+  <main
+    class="flex min-h-screen flex-col items-center justify-center bg-neutral-900 px-6 text-center text-white"
+  >
     <img class="mb-8 w-72 max-w-full" :src="logoClara" alt="Logo do AutoGarage" />
     <p class="mb-2 text-lg font-semibold">404</p>
     <h1 class="text-3xl font-bold">Página não encontrada</h1>

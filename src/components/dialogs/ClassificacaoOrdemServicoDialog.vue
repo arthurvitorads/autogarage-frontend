@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { OrderClassificationModel } from '@/models/order-classification.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IDialogProps } from '@/interface/dialog'
@@ -166,38 +167,44 @@ watch(
       <Fieldset legend="Dados da classificação">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
-            class="col-span-12 sm:col-span-9"
+            class="m-[4px] col-span-12 sm:col-span-9"
             name="an_descr"
-            label="Nome *"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              maxlength="4000"
-              v-model="formData.an_descr"
-              :name="field"
-              :invalid="invalid"
-              fluid
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="ClassificacaoOrdemServicoDialog-an_descr"
+                maxlength="4000"
+                v-model="formData.an_descr"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
+              <label for="ClassificacaoOrdemServicoDialog-an_descr">Nome *</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-3"
+            class="m-[4px] col-span-12 sm:col-span-3"
             name="ca_cor"
-            label="Cor *"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              maxlength="4000"
-              v-model="formData.ca_cor"
-              :name="field"
-              type="color"
-              :invalid="invalid"
-              fluid
-              class="h-10"
-              aria-label="Cor da classificação"
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="ClassificacaoOrdemServicoDialog-ca_cor"
+                maxlength="4000"
+                v-model="formData.ca_cor"
+                :name="field"
+                type="color"
+                :invalid="invalid"
+                fluid
+                class="h-10"
+                aria-label="Cor da classificação"
+              />
+              <label for="ClassificacaoOrdemServicoDialog-ca_cor">Cor *</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12"
+            class="m-[4px] col-span-12"
             name="bo_padrao"
             label="Padrão para novas ordens"
             v-slot="{ field }"

@@ -19,10 +19,11 @@ export type TSaleCustomer = Pick<
   ICadPessoa,
   'an_nome' | 'an_razao_social' | 'ca_cpf' | 'ca_cnpj' | 'an_email' | 'an_telefone'
 > & {
-  endereco: Pick<
-    NonNullable<ICadPessoa['endereco']>,
-    'an_logradouro' | 'an_numero' | 'an_cidade'
-  > & { estado: { ca_uf: string } | null } | null
+  endereco:
+    | (Pick<NonNullable<ICadPessoa['endereco']>, 'an_logradouro' | 'an_numero' | 'an_cidade'> & {
+        estado: { ca_uf: string } | null
+      })
+    | null
 }
 
 export interface IItemVenda {

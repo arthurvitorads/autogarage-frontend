@@ -56,3 +56,8 @@ export interface ICnpjBrasilApiResponse {
 export interface IFormPageRef {
   submit: () => void
 }
+
+export interface IGridActionEvent<TData> {
+  action: string
+  data?: TData
+}

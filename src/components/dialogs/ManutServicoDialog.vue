@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { ServiceModel } from '@/models/service.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IManutServiceDialogProps } from '@/interface/dialog'
@@ -160,39 +161,43 @@ watch(
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
-            class="col-span-12 sm:col-span-10"
+            class="m-[4px] col-span-12 sm:col-span-10"
             name="an_nome"
-            label="Nome *"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              maxlength="4000"
-              v-model="formData.an_nome"
-              :name="field"
-              :invalid="invalid"
-              fluid
-              placeholder="Digite o nome do serviço"
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="ManutServicoDialog-an_nome"
+                maxlength="4000"
+                v-model="formData.an_nome"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
+              <label for="ManutServicoDialog-an_nome">Nome *</label>
+            </FloatLabel>
           </FieldForm>
-          <FieldForm class="col-span-12 sm:col-span-2" name="bo_sts_reg" label="Status">
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-2" name="bo_sts_reg">
             <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="an_categoria"
-            label="Categoria"
             v-slot="{ invalid, field }"
           >
             <div class="flex gap-2">
-              <Select
-                v-model="formData.an_categoria"
-                :name="field"
-                :options="serviceCategories"
-                :invalid="invalid"
-                class="flex-1 min-w-0"
-                placeholder="Selecione a categoria"
-                showClear
-              />
+              <FloatLabel variant="on" class="flex-1 min-w-0">
+                <Select
+                  inputId="ManutServicoDialog-an_categoria"
+                  v-model="formData.an_categoria"
+                  :name="field"
+                  :options="serviceCategories"
+                  :invalid="invalid"
+                  showClear
+                  fluid
+                />
+                <label for="ManutServicoDialog-an_categoria">Categoria</label>
+              </FloatLabel>
               <Button
                 type="button"
                 icon="pi pi-plus"
@@ -203,45 +208,50 @@ watch(
             </div>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="vl_preco"
-            label="Preço do serviço *"
             v-slot="{ invalid, field }"
           >
-            <InputNumber
-              v-model="formData.vl_preco"
-              :name="field"
-              :invalid="invalid"
-              fluid
-              locale="pt-BR"
-              mode="currency"
-              currency="BRL"
-              :max="999999999.99"
-              :min="0"
-            />
+            <FloatLabel variant="on">
+              <InputNumber
+                inputId="ManutServicoDialog-vl_preco"
+                v-model="formData.vl_preco"
+                :name="field"
+                :invalid="invalid"
+                fluid
+                locale="pt-BR"
+                mode="currency"
+                currency="BRL"
+                :max="999999999.99"
+                :min="0"
+              />
+              <label for="ManutServicoDialog-vl_preco">Preço do serviço *</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-6 lg:col-span-4"
+            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="nu_tempo_estimado"
-            label="Tempo estimado (minutos)"
             v-slot="{ invalid, field }"
           >
-            <InputNumber
-              v-model="formData.nu_tempo_estimado"
-              :name="field"
-              :invalid="invalid"
-              fluid
-              locale="pt-BR"
-              :max="999999"
-              :min="0"
-              :maxFractionDigits="0"
-              placeholder="Opcional"
-            />
+            <FloatLabel variant="on">
+              <InputNumber
+                inputId="ManutServicoDialog-nu_tempo_estimado"
+                v-model="formData.nu_tempo_estimado"
+                :name="field"
+                :invalid="invalid"
+                fluid
+                locale="pt-BR"
+                :max="999999"
+                :min="0"
+                :maxFractionDigits="0"
+              />
+              <label for="ManutServicoDialog-nu_tempo_estimado">Tempo estimado (minutos)</label>
+            </FloatLabel>
           </FieldForm>
         </div>
       </Fieldset>
       <Fieldset legend="Observações">
-        <FieldForm name="an_obs" v-slot="{ field }">
+        <FieldForm class="m-[4px]" name="an_obs" v-slot="{ field }">
           <Textarea maxlength="4000" v-model="formData.an_obs" :name="field" rows="2" fluid />
         </FieldForm>
       </Fieldset>

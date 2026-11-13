@@ -11,6 +11,8 @@ import type { Pessoa } from '@/models/pessoa.model'
 
 import type { ICadPessoa } from '@/interface/interface-pages/PessoaPage'
 
+import { IGridActionEvent } from '@/interface/util'
+
 import { getPeople } from '@/services/person.service'
 
 import { useUtilStore } from '@/stores/util.store'
@@ -27,16 +29,22 @@ const filter = ref('')
 const manutPessoaVisible = ref(false)
 const selectedPessoa = ref<Pessoa | null>(null)
 
-function newPessoa() {
+function onGridAction({ action, data }: IGridActionEvent<ICadPessoa>) {
+  switch (action) {
+    case 'edit':
+      if (data) openEdit(data)
+      break
+    default:
+      break
+  }
+}
+
+function openNewForm() {
   selectedPessoa.value = null
   manutPessoaVisible.value = true
 }
 
-function onGridAction({ action, data }: { action: string; data: ICadPessoa }) {
-  if (action === 'edit') editPessoa(data)
-}
-
-function editPessoa(pessoa: ICadPessoa) {
+function openEdit(pessoa: ICadPessoa) {
   const endereco = pessoa.endereco
   const dados = {
     cn_pessoa: pessoa.cn_pessoa,
@@ -83,7 +91,6 @@ onMounted(() => {
 </script>
 <template>
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
-    <!-- filtro -->
     <div class="flex flex-col flex-1 min-h-0 min-w-0 border border-surface-200 rounded-xl">
       <div class="flex justify-between m-5">
         <div class="flex justify-center gap-2 w-140">
@@ -97,7 +104,12 @@ onMounted(() => {
           <Button icon="pi pi-search" :disabled="grid?.loading" @click="grid?.loadGrid(filter)" />
         </div>
         <div class="flex">
-          <Button v-if="canWrite('CADASTROS')" label="Novo" icon="pi pi-plus" @click="newPessoa" />
+          <Button
+            v-if="canWrite('CADASTROS')"
+            label="Novo"
+            icon="pi pi-plus"
+            @click="openNewForm"
+          />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">

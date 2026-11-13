@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { AuxiliaryModel } from '@/models/auxiliary.model'
 import type { IDialogProps } from '@/interface/dialog'
 import type { IFormPageRef, TGenericData } from '@/interface/util'
@@ -149,32 +150,38 @@ watch(
       <Fieldset legend="Dados da unidade">
         <div class="grid grid-cols-12 gap-x-4">
           <FieldForm
-            class="col-span-12 sm:col-span-8"
+            class="m-[4px] col-span-12 sm:col-span-8"
             name="an_descr"
-            label="Descrição *"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              maxlength="4000"
-              v-model="formData.an_descr"
-              :name="field"
-              :invalid="invalid"
-              fluid
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="UnidadeDialog-an_descr"
+                maxlength="4000"
+                v-model="formData.an_descr"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
+              <label for="UnidadeDialog-an_descr">Descrição *</label>
+            </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="col-span-12 sm:col-span-4"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="ca_sigla"
-            label="Sigla *"
             v-slot="{ invalid, field }"
           >
-            <InputText
-              v-model="formData.ca_sigla"
-              :name="field"
-              :invalid="invalid"
-              maxlength="10"
-              fluid
-            />
+            <FloatLabel variant="on">
+              <InputText
+                id="UnidadeDialog-ca_sigla"
+                v-model="formData.ca_sigla"
+                :name="field"
+                :invalid="invalid"
+                maxlength="10"
+                fluid
+              />
+              <label for="UnidadeDialog-ca_sigla">Sigla *</label>
+            </FloatLabel>
           </FieldForm>
         </div>
       </Fieldset>

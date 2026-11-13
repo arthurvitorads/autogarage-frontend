@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import type { IMoveServiceOrderDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import Dialog from 'primevue/dialog'
@@ -72,18 +73,21 @@ async function confirmAction() {
   >
     <p class="mb-4">Deseja realizar o processo?</p>
     <p class="text-surface-500 mb-4">O.S. #{{ order?.nu_numero }} — {{ order?.an_cliente }}</p>
-    <label v-if="action === 'CANCELAR'" class="flex flex-col gap-2">
-      <span>Motivo do cancelamento *</span>
-      <Textarea
-        v-model="reason"
-        maxlength="4000"
-        rows="4"
-        :invalid="!!errorMessage"
-        :disabled="loading"
-        fluid
-      />
+    <div v-if="action === 'CANCELAR'" class="m-[4px] flex flex-col gap-2">
+      <FloatLabel variant="on">
+        <Textarea
+          id="os-motivo-cancelamento"
+          v-model="reason"
+          maxlength="4000"
+          rows="4"
+          :invalid="!!errorMessage"
+          :disabled="loading"
+          fluid
+        />
+        <label for="os-motivo-cancelamento">Motivo do cancelamento *</label>
+      </FloatLabel>
       <span v-if="errorMessage" class="text-red-600 text-sm">{{ errorMessage }}</span>
-    </label>
+    </div>
     <template #footer>
       <Button
         label="Não"

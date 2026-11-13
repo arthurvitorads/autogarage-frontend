@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FloatLabel from 'primevue/floatlabel'
 import { SaleModel } from '@/models/sale.model'
 import type { IFormSale } from '@/interface/interface-pages/VendaPage'
 import type { IManutSaleDialogProps } from '@/interface/dialog'
@@ -214,34 +215,45 @@ async function save() {
         <Button label="Tentar novamente" severity="secondary" @click="loadData" />
       </div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Select
-          v-model="origin"
-          :options="originOptions"
-          optionLabel="label"
-          optionValue="value"
-          :disabled="!!order || saving"
-          aria-label="Origem da venda"
-        />
-        <Select
-          v-if="origin === 'ORDEM_SERVICO' && !order"
-          v-model="orderId"
-          :options="availableOrders"
-          optionLabel="an_label"
-          optionValue="cn_ordem_servico"
-          placeholder="Selecione a O.S. finalizada"
-          filter
-          aria-label="Ordem de serviço"
-        />
-        <Select
-          v-if="origin === 'DIRETA'"
-          v-model="personId"
-          :options="customers"
-          optionLabel="an_nome"
-          optionValue="cn_pessoa"
-          placeholder="Selecione o cliente"
-          filter
-          aria-label="Cliente da venda"
-        />
+        <FloatLabel variant="on" class="m-[4px]">
+          <Select
+            inputId="venda-origin"
+            v-model="origin"
+            :options="originOptions"
+            optionLabel="label"
+            optionValue="value"
+            :disabled="!!order || saving"
+            aria-label="Origem da venda"
+            fluid
+          />
+          <label for="venda-origin">Origem da venda</label>
+        </FloatLabel>
+        <FloatLabel variant="on" class="m-[4px]" v-if="origin === 'ORDEM_SERVICO' && !order">
+          <Select
+            inputId="venda-orderId"
+            v-model="orderId"
+            :options="availableOrders"
+            optionLabel="an_label"
+            optionValue="cn_ordem_servico"
+            filter
+            aria-label="Ordem de serviço"
+            fluid
+          />
+          <label for="venda-orderId">Ordem de serviço</label>
+        </FloatLabel>
+        <FloatLabel variant="on" class="m-[4px]" v-if="origin === 'DIRETA'">
+          <Select
+            inputId="venda-personId"
+            v-model="personId"
+            :options="customers"
+            optionLabel="an_nome"
+            optionValue="cn_pessoa"
+            filter
+            aria-label="Cliente da venda"
+            fluid
+          />
+          <label for="venda-personId">Cliente da venda</label>
+        </FloatLabel>
       </div>
       <Fieldset legend="Cliente">
         <div v-if="customer" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -251,43 +263,53 @@ async function save() {
           <p>{{ customer.an_telefone }}</p>
           <p v-if="customer.endereco" class="sm:col-span-2">
             {{ customer.endereco.an_logradouro }}, {{ customer.endereco.an_numero }} —
-            {{ customer.endereco.an_cidade }}{{ customer.endereco.estado ? '/' + customer.endereco.estado.ca_uf : '' }}
+            {{ customer.endereco.an_cidade
+            }}{{ customer.endereco.estado ? '/' + customer.endereco.estado.ca_uf : '' }}
           </p>
         </div>
         <p v-else>Selecione um cliente para conferir as informações.</p>
       </Fieldset>
       <Fieldset legend="Itens">
         <div v-if="origin === 'DIRETA'" class="flex flex-wrap gap-2 mb-4 items-end">
-          <Select
-            v-model="item.ca_tipo"
-            :options="itemTypes"
-            optionLabel="label"
-            optionValue="value"
-            aria-label="Tipo do item"
-          />
-          <Select
-            v-model="item.cn_referencia"
-            :options="references"
-            optionLabel="an_nome"
-            optionValue="cn_referencia"
-            placeholder="Produto ou serviço"
-            filter
-            class="min-w-64"
-            aria-label="Produto ou serviço"
-          />
-          <div>
-            <label class="block mb-1">Quantidade</label
-            ><InputNumber
+          <FloatLabel variant="on" class="m-[4px]">
+            <Select
+              inputId="venda-item-ca_tipo"
+              v-model="item.ca_tipo"
+              :options="itemTypes"
+              optionLabel="label"
+              optionValue="value"
+              aria-label="Tipo do item"
+              fluid
+            />
+            <label for="venda-item-ca_tipo">Tipo do item</label>
+          </FloatLabel>
+          <FloatLabel variant="on" class="m-[4px] min-w-64">
+            <Select
+              inputId="venda-item-cn_referencia"
+              v-model="item.cn_referencia"
+              :options="references"
+              optionLabel="an_nome"
+              optionValue="cn_referencia"
+              filter
+              aria-label="Produto ou serviço"
+              fluid
+            />
+            <label for="venda-item-cn_referencia">Produto ou serviço</label>
+          </FloatLabel>
+          <FloatLabel variant="on" class="m-[4px]">
+            <InputNumber
+              inputId="venda-quantidade"
               v-model="item.qt_quantidade"
               :min="0.001"
               :maxFractionDigits="3"
               class="w-32"
               aria-label="Quantidade"
             />
-          </div>
-          <div>
-            <label class="block mb-1">Preço unitário</label
-            ><InputNumber
+            <label for="venda-quantidade">Quantidade</label>
+          </FloatLabel>
+          <FloatLabel variant="on" class="m-[4px]">
+            <InputNumber
+              inputId="venda-preco-unitario"
               v-model="item.vl_unitario"
               :min="0"
               :max="999999999.99"
@@ -297,7 +319,8 @@ async function save() {
               class="w-40"
               aria-label="Preço unitário"
             />
-          </div>
+            <label for="venda-preco-unitario">Preço unitário</label>
+          </FloatLabel>
           <Button icon="pi pi-plus" label="Adicionar" @click="addItem" />
         </div>
         <DataTable :value="rows" size="small" scrollable tableStyle="min-width: 45rem">
@@ -326,8 +349,10 @@ async function save() {
         </DataTable>
         <p class="text-right font-bold mt-3">Total: {{ formatOrderCurrency(total) }}</p>
       </Fieldset>
-      <label for="venda-observacao">Observações</label
-      ><Textarea id="venda-observacao" v-model="notes" rows="2" fluid />
+      <FloatLabel variant="on" class="m-[4px]">
+        <Textarea id="venda-observacao" v-model="notes" rows="2" fluid />
+        <label for="venda-observacao">Observações</label>
+      </FloatLabel>
     </div>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
