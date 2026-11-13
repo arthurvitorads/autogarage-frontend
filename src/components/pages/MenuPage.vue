@@ -115,20 +115,7 @@ const modules = [
     access: 'RELATORIOS',
     label: 'Relatórios',
     icon: 'chart-bar',
-    items: [
-      {
-        key: 'relatorios:tempos',
-        label: 'Tempo dos serviços',
-        icon: 'clock',
-        route: '/relatorios/tempos',
-      },
-      {
-        key: 'relatorios:vendas',
-        label: 'Vendas por período',
-        icon: 'chart-line',
-        route: '/relatorios/vendas',
-      },
-    ],
+    items: [],
   },
   {
     key: 'admin',

@@ -101,18 +101,6 @@ const atalhos = [
     icone: 'pi-shopping-cart',
     rota: 'faturamento-vendas',
   },
-  {
-    titulo: 'Tempo dos serviços',
-    descricao: 'Consulte os tempos de execução',
-    icone: 'pi-clock',
-    rota: 'relatorio-tempos',
-  },
-  {
-    titulo: 'Relatório de vendas',
-    descricao: 'Consulte as vendas por data',
-    icone: 'pi-chart-line',
-    rota: 'relatorio-vendas',
-  },
 ]
 const visibleShortcuts = computed(() =>
   atalhos.filter((shortcut) => {

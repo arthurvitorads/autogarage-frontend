@@ -4,16 +4,16 @@ import { signOut } from 'firebase/auth'
 import MainPage from '@/components/pages/MainPage.vue'
 
 import LoginPage from '@/views/LoginPage.vue'
+import NotFoundView from '@/views/404View.vue'
 import HomePage from '@/views/HomePage.vue'
-import PessoaPage from '@/views/PessoaPage.vue'
-import ProdutoPage from '@/views/ProdutoPage.vue'
-import ServicoPage from '@/views/ServicoPage.vue'
-import UsuarioPage from '@/views/UsuarioPage.vue'
-import VendaPage from '@/views/VendaPage.vue'
-import RelatorioPage from '@/views/RelatorioPage.vue'
-import PerfilPage from '@/views/PerfilPage.vue'
-import OrdemServicoPainelPage from '@/views/OrdemServicoPainelPage.vue'
-import OrdemServicoDetalhePage from '@/views/OrdemServicoDetalhePage.vue'
+import PessoaPage from '@/views/pages/PessoaPage.vue'
+import ProdutoPage from '@/views/pages/ProdutoPage.vue'
+import ServicoPage from '@/views/pages/ServicoPage.vue'
+import UsuarioPage from '@/views/pages/UsuarioPage.vue'
+import VendaPage from '@/views/pages/VendaPage.vue'
+import PerfilPage from '@/views/pages/PerfilPage.vue'
+import OrdemServicoPainelPage from '@/views/pages/OrdemServicoPainelPage.vue'
+import OrdemServicoDetalhePage from '@/views/pages/OrdemServicoDetalhePage.vue'
 
 import { auth } from '@/services/firebase.service'
 import { isFirstLogin } from '@/services/auth.service'
@@ -100,20 +100,6 @@ const router = createRouter({
           meta: { module: 'FATURAMENTO', title: 'Vendas | AutoGarage' },
         },
         {
-          path: 'relatorios/tempos',
-          name: 'relatorio-tempos',
-          component: RelatorioPage,
-          props: { reportType: 'tempos' },
-          meta: { module: 'RELATORIOS', title: 'Tempo dos serviços | AutoGarage' },
-        },
-        {
-          path: 'relatorios/vendas',
-          name: 'relatorio-vendas',
-          component: RelatorioPage,
-          props: { reportType: 'vendas' },
-          meta: { module: 'RELATORIOS', title: 'Relatório de vendas | AutoGarage' },
-        },
-        {
           path: 'usuario',
           name: 'usuario',
           component: UsuarioPage,
@@ -133,10 +119,18 @@ const router = createRouter({
         },
       ],
     },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'not-found',
+      component: NotFoundView,
+      meta: { title: 'Página não encontrada | AutoGarage' },
+    },
   ],
 })
 
 router.beforeEach(async (to) => {
+  if (to.name === 'not-found') return true
+
   const utilStore = useUtilStore()
 
   utilStore.setLoading(true)
