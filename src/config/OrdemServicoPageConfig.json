@@ -1,0 +1,52 @@
+{
+  "dataKey": "cn_ordem_servico",
+  "columns": [
+    {
+      "field": "nu_numero",
+      "header": "O.S.",
+      "align": "end"
+    },
+    {
+      "field": "an_cliente",
+      "header": "Cliente"
+    },
+    {
+      "field": "placa",
+      "header": "Placa"
+    },
+    {
+      "field": "veiculo",
+      "header": "Veículo"
+    },
+    {
+      "field": "ca_status",
+      "header": "Status"
+    },
+    {
+      "field": "dt_entrada",
+      "header": "Entrada"
+    },
+    {
+      "field": "dt_previsao",
+      "header": "Previsão"
+    },
+    {
+      "field": "total",
+      "header": "Total",
+      "align": "end"
+    }
+  ],
+  "actionHeader": "Ações",
+  "actions": [
+    {
+      "action": "edit",
+      "label": "Editar ordem",
+      "icon": "pi pi-pencil"
+    },
+    {
+      "action": "open",
+      "label": "Abrir itens da ordem",
+      "icon": "pi pi-external-link"
+    }
+  ]
+}

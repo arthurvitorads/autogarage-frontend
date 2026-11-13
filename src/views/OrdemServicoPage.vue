@@ -1,25 +1,18 @@
 <script setup lang="ts">
-import { useUtilStore } from '@/stores/util.store'
-import { usePesquisa as useSearch } from '@/composables/usePesquisa'
-import { getOrdersPage } from '@/services/ordem-api.service'
-import { usePageLoad } from '@/composables/usePageLoad'
-import { ref } from 'vue'
-import { storeToRefs } from 'pinia'
+import { ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 
+import GridPage from '@/components/pages/GridPage.vue'
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
-import type {
-  IAdmOrdemServico,
-  TServiceOrderCode,
-} from '@/interface/interface-pages/OrdemServicoPage'
+import type { IAdmOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 
+import { getOrdersPage } from '@/services/ordem-api.service'
+import { usePageLoad } from '@/composables/usePageLoad'
 import {
   calcularTotalOrdem as calculateOrderTotal,
   corTextoStatus as statusTextColor,
@@ -28,21 +21,15 @@ import {
   ordemEncerrada as isOrderClosed,
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
+
+import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
+import OrdemServicoPageConfig from '@/config/OrdemServicoPageConfig.json'
+
 const router = useRouter()
-const { classificacoes: classifications } = storeToRefs(useServiceOrderStore())
-const {
-  records: orders,
-  total,
-  firstRecord,
-  limit,
-  filter,
-  loadingGrid,
-  load,
-  search,
-  changePage,
-} = useSearch<IAdmOrdemServico>(getOrdersPage)
+const grid = useTemplateRef('grid')
+const filter = ref('')
 
 const manutOrderVisible = ref(false)
 const classificationDialogVisible = ref(false)
@@ -62,15 +49,20 @@ function openOrder(order: IAdmOrdemServico) {
   router.push({ name: 'ordem-servico-detalhe', params: { id: order.cn_ordem_servico } })
 }
 
-function getStatus(code: TServiceOrderCode) {
-  return classifications.value.find((item) => item.cn_classificacao === code)
-}
-
 usePageLoad(async () => {
   await useServiceOrderStore().loadParametros()
-  await load()
+  await grid.value?.loadGrid()
 })
 const { canRead, canWrite } = useUtilStore()
+
+function isActionVisible(action: string, order: IAdmOrdemServico) {
+  return action !== 'edit' || (canWrite('ORDEM_SERVICO') && !isOrderClosed(order))
+}
+
+function onGridAction({ action, data }: { action: string; data: IAdmOrdemServico }) {
+  if (action === 'edit') editOrder(data)
+  if (action === 'open') openOrder(data)
+}
 </script>
 
 <template>
@@ -83,13 +75,13 @@ const { canRead, canWrite } = useUtilStore()
             placeholder="Pesquisar por número, cliente ou veículo..."
             aria-label="Pesquisar ordens de serviço"
             class="flex-1 min-w-0"
-            @keyup.enter="search"
+            @keyup.enter="grid?.loadGrid(filter.trim())"
           />
           <Button
             icon="pi pi-search"
             aria-label="Pesquisar"
-            :disabled="loadingGrid"
-            @click="search"
+            :disabled="grid?.loading"
+            @click="grid?.loadGrid(filter.trim())"
           />
         </div>
         <div class="flex gap-2">
@@ -109,89 +101,47 @@ const { canRead, canWrite } = useUtilStore()
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
-        <DataTable
-          :pt="{ emptyMessage: { class: 'hidden' } }"
-          :value="orders"
-          dataKey="cn_ordem_servico"
-          size="small"
-          stripedRows
-          scrollable
-          scrollHeight="flex"
-          tableStyle="min-width: 65rem"
-          lazy
-          :loading="loadingGrid"
-          :totalRecords="total"
-          @page="changePage"
-          paginator
-          v-model:first="firstRecord"
-          :rows="limit"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-          currentPageReportTemplate="Total: {totalRecords}"
+        <GridPage
+          ref="grid"
+          :fetch-page="getOrdersPage"
+          :data-key="OrdemServicoPageConfig.dataKey"
+          :columns="OrdemServicoPageConfig.columns"
+          table-min-width="65rem"
+          :action-header="OrdemServicoPageConfig.actionHeader"
+          :actions="OrdemServicoPageConfig.actions"
+          @action="onGridAction"
+          :is-action-visible="isActionVisible"
         >
-          <Column header="Ações" class="min-w-24">
-            <template #body="{ data }">
-              <div class="flex">
-                <Button
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  text
-                  rounded
-                  v-if="canWrite('ORDEM_SERVICO') && !isOrderClosed(data)"
-                  aria-label="Editar ordem de serviço"
-                  v-tooltip.top="'Editar ordem'"
-                  @click="editOrder(data)"
-                />
-                <Button
-                  icon="pi pi-external-link"
-                  severity="secondary"
-                  text
-                  rounded
-                  aria-label="Abrir itens da ordem"
-                  v-tooltip.top="'Produtos e serviços da ordem'"
-                  @click="openOrder(data)"
-                />
-              </div>
-            </template>
-          </Column>
-          <Column header="O.S." :bodyStyle="{ textAlign: 'end' }">
-            <template #body="{ data }">{{ String(data.nu_numero).padStart(6, '0') }}</template>
-          </Column>
-          <Column field="an_cliente" header="Cliente" />
-          <Column header="Placa">
-            <template #body="{ data }">{{ data.veiculo.an_placa }}</template>
-          </Column>
-          <Column header="Veículo">
-            <template #body="{ data }"
-              >{{ data.veiculo.an_marca }} {{ data.veiculo.an_modelo }}</template
+          <template #cell-nu_numero="{ data }">{{
+            String(data.nu_numero).padStart(6, '0')
+          }}</template>
+          <template #cell-placa="{ data }">{{ data.veiculo.an_placa }}</template>
+          <template #cell-veiculo="{ data }"
+            >{{ data.veiculo.an_marca }} {{ data.veiculo.an_modelo }}</template
+          >
+          <template #cell-ca_status="{ data }">
+            <span
+              class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+              :style="{
+                backgroundColor: getOrderStatus(data.ca_status).cor ?? '#64748b',
+                color: statusTextColor(getOrderStatus(data.ca_status).cor ?? '#64748b'),
+              }"
+              >{{ getOrderStatus(data.ca_status).label }}</span
             >
-          </Column>
-          <Column header="Status">
-            <template #body="{ data }">
-              <span
-                class="inline-flex rounded-full px-3 py-1 text-xs font-semibold"
-                :style="{
-                  backgroundColor: getOrderStatus(data.ca_status).cor ?? '#64748b',
-                  color: statusTextColor(getOrderStatus(data.ca_status).cor ?? '#64748b'),
-                }"
-                >{{ getOrderStatus(data.ca_status).label }}</span
-              >
-            </template>
-          </Column>
-          <Column header="Entrada">
-            <template #body="{ data }">{{ formatDateTime(data.dt_entrada) }}</template>
-          </Column>
-          <Column header="Previsão">
-            <template #body="{ data }">{{ formatDateTime(data.dt_previsao) }}</template>
-          </Column>
-          <Column header="Total" :bodyStyle="{ textAlign: 'end' }">
-            <template #body="{ data }">{{
-              formatOrderCurrency(calculateOrderTotal(data.itens))
-            }}</template>
-          </Column>
-        </DataTable>
+          </template>
+          <template #cell-dt_entrada="{ data }">{{ formatDateTime(data.dt_entrada) }}</template>
+          <template #cell-dt_previsao="{ data }">{{ formatDateTime(data.dt_previsao) }}</template>
+          <template #cell-total="{ data }">{{
+            formatOrderCurrency(calculateOrderTotal(data.itens))
+          }}</template>
+        </GridPage>
       </div>
     </div>
   </div>
-  <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="selectOrder" @saved="load" />
+  <ManutOrdemServicoDialog
+    v-model:visible="manutOrderVisible"
+    :order="selectOrder"
+    @saved="grid?.loadGrid()"
+  />
   <ClassificacaoOrdemServicoDialog v-model:visible="classificationDialogVisible" />
 </template>

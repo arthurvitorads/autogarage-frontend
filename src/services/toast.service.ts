@@ -3,7 +3,7 @@ import { useToast } from 'primevue/usetoast'
 export function useAppToast() {
   const toast = useToast()
 
-  function success(message: string, summary = 'Sucesso') {
+  function showSuccess(message: string, summary = 'Sucesso') {
     toast.add({
       severity: 'success',
       summary,
@@ -12,7 +12,7 @@ export function useAppToast() {
     })
   }
 
-  function error(message: string, summary = 'Erro') {
+  function showError(message: string, summary = 'Erro') {
     toast.add({
       severity: 'error',
       summary,
@@ -21,7 +21,7 @@ export function useAppToast() {
     })
   }
 
-  function warn(message: string, summary = 'Atenção') {
+  function showWarn(message: string, summary = 'Atenção') {
     toast.add({
       severity: 'warn',
       summary,
@@ -30,7 +30,7 @@ export function useAppToast() {
     })
   }
 
-  function info(message: string, summary = 'Informação') {
+  function showInfo(message: string, summary = 'Informação') {
     toast.add({
       severity: 'info',
       summary,
@@ -40,9 +40,9 @@ export function useAppToast() {
   }
 
   return {
-    success,
-    error,
-    warn,
-    info,
+    showSuccess,
+    showError,
+    showWarn,
+    showInfo,
   }
 }

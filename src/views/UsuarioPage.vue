@@ -1,66 +1,28 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 
-import Skeleton from 'primevue/skeleton'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import DataTable, { DataTablePageEvent } from 'primevue/datatable'
-import Column from 'primevue/column'
 import Tag from 'primevue/tag'
+
+import GridPage from '@/components/pages/GridPage.vue'
 import ManutUserDialog from '@/components/dialogs/ManutUserDialog.vue'
 
-import { IAdmUsuario } from '@/interface/interface-pages/UsuarioPage'
+import type { IAdmUsuario } from '@/interface/interface-pages/UsuarioPage'
+
+import { getUsers } from '@/services/user.service'
+import { formatDateTime } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
-import { getUsers } from '@/services/user.service'
-import { useAppToast } from '@/services/toast.service'
-import { formatDateTime } from '@/services/util.service'
+import UsuarioPageConfig from '@/config/UsuarioPageConfig.json'
 
-const { normalizeError, setLoading } = useUtilStore()
-
-const toastService = useAppToast()
-
-// paginacao
-const limit = ref(20)
-const page = ref(1)
-const total = ref(0)
-
+const grid = useTemplateRef('grid')
 const filter = ref('')
-
-// skeleton
-const skeletonColumns = [
-  'Ações',
-  'Nome',
-  'E-mail',
-  'Perfil',
-  'Status',
-  'Dt. inclusão',
-  'Dt. alteração',
-]
-const loadingGrid = ref(false)
 
 // form
 const manutUserVisible = ref(false)
 const selectUser = ref<IAdmUsuario | null>(null)
-
-const users = ref<IAdmUsuario[]>([])
-
-function search() {
-  if (loadingGrid.value) return
-
-  page.value = 1
-  loadUsers()
-}
-
-function changePage(event: DataTablePageEvent) {
-  if (loadingGrid.value) return
-
-  page.value = event.page + 1
-  limit.value = event.rows
-
-  loadUsers()
-}
 
 function newUser() {
   selectUser.value = null
@@ -72,34 +34,12 @@ function editUser(user: IAdmUsuario) {
   manutUserVisible.value = true
 }
 
-async function loadUsers() {
-  loadingGrid.value = true
-
-  try {
-    const result = await getUsers(page.value, limit.value, filter.value)
-
-    users.value = result.dados
-    total.value = result.pagination.total
-  } catch (error) {
-    toastService.error(normalizeError(error))
-
-    users.value = []
-    total.value = 0
-  } finally {
-    loadingGrid.value = false
-  }
-}
-
-onMounted(async () => {
-  setLoading(true)
-
-  try {
-    await loadUsers()
-  } finally {
-    setLoading(false)
-  }
-})
+onMounted(() => grid.value?.loadGrid())
 const { canWrite } = useUtilStore()
+
+function onGridAction({ action, data }: { action: string; data: IAdmUsuario }) {
+  if (action === 'edit') editUser(data)
+}
 </script>
 <template>
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
@@ -111,10 +51,14 @@ const { canWrite } = useUtilStore()
             v-model="filter"
             placeholder="Digite o que deseja pesquisar..."
             class="flex-1 min-w-0"
-            :disabled="loadingGrid"
-            @keyup.enter="search"
+            :disabled="grid?.loading"
+            @keyup.enter="grid?.loadGrid(filter.trim())"
           />
-          <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
+          <Button
+            icon="pi pi-search"
+            :disabled="grid?.loading"
+            @click="grid?.loadGrid(filter.trim())"
+          />
         </div>
         <div class="flex">
           <Button
@@ -127,74 +71,35 @@ const { canWrite } = useUtilStore()
       </div>
 
       <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
-        <DataTable
-          :pt="{
-            emptyMessage: { class: 'hidden' },
-          }"
-          :value="users"
-          :aria-busy="loadingGrid"
-          dataKey="cn_usuario"
-          size="small"
-          stripedRows
-          scrollable
-          scrollHeight="flex"
-          tableStyle="min-width: 50rem"
-          lazy
-          paginator
-          :first="(page - 1) * limit"
-          :rows="limit"
-          :totalRecords="total"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-          currentPageReportTemplate="Total: {totalRecords}"
-          @page="changePage"
+        <GridPage
+          ref="grid"
+          :fetch-page="getUsers"
+          :data-key="UsuarioPageConfig.dataKey"
+          :columns="UsuarioPageConfig.columns"
+          table-min-width="50rem"
+          :action-header="UsuarioPageConfig.actionHeader"
+          :actions="canWrite('ADMINISTRACAO') ? UsuarioPageConfig.actions : []"
+          @action="onGridAction"
         >
-          <template v-if="loadingGrid">
-            <Column v-for="header in skeletonColumns" :key="header" :header="header">
-              <template #body>
-                <Skeleton height="2.8rem" />
-              </template>
-            </Column>
+          <template #cell-bo_sts_reg="{ data }">
+            <Tag
+              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+              :severity="data.bo_sts_reg ? 'success' : 'danger'"
+            />
           </template>
-          <template v-else>
-            <Column header="Ações" class="min-w-5">
-              <template #body="{ data }">
-                <Button
-                  v-if="canWrite('ADMINISTRACAO')"
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  text
-                  rounded
-                  v-tooltip.top="'Editar usuário'"
-                  @click="editUser(data)"
-                />
-              </template>
-            </Column>
-            <Column field="cn_usuario" header="Código" :bodyStyle="{ textAlign: 'end' }" />
-            <Column field="an_nome" header="Nome" />
-            <Column field="an_email" header="E-mail" />
-            <Column class="min-w-60" field="an_perfil" header="Perfil" />
-            <Column field="bo_sts_reg" header="Status">
-              <template #body="{ data }">
-                <Tag
-                  :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-                  :severity="data.bo_sts_reg ? 'success' : 'danger'"
-                />
-              </template>
-            </Column>
-            <Column class="min-w-50" field="dt_inc" header="Dt. inclusão">
-              <template #body="{ data }">
-                <span>{{ formatDateTime(data.dt_inc) }}</span>
-              </template>
-            </Column>
-            <Column class="min-w-50" field="dt_alt" header="Dt. alteração">
-              <template #body="{ data }">
-                <span>{{ formatDateTime(data.dt_alt) }}</span>
-              </template>
-            </Column>
+          <template #cell-dt_inc="{ data }">
+            <span>{{ formatDateTime(data.dt_inc) }}</span>
           </template>
-        </DataTable>
+          <template #cell-dt_alt="{ data }">
+            <span>{{ formatDateTime(data.dt_alt) }}</span>
+          </template>
+        </GridPage>
       </div>
     </div>
   </div>
-  <ManutUserDialog v-model:visible="manutUserVisible" :user="selectUser" @saved="loadUsers" />
+  <ManutUserDialog
+    v-model:visible="manutUserVisible"
+    :user="selectUser"
+    @saved="grid?.loadGrid()"
+  />
 </template>

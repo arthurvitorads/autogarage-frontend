@@ -1,62 +1,33 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 
-import Skeleton from 'primevue/skeleton'
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import DataTable, { DataTablePageEvent } from 'primevue/datatable'
-import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 
+import GridPage from '@/components/pages/GridPage.vue'
 import ManutPerfilDialog from '@/components/dialogs/ManutPerfilDialog.vue'
 import PerfilAcessosDialog from '@/components/dialogs/PerfilAcessosDialog.vue'
 
-import { IAdmPerfil } from '@/interface/interface-pages/PerfilPage'
+import type { IAdmPerfil } from '@/interface/interface-pages/PerfilPage'
 
-import { useUtilStore } from '@/stores/util.store'
-
-import { useAppToast } from '@/services/toast.service'
 import { formatDateTime } from '@/services/util.service'
 import { getProfiles } from '@/services/perfil.service'
 
-const { normalizeError, setLoading, canWrite } = useUtilStore()
+import { useUtilStore } from '@/stores/util.store'
 
-const toastService = useAppToast()
+import PerfilPageConfig from '@/config/PerfilPageConfig.json'
 
-// paginacao
-const limit = ref(20)
-const page = ref(1)
-const total = ref(0)
+const { canWrite } = useUtilStore()
 
+const grid = useTemplateRef('grid')
 const filter = ref('')
-
-// skeleton
-const skeletonColumns = ['Ações', 'Descrição', 'Status', 'Dt. inclusão', 'Dt. alteração']
-const loadingGrid = ref(false)
 
 // form
 const manutProfileVisible = ref(false)
 const selectProfile = ref<IAdmPerfil | null>(null)
 const accessDialogVisible = ref(false)
 const accessProfile = ref<IAdmPerfil | null>(null)
-
-const profile = ref<IAdmPerfil[]>([])
-
-function search() {
-  if (loadingGrid.value) return
-
-  page.value = 1
-  loadProfiles()
-}
-
-function changePage(event: DataTablePageEvent) {
-  if (loadingGrid.value) return
-
-  page.value = event.page + 1
-  limit.value = event.rows
-
-  loadProfiles()
-}
 
 function newProfile() {
   selectProfile.value = null
@@ -73,33 +44,12 @@ function openAccess(profile: IAdmPerfil) {
   accessDialogVisible.value = true
 }
 
-async function loadProfiles() {
-  loadingGrid.value = true
+onMounted(() => grid.value?.loadGrid())
 
-  try {
-    const result = await getProfiles(page.value, limit.value, filter.value)
-
-    profile.value = result.dados
-    total.value = result.pagination.total
-  } catch (error) {
-    toastService.error(normalizeError(error))
-
-    profile.value = []
-    total.value = 0
-  } finally {
-    loadingGrid.value = false
-  }
+function onGridAction({ action, data }: { action: string; data: IAdmPerfil }) {
+  if (action === 'edit') editProfile(data)
+  if (action === 'access') openAccess(data)
 }
-
-onMounted(async () => {
-  setLoading(true)
-
-  try {
-    await loadProfiles()
-  } finally {
-    setLoading(false)
-  }
-})
 </script>
 <template>
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
@@ -111,10 +61,14 @@ onMounted(async () => {
             v-model="filter"
             placeholder="Digite o que deseja pesquisar..."
             class="flex-1 min-w-0"
-            :disabled="loadingGrid"
-            @keyup.enter="search"
+            :disabled="grid?.loading"
+            @keyup.enter="grid?.loadGrid(filter.trim())"
           />
-          <Button icon="pi pi-search" :disabled="loadingGrid" @click="search" />
+          <Button
+            icon="pi pi-search"
+            :disabled="grid?.loading"
+            @click="grid?.loadGrid(filter.trim())"
+          />
         </div>
         <div class="flex">
           <Button
@@ -127,86 +81,40 @@ onMounted(async () => {
       </div>
 
       <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
-        <DataTable
-          :pt="{
-            emptyMessage: { class: 'hidden' },
-          }"
-          :value="profile"
-          :aria-busy="loadingGrid"
-          dataKey="cn_perfil"
-          size="small"
-          stripedRows
-          scrollable
-          scrollHeight="flex"
-          tableStyle="min-width: 50rem"
-          lazy
-          paginator
-          :first="(page - 1) * limit"
-          :rows="limit"
-          :totalRecords="total"
-          paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport"
-          currentPageReportTemplate="Total: {totalRecords}"
-          @page="changePage"
+        <GridPage
+          ref="grid"
+          :fetch-page="getProfiles"
+          :data-key="PerfilPageConfig.dataKey"
+          :columns="PerfilPageConfig.columns"
+          table-min-width="50rem"
+          :action-header="PerfilPageConfig.actionHeader"
+          :actions="
+            canWrite('ADMINISTRACAO')
+              ? PerfilPageConfig.actions
+              : PerfilPageConfig.actions.filter((item) => item.action !== 'edit')
+          "
+          @action="onGridAction"
         >
-          <template v-if="loadingGrid">
-            <Column v-for="header in skeletonColumns" :key="header" :header="header">
-              <template #body>
-                <Skeleton height="2.8rem" />
-              </template>
-            </Column>
+          <template #cell-bo_sts_reg="{ data }">
+            <Tag
+              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+              :severity="data.bo_sts_reg ? 'success' : 'danger'"
+            />
           </template>
-          <template v-else>
-            <Column header="Ações" class="min-w-5">
-              <template #body="{ data }">
-                <Button
-                  v-if="canWrite('ADMINISTRACAO')"
-                  icon="pi pi-pencil"
-                  severity="secondary"
-                  text
-                  rounded
-                  v-tooltip.top="'Editar'"
-                  @click="editProfile(data)"
-                />
-                <Button
-                  icon="pi pi-lock"
-                  severity="secondary"
-                  text
-                  rounded
-                  aria-label="Acessos do perfil"
-                  v-tooltip.top="'Acessos'"
-                  @click="openAccess(data)"
-                />
-              </template>
-            </Column>
-            <Column class="min-w-30" field="cn_perfil" header="Código" :bodyStyle="{ textAlign: 'end' }" />
-            <Column field="an_descr" header="Nome" />
-            <Column class="min-w-30" field="bo_sts_reg" header="Status">
-              <template #body="{ data }">
-                <Tag
-                  :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-                  :severity="data.bo_sts_reg ? 'success' : 'danger'"
-                />
-              </template>
-            </Column>
-            <Column class="min-w-50" field="dt_inc" header="Dt. inclusão">
-              <template #body="{ data }">
-                <span>{{ formatDateTime(data.dt_inc) }}</span>
-              </template>
-            </Column>
-            <Column class="min-w-50" field="dt_alt" header="Dt. alteração">
-              <template #body="{ data }">
-                <span>{{ formatDateTime(data.dt_alt) }}</span>
-              </template>
-            </Column>
+          <template #cell-dt_inc="{ data }">
+            <span>{{ formatDateTime(data.dt_inc) }}</span>
           </template>
-        </DataTable>
+          <template #cell-dt_alt="{ data }">
+            <span>{{ formatDateTime(data.dt_alt) }}</span>
+          </template>
+        </GridPage>
       </div>
     </div>
   </div>
   <ManutPerfilDialog
     v-model:visible="manutProfileVisible"
     :profile="selectProfile"
-    @saved="loadProfiles"
+    @saved="grid?.loadGrid()"
   />
   <PerfilAcessosDialog v-model:visible="accessDialogVisible" :profile="accessProfile" />
 </template>

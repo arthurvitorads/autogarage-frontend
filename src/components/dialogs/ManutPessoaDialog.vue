@@ -43,7 +43,7 @@ const emit = defineEmits<{
   saved: []
 }>()
 
-const toast = useAppToast()
+const { showError, showWarn, showSuccess } = useAppToast()
 const { fetchCep, fetchCnpj, normalizeError, setLoading } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
 
@@ -129,7 +129,7 @@ async function queryCnpj(forceQuery = false) {
   if (!cnpj) return
 
   if (!validateCNPJ(cnpj)) {
-    toast.error('O CNPJ informado é inválido.')
+    showError('O CNPJ informado é inválido.')
     formErrors.value.cnpj = 'Informe um CNPJ válido.'
     return
   }
@@ -149,7 +149,7 @@ async function queryCnpj(forceQuery = false) {
     if (!company) {
       missingCnpj.value = cnpj
       formErrors.value.cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
-      toast.warn('Não foi encontrado nenhum cadastro para este CNPJ.')
+      showWarn('Não foi encontrado nenhum cadastro para este CNPJ.')
       return
     }
 
@@ -193,14 +193,14 @@ async function queryCnpj(forceQuery = false) {
 
     queriedCnpj.value = cnpj
     missingCnpj.value = ''
-    toast.success('CNPJ confirmado. Confira os dados preenchidos e complete os campos restantes.')
+    showSuccess('CNPJ confirmado. Confira os dados preenchidos e complete os campos restantes.')
 
     if (filledCompanyFields.cep && formData.value.cep === filledCompanyFields.cep)
       await queryPostalCode(true)
   } catch (error) {
     if (currentRequest !== cnpjRequestId) return
 
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     if (currentRequest === cnpjRequestId) loadingCnpj.value = false
   }
@@ -255,7 +255,7 @@ async function queryPostalCode(fillOnlyEmpty = false) {
     if (currentRequest !== postalCodeRequestId) return
 
     postalCodeMessage.value = normalizeError(error) + ' Preencha o endereço manualmente.'
-    toast.warn(postalCodeMessage.value)
+    showWarn(postalCodeMessage.value)
   } finally {
     if (currentRequest === postalCodeRequestId) {
       queriedPostalCode.value = postalCode
@@ -377,13 +377,14 @@ async function onSubmit(values: IFormPerson) {
             cnpj: document,
           }
 
-    if (props.person?.cn_pessoa !== undefined) await updatePerson(props.person.cn_pessoa, personToRequest(person))
+    if (props.person?.cn_pessoa !== undefined)
+      await updatePerson(props.person.cn_pessoa, personToRequest(person))
     else await createPerson(personToRequest(person))
-    toast.success('Pessoa gravada com sucesso.')
+    showSuccess('Pessoa gravada com sucesso.')
     emit('update:visible', false)
     emit('saved')
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }

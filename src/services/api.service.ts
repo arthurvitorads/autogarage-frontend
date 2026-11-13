@@ -14,7 +14,8 @@ export async function apiRequest<T, TResponse extends IApiResponse<T> = IApiResp
   if (!user) throw new Error('Usuário não autenticado.')
 
   const token = await user.getIdToken()
-  const url = typeof endpoint === 'string' ? `${String(API_URL).replace(/\/$/, '')}${endpoint}` : endpoint
+  const url =
+    typeof endpoint === 'string' ? `${String(API_URL).replace(/\/$/, '')}${endpoint}` : endpoint
   const response = await fetch(url, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

@@ -1,0 +1,42 @@
+{
+  "dataKey": "cn_item",
+  "columns": [
+    {
+      "field": "nu_ordem",
+      "header": "O.S.",
+      "align": "end"
+    },
+    {
+      "field": "an_descr",
+      "header": "Serviço"
+    },
+    {
+      "field": "an_cliente",
+      "header": "Cliente"
+    },
+    {
+      "field": "an_responsavel",
+      "header": "Responsável"
+    },
+    {
+      "field": "qt_quantidade",
+      "header": "Quantidade"
+    },
+    {
+      "field": "qt_tempo_segundos",
+      "header": "Tempo"
+    },
+    {
+      "field": "dt_finalizacao",
+      "header": "Finalização da O.S."
+    }
+  ],
+  "actionHeader": "Intervalos",
+  "actions": [
+    {
+      "action": "intervals",
+      "label": "Consultar intervalos",
+      "icon": "pi pi-clock"
+    }
+  ]
+}

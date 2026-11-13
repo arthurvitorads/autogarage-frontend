@@ -4,11 +4,7 @@ import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
 
 export function usePesquisa<T>(
-  request: (
-    page: number,
-    limit: number,
-    search: string,
-  ) => Promise<IPageResponse<T>>,
+  request: (page: number, limit: number, search: string) => Promise<IPageResponse<T>>,
 ) {
   const records = ref<T[]>([])
   const total = ref(0)
@@ -17,7 +13,7 @@ export function usePesquisa<T>(
   const filter = ref('')
   const loadingGrid = ref(false)
   const { normalizeError } = useUtilStore()
-  const toast = useAppToast()
+  const { showError } = useAppToast()
   let searchText = ''
 
   async function load() {
@@ -34,7 +30,7 @@ export function usePesquisa<T>(
     } catch (error) {
       records.value = []
       total.value = 0
-      toast.error(normalizeError(error))
+      showError(normalizeError(error))
     } finally {
       loadingGrid.value = false
     }

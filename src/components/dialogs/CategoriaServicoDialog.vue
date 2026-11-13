@@ -37,7 +37,7 @@ const loadingGrid = ref(false)
 const utilStore = useUtilStore()
 const { loading } = storeToRefs(utilStore)
 const { normalizeError, setLoading, canWrite } = utilStore
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
@@ -68,10 +68,10 @@ async function onSubmit(values: IFormDescription) {
       ca_sigla: '',
     })
     emit('saved', saved)
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }
@@ -87,7 +87,7 @@ watch(
     try {
       await catalogStore.loadCadastros()
     } catch (error) {
-      toast.error(normalizeError(error))
+      showError(normalizeError(error))
     } finally {
       loadingGrid.value = false
     }

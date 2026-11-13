@@ -26,11 +26,7 @@ import { getCustomers } from '@/services/ordem-api.service'
 import type { IClienteOrdemServico } from '@/interface/interface-pages/OrdemServicoPage'
 import { useUtilStore } from '@/stores/util.store'
 import { useAppToast } from '@/services/toast.service'
-import {
-  createSale,
-  getBillableOrders,
-  getSaleCustomer,
-} from '@/services/faturamento.service'
+import { createSale, getBillableOrders, getSaleCustomer } from '@/services/faturamento.service'
 import {
   calcularTotalItemOrdem as calculateItemTotal,
   formatCurrencyOrdem as formatOrderCurrency,
@@ -45,7 +41,7 @@ const customers = ref<IClienteOrdemServico[]>([])
 const orders = ref<TBillableOrder[]>([])
 const { setLoading, normalizeError } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
-const toast = useAppToast()
+const { showError, showWarn, showSuccess } = useAppToast()
 
 const customer = ref<TSaleCustomer | null>(null)
 
@@ -95,7 +91,7 @@ watch([personId, orderId], async ([code, order]) => {
     )
     if (requestId === customerRequestId) customer.value = data
   } catch (error) {
-    if (requestId === customerRequestId) toast.error(normalizeError(error))
+    if (requestId === customerRequestId) showError(normalizeError(error))
   }
 })
 watch([origin, selectedOrder], () => {
@@ -163,21 +159,21 @@ function addItem() {
       vl_total: lineTotal,
     })
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   }
 }
 
 async function save() {
   if (saving.value || loadingData.value) return
   if (!customer.value || !personId.value || !rows.value.length) {
-    toast.warn('Selecione o cliente e adicione pelo menos um item.')
+    showWarn('Selecione o cliente e adicione pelo menos um item.')
     return
   }
   if (
     origin.value === 'ORDEM_SERVICO' &&
     (!selectedOrder.value || selectedOrder.value.ca_status !== 'FINALIZADO')
   ) {
-    toast.warn('Selecione uma O.S. finalizada.')
+    showWarn('Selecione uma O.S. finalizada.')
     return
   }
   saving.value = true
@@ -191,11 +187,11 @@ async function save() {
         ? { cn_ordem_servico: selectedOrder.value!.cn_ordem_servico }
         : { itens: items.value.map(({ an_descr, vl_total, ...data }) => data) }),
     })
-    toast.success('Venda registrada com sucesso.')
+    showSuccess('Venda registrada com sucesso.')
     emit('saved', data)
     emit('update:visible', false)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     saving.value = false
     setLoading(false)

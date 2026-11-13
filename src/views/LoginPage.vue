@@ -26,7 +26,7 @@ const utilStore = useUtilStore()
 
 const router = useRouter()
 
-const toastService = useAppToast()
+const { showWarn } = useAppToast()
 
 const formData = reactive<IFormLogin>(LoginModel.createForm())
 
@@ -43,7 +43,7 @@ async function onSubmit(values: IFormLogin) {
     await login(values)
     await router.push('/')
   } catch (error) {
-    toastService.warn((error as Error).message)
+    showWarn((error as Error).message)
   } finally {
     utilStore.setLoading(false)
   }

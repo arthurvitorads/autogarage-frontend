@@ -40,7 +40,7 @@ const { classificacoes: classifications } = storeToRefs(orderStore)
 const { saveClassificacao: saveClassification } = orderStore
 const { normalizeError, setLoading, canWrite } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const selectClassification = ref<TServiceOrderCode | null>(null)
 const isEditing = computed(() => selectClassification.value !== null)
 const formErrors = ref<TGenericData>({})
@@ -94,10 +94,10 @@ async function onSubmit(values: IFormOrderClassification) {
     }
     const result = await saveClassification(data)
     emit('saved', result)
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }
@@ -112,7 +112,7 @@ watch(
         await orderStore.loadParametros()
         newClassification()
       } catch (error) {
-        toast.error(normalizeError(error))
+        showError(normalizeError(error))
       }
     }
   },

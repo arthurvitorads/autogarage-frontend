@@ -1,0 +1,59 @@
+{
+  "dataKey": "cn_pessoa",
+  "columns": [
+    {
+      "field": "cn_pessoa",
+      "header": "Código",
+      "align": "end"
+    },
+    {
+      "field": "nome",
+      "header": "Nome",
+      "minWidth": "25rem"
+    },
+    {
+      "field": "tipo",
+      "header": "Tipo"
+    },
+    {
+      "field": "documento",
+      "header": "Documento",
+      "minWidth": "10rem"
+    },
+    {
+      "field": "categorias",
+      "header": "Categorias"
+    },
+    {
+      "field": "telefone",
+      "header": "Telefone",
+      "minWidth": "10rem"
+    },
+    {
+      "field": "an_email",
+      "header": "E-mail"
+    },
+    {
+      "field": "status",
+      "header": "Status"
+    },
+    {
+      "field": "inclusao",
+      "header": "Dt. inclusão",
+      "minWidth": "12.5rem"
+    },
+    {
+      "field": "alteracao",
+      "header": "Dt. alteração",
+      "minWidth": "12.5rem"
+    }
+  ],
+  "actionHeader": "Editar",
+  "actions": [
+    {
+      "action": "edit",
+      "label": "Editar",
+      "icon": "pi pi-pencil"
+    }
+  ]
+}

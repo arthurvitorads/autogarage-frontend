@@ -1,0 +1,45 @@
+{
+  "dataKey": "cn_usuario",
+  "columns": [
+    {
+      "field": "cn_usuario",
+      "header": "Código",
+      "align": "end"
+    },
+    {
+      "field": "an_nome",
+      "header": "Nome"
+    },
+    {
+      "field": "an_email",
+      "header": "E-mail"
+    },
+    {
+      "field": "an_perfil",
+      "header": "Perfil",
+      "minWidth": "15rem"
+    },
+    {
+      "field": "bo_sts_reg",
+      "header": "Status"
+    },
+    {
+      "field": "dt_inc",
+      "header": "Dt. inclusão",
+      "minWidth": "12.5rem"
+    },
+    {
+      "field": "dt_alt",
+      "header": "Dt. alteração",
+      "minWidth": "12.5rem"
+    }
+  ],
+  "actionHeader": "Ações",
+  "actions": [
+    {
+      "action": "edit",
+      "label": "Editar usuário",
+      "icon": "pi pi-pencil"
+    }
+  ]
+}

@@ -74,11 +74,7 @@ export function getOrdersPage(
   return apiPage<IAdmOrdemServico>('/ordensServico/listar', page, limit, search, filters)
 }
 
-export function moveOrder(
-  orderId: TServiceOrderCode,
-  action: TServiceOrderAction,
-  reason: string,
-) {
+export function moveOrder(orderId: TServiceOrderCode, action: TServiceOrderAction, reason: string) {
   return apiRequest<IAdmOrdemServico>('/ordensServico/movimentar', {
     cn_ordem_servico: orderId,
     acao: action,

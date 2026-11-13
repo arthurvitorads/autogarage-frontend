@@ -48,7 +48,7 @@ const loadingOptions = ref(false)
 const { saveItem } = useServiceOrderStore()
 const { normalizeError, setLoading } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const confirmAction = useConfirmation()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -151,10 +151,10 @@ async function onSubmit(values: IFormServiceOrderItem) {
 
     await saveItem(data)
     emit('saved')
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }
@@ -190,7 +190,7 @@ watch(
       const { dados } = await getCatalogItemOptions()
       catalog.value = dados
     } catch (error) {
-      toast.error(normalizeError(error))
+      showError(normalizeError(error))
     } finally {
       loadingOptions.value = false
     }

@@ -1,0 +1,60 @@
+{
+  "dataKey": "cn_produto",
+  "columns": [
+    {
+      "field": "cn_produto",
+      "header": "Código",
+      "align": "end"
+    },
+    {
+      "field": "an_nome",
+      "header": "Nome"
+    },
+    {
+      "field": "an_referencia",
+      "header": "Referência"
+    },
+    {
+      "field": "an_categoria",
+      "header": "Categoria"
+    },
+    {
+      "field": "an_marca",
+      "header": "Marca"
+    },
+    {
+      "field": "ca_unidade",
+      "header": "Unidade"
+    },
+    {
+      "field": "vl_custo",
+      "header": "Custo",
+      "align": "end"
+    },
+    {
+      "field": "vl_venda",
+      "header": "Venda",
+      "align": "end"
+    },
+    {
+      "field": "qt_estoque",
+      "header": "Estoque"
+    },
+    {
+      "field": "qt_estoque_min",
+      "header": "Mínimo"
+    },
+    {
+      "field": "bo_sts_reg",
+      "header": "Status"
+    }
+  ],
+  "actionHeader": "Ações",
+  "actions": [
+    {
+      "action": "edit",
+      "label": "Editar produto",
+      "icon": "pi pi-pencil"
+    }
+  ]
+}

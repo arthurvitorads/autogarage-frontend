@@ -37,7 +37,7 @@ const emit = defineEmits<{
   saved: [servico: IManutService]
 }>()
 
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const catalogStore = useCatalogStore()
 const { saveServico: saveService } = catalogStore
 const { categoriasServico: serviceCategories } = storeToRefs(catalogStore)
@@ -104,10 +104,10 @@ async function onSubmit(values: IFormService) {
 
     await saveService(service)
     emit('saved', service)
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }

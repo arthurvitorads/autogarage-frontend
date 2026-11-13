@@ -1,0 +1,39 @@
+{
+  "dataKey": "cn_servico",
+  "columns": [
+    {
+      "field": "cn_servico",
+      "header": "Código",
+      "align": "end"
+    },
+    {
+      "field": "an_nome",
+      "header": "Nome"
+    },
+    {
+      "field": "an_categoria",
+      "header": "Categoria"
+    },
+    {
+      "field": "vl_preco",
+      "header": "Preço",
+      "align": "end"
+    },
+    {
+      "field": "nu_tempo_estimado",
+      "header": "Tempo estimado"
+    },
+    {
+      "field": "bo_sts_reg",
+      "header": "Status"
+    }
+  ],
+  "actionHeader": "Ações",
+  "actions": [
+    {
+      "action": "edit",
+      "label": "Editar serviço",
+      "icon": "pi pi-pencil"
+    }
+  ]
+}

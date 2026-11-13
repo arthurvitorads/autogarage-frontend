@@ -9,7 +9,7 @@ import type { TItemOrdemServico } from '@/interface/interface-pages/OrdemServico
 
 const props = defineProps<{ item: TItemOrdemServico; editable?: boolean }>()
 const emit = defineEmits<{ saved: [item: TItemOrdemServico] }>()
-const toast = useAppToast()
+const { showError } = useAppToast()
 const { normalizeError } = useUtilStore()
 const agora = ref(0)
 const origem = ref(0)
@@ -60,7 +60,7 @@ async function movimentar(acao: 'INICIAR' | 'PAUSAR' | 'FINALIZAR') {
     const { dados } = await updateItemTime(cn_ordem_servico, cn_item, acao)
     emit('saved', dados)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     saving.value = false
   }

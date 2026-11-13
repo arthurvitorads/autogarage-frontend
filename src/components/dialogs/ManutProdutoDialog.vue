@@ -41,7 +41,7 @@ const emit = defineEmits<{
   saved: [produto: IManutProduct]
 }>()
 
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const catalogStore = useCatalogStore()
 const { saveProduto: saveProduct } = catalogStore
 const {
@@ -146,10 +146,10 @@ async function onSubmit(values: IFormProduct) {
 
     await saveProduct(product)
     emit('saved', product)
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }

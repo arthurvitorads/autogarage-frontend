@@ -1,0 +1,49 @@
+{
+  "dataKey": "cn_item",
+  "columns": [
+    {
+      "field": "ca_tipo",
+      "header": "Tipo"
+    },
+    {
+      "field": "an_descr",
+      "header": "Descrição"
+    },
+    {
+      "field": "tempo",
+      "header": "Tempo de serviço"
+    },
+    {
+      "field": "ca_unidade",
+      "header": "Unidade"
+    },
+    {
+      "field": "qt_quantidade",
+      "header": "Quantidade"
+    },
+    {
+      "field": "vl_unitario",
+      "header": "Preço unitário",
+      "align": "end"
+    },
+    {
+      "field": "vl_total",
+      "header": "Total",
+      "align": "end"
+    }
+  ],
+  "actionHeader": "Ações",
+  "actions": [
+    {
+      "action": "edit",
+      "label": "Editar item",
+      "icon": "pi pi-pencil"
+    },
+    {
+      "action": "remove",
+      "label": "Remover item",
+      "icon": "pi pi-trash",
+      "severity": "danger"
+    }
+  ]
+}

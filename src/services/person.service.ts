@@ -2,10 +2,14 @@ import { apiPage, apiRequest } from '@/services/api.service'
 
 import type { Pessoa } from '@/models/pessoa.model'
 
-import type { ICadPessoa, IManutPerson } from '@/interface/interface-pages/PessoaPage'
+import type {
+  ICadPessoa,
+  IManutPerson,
+  IPessoaGridRow,
+} from '@/interface/interface-pages/PessoaPage'
 
 export function getPeople(page = 1, limit = 20, search = '') {
-  return apiPage<ICadPessoa>('/pessoa/listar', page, limit, search)
+  return apiPage<IPessoaGridRow>('/pessoa/listar', page, limit, search)
 }
 
 export function getPersonById(id: string | number) {

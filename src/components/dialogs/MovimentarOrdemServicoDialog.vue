@@ -18,7 +18,7 @@ const reason = ref('')
 const errorMessage = ref('')
 const loading = ref(false)
 const store = useServiceOrderStore()
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const { normalizeError } = useUtilStore()
 const title = computed(() =>
   props.action === 'INICIAR'
@@ -51,9 +51,9 @@ async function confirmAction() {
     )
     emit('saved', order)
     emit('update:visible', false)
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     loading.value = false
   }

@@ -18,7 +18,7 @@ const loading = ref(false)
 const { normalizeError, canRead } = useUtilStore()
 const router = useRouter()
 const showIndicators = computed(() => canRead('GERAL') && canRead('ORDEM_SERVICO'))
-const toast = useAppToast()
+const { showError } = useAppToast()
 
 const indicadores = [
   {
@@ -64,7 +64,7 @@ async function loadIndicators() {
       }),
     )
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     loading.value = false
   }

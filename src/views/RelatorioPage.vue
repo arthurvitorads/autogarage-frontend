@@ -1,31 +1,34 @@
 <script setup lang="ts">
-import type { IReportPageProps } from '@/interface/dialog'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useTemplateRef, watch } from 'vue'
+
 import Button from 'primevue/button'
 import Select from 'primevue/select'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import Paginator from 'primevue/paginator'
 import Dialog from 'primevue/dialog'
+
+import GridPage from '@/components/pages/GridPage.vue'
 import FiltroData from '@/components/field/FiltroData.vue'
 import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
-import { usePageLoad } from '@/composables/usePageLoad'
-import { currentMonthDates, dateInterval } from '@/services/date-range.service'
-import {
-  getTimeReport,
-  getSalesReport,
-} from '@/services/faturamento.service'
-import { formatTempo } from '@/services/tempo.service'
-import { formatDateTime } from '@/services/util.service'
-import { formatCurrencyOrdem as formatOrderCurrency } from '@/services/ordem-servico.service'
-import { useUtilStore } from '@/stores/util.store'
-import { useAppToast } from '@/services/toast.service'
+
+import type { IReportPageProps } from '@/interface/dialog'
 import type {
   ITimeReportResponse,
   ISaleReportResponse,
   ITimeReport,
   IAdmVenda,
 } from '@/interface/interface-pages/VendaPage'
+
+import { usePageLoad } from '@/composables/usePageLoad'
+import { currentMonthDates, dateInterval } from '@/services/date-range.service'
+import { getTimeReport, getSalesReport } from '@/services/faturamento.service'
+import { formatTempo } from '@/services/tempo.service'
+import { formatDateTime } from '@/services/util.service'
+import { formatCurrencyOrdem as formatOrderCurrency } from '@/services/ordem-servico.service'
+import { useAppToast } from '@/services/toast.service'
+
+import RelatorioTemposPageConfig from '@/config/RelatorioTemposPageConfig.json'
+import RelatorioVendasPageConfig from '@/config/RelatorioVendasPageConfig.json'
 
 const props = defineProps<IReportPageProps>()
 const dates = ref<(Date | null)[]>(currentMonthDates())
@@ -36,48 +39,55 @@ const sortOptions = [
 ]
 const timeReport = ref<ITimeReportResponse | null>(null)
 const sales = ref<ISaleReportResponse | null>(null)
-const loading = ref(false)
-const firstRecord = ref(0)
+const timeGrid = useTemplateRef('timeGrid')
+const salesGrid = useTemplateRef('salesGrid')
+const loading = computed(() => timeGrid.value?.loading || salesGrid.value?.loading)
+let period = dateInterval(dates.value)
+let appliedSort = sortOrder.value
 const intervalDialogVisible = ref(false)
 const selectServiceTime = ref<ITimeReport | null>(null)
 const selectSale = ref<IAdmVenda | null>(null)
 const saleDialogVisible = ref(false)
-const { normalizeError } = useUtilStore()
-const toast = useAppToast()
-const total = computed(() =>
-  props.reportType === 'tempos'
-    ? (timeReport.value?.pagination.total ?? 0)
-    : (sales.value?.pagination.total ?? 0),
-)
+const { showWarn } = useAppToast()
 let requestId = 0
 
-async function load(reset = false) {
-  const period = dateInterval(dates.value)
-  if (!period) {
-    toast.warn('Informe um período válido.')
+async function fetchTimes(page: number) {
+  if (!period) return { dados: [], pagination: { total: 0 } }
+  const request = ++requestId
+  timeReport.value = null
+  const result = await getTimeReport(page, period.inicio, period.fim, appliedSort)
+  if (request === requestId) timeReport.value = result
+  return result
+}
+
+async function fetchSales(page: number) {
+  if (!period) return { dados: [], pagination: { total: 0 } }
+  const request = ++requestId
+  sales.value = null
+  const result = await getSalesReport(page, period.inicio, period.fim)
+  if (request === requestId) sales.value = result
+  return result
+}
+
+async function load() {
+  const nextPeriod = dateInterval(dates.value)
+  if (!nextPeriod) {
+    showWarn('Informe um período válido.')
     return
   }
-  if (reset) firstRecord.value = 0
-  const currentRequest = ++requestId
-  loading.value = true
-  try {
-    const page = Math.floor(firstRecord.value / 20) + 1
-    if (props.reportType === 'tempos') {
-      const result = await getTimeReport(page, period.inicio, period.fim, sortOrder.value)
-      if (currentRequest === requestId) timeReport.value = result
-    } else {
-      const result = await getSalesReport(page, period.inicio, period.fim)
-      if (currentRequest === requestId) sales.value = result
-    }
-  } catch (error) {
-    if (currentRequest === requestId) {
-      timeReport.value = null
-      sales.value = null
-      toast.error(normalizeError(error))
-    }
-  } finally {
-    if (currentRequest === requestId) loading.value = false
-  }
+  period = nextPeriod
+  appliedSort = sortOrder.value
+  await (timeGrid.value ?? salesGrid.value)?.loadGrid('')
+}
+
+function onTimeAction({ action, data }: { action: string; data: ITimeReport }) {
+  if (action === 'intervals') showTimeDetails(data)
+}
+
+function onSaleAction({ action, data }: { action: string; data: IAdmVenda }) {
+  if (action !== 'details') return
+  selectSale.value = data
+  saleDialogVisible.value = true
 }
 
 function showTimeDetails(service: ITimeReport) {
@@ -90,8 +100,9 @@ watch(
   () => {
     timeReport.value = null
     sales.value = null
-    load(true)
+    void load()
   },
+  { flush: 'post' },
 )
 usePageLoad(() => load())
 </script>
@@ -111,12 +122,7 @@ usePageLoad(() => load())
         optionValue="value"
         aria-label="Ordenar serviços por tempo"
       />
-      <Button
-        label="Gerar relatório"
-        icon="pi pi-chart-bar"
-        :loading="loading"
-        @click="load(true)"
-      />
+      <Button label="Gerar relatório" icon="pi pi-chart-bar" :loading="loading" @click="load" />
     </div>
     <template v-if="reportType === 'tempos'">
       <p class="text-surface-500">
@@ -137,37 +143,24 @@ usePageLoad(() => load())
           Maior tempo: <strong>{{ formatTempo(timeReport.resumo.qt_maior_segundos) }}</strong>
         </p>
       </div>
-      <DataTable
-        :value="timeReport?.dados ?? []"
-        :loading="loading"
-        size="small"
-        scrollable
-        tableStyle="min-width: 56rem"
+      <GridPage
+        ref="timeGrid"
+        :fetch-page="fetchTimes"
+        :data-key="RelatorioTemposPageConfig.dataKey"
+        :columns="RelatorioTemposPageConfig.columns"
+        table-min-width="56rem"
+        :action-header="RelatorioTemposPageConfig.actionHeader"
+        :actions="RelatorioTemposPageConfig.actions"
+        @action="onTimeAction"
+        empty-message="Nenhum serviço com tempo medido no período."
       >
-        <Column header="Intervalos"
-          ><template #body="{ data }"
-            ><Button
-              icon="pi pi-clock"
-              text
-              aria-label="Consultar intervalos"
-              @click="showTimeDetails(data)" /></template
-        ></Column>
-        <Column field="nu_ordem" header="O.S." :bodyStyle="{ textAlign: 'end' }" /><Column field="an_descr" header="Serviço" /><Column
-          field="an_cliente"
-          header="Cliente"
-        />
-        <Column field="an_responsavel" header="Responsável" /><Column
-          field="qt_quantidade"
-          header="Quantidade"
-        />
-        <Column header="Tempo"
-          ><template #body="{ data }">{{ formatTempo(data.qt_tempo_segundos) }}</template></Column
-        >
-        <Column header="Finalização da O.S."
-          ><template #body="{ data }">{{ formatDateTime(data.dt_finalizacao) }}</template></Column
-        >
-        <template #empty>Nenhum serviço com tempo medido no período.</template>
-      </DataTable>
+        <template #cell-qt_tempo_segundos="{ data }">{{
+          formatTempo(data.qt_tempo_segundos)
+        }}</template>
+        <template #cell-dt_finalizacao="{ data }">{{
+          formatDateTime(data.dt_finalizacao)
+        }}</template>
+      </GridPage>
     </template>
     <template v-else>
       <div v-if="sales" class="flex gap-6 border border-surface-200 rounded-xl p-4">
@@ -178,43 +171,24 @@ usePageLoad(() => load())
           Total: <strong>{{ formatOrderCurrency(sales.resumo.vl_total) }}</strong>
         </p>
       </div>
-      <DataTable
-        :value="sales?.dados ?? []"
-        :loading="loading"
-        size="small"
-        scrollable
-        tableStyle="min-width: 45rem"
+      <GridPage
+        ref="salesGrid"
+        :fetch-page="fetchSales"
+        :data-key="RelatorioVendasPageConfig.dataKey"
+        :columns="RelatorioVendasPageConfig.columns"
+        table-min-width="45rem"
+        :action-header="RelatorioVendasPageConfig.actionHeader"
+        :actions="RelatorioVendasPageConfig.actions"
+        @action="onSaleAction"
+        empty-message="Nenhuma venda no período."
       >
-        <Column header="Ações"
-          ><template #body="{ data }"
-            ><Button
-              icon="pi pi-eye"
-              text
-              aria-label="Detalhar venda"
-              @click="((selectSale = data), (saleDialogVisible = true))" /></template
-        ></Column>
-        <Column field="nu_numero" header="Venda" :bodyStyle="{ textAlign: 'end' }" /><Column field="an_cliente" header="Cliente" />
-        <Column header="Origem"
-          ><template #body="{ data }">{{
-            data.ca_origem === 'DIRETA' ? 'Avulsa' : 'O.S.'
-          }}</template></Column
-        >
-        <Column header="Data"
-          ><template #body="{ data }">{{ formatDateTime(data.dt_venda) }}</template></Column
-        >
-        <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
-          ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
-        >
-        <template #empty>Nenhuma venda no período.</template>
-      </DataTable>
+        <template #cell-ca_origem="{ data }">{{
+          data.ca_origem === 'DIRETA' ? 'Avulsa' : 'O.S.'
+        }}</template>
+        <template #cell-dt_venda="{ data }">{{ formatDateTime(data.dt_venda) }}</template>
+        <template #cell-vl_total="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
+      </GridPage>
     </template>
-    <Paginator
-      :first="firstRecord"
-      :rows="20"
-      :totalRecords="total"
-      :disabled="loading"
-      @page="((firstRecord = $event.first), load())"
-    />
   </div>
   <Dialog
     v-model:visible="intervalDialogVisible"

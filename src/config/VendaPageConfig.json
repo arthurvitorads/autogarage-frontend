@@ -1,0 +1,39 @@
+{
+  "dataKey": "cn_venda",
+  "columns": [
+    {
+      "field": "nu_numero",
+      "header": "Número",
+      "align": "end"
+    },
+    {
+      "field": "an_cliente",
+      "header": "Cliente"
+    },
+    {
+      "field": "ca_documento",
+      "header": "Documento"
+    },
+    {
+      "field": "ca_origem",
+      "header": "Origem"
+    },
+    {
+      "field": "dt_venda",
+      "header": "Data"
+    },
+    {
+      "field": "vl_total",
+      "header": "Total",
+      "align": "end"
+    }
+  ],
+  "actionHeader": "Ações",
+  "actions": [
+    {
+      "action": "details",
+      "label": "Detalhar venda",
+      "icon": "pi pi-eye"
+    }
+  ]
+}

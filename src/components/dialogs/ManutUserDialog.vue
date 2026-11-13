@@ -31,7 +31,7 @@ const emit = defineEmits<{
   saved: []
 }>()
 
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 
 const { normalizeError, setLoading } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
@@ -79,11 +79,11 @@ async function onSubmit(values: IFormUser) {
     } else {
       await createUser({ ...values, cn_perfil: formData.value.cn_perfil })
     }
-    toast.success('Processo realizado com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
     emit('saved')
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   } finally {
     setLoading(false)
   }

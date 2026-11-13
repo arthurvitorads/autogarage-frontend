@@ -42,6 +42,17 @@ export interface ICadPessoa extends Omit<IManutPerson, 'endereco'> {
   endereco: ICadEndereco | null
 }
 
+export interface IPessoaGridRow extends ICadPessoa {
+  nome: string
+  tipo: string
+  documento: string
+  telefone: string
+  categorias: string
+  status: string
+  inclusao: string
+  alteracao: string
+}
+
 export interface IFormPerson {
   tipo: ITipoPessoa
   bo_categ_cliente: boolean

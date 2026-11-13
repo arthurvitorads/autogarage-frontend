@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
-import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
-import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
-import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServicoDialog.vue'
-import { usePageLoad } from '@/composables/usePageLoad'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 
 import Fieldset from 'primevue/fieldset'
 import Button from 'primevue/button'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
 import Tag from 'primevue/tag'
 
+import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
+import GridPage from '@/components/pages/GridPage.vue'
+import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
+import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServicoDialog.vue'
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 import ItemOrdemServicoDialog from '@/components/dialogs/ItemOrdemServicoDialog.vue'
 
@@ -22,6 +19,8 @@ import type {
   TServiceOrderAction,
 } from '@/interface/interface-pages/OrdemServicoPage'
 
+import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
+import { usePageLoad } from '@/composables/usePageLoad'
 import {
   calcularTotalOrdem as calculateOrderTotal,
   corTextoStatus as statusTextColor,
@@ -31,8 +30,11 @@ import {
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useAppToast } from '@/services/toast.service'
+
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
+
+import OrdemServicoDetalhePageConfig from '@/config/OrdemServicoDetalhePageConfig.json'
 
 const route = useRoute()
 const router = useRouter()
@@ -40,7 +42,7 @@ const orderStore = useServiceOrderStore()
 const { ordens: orders, classificacoes: classifications } = storeToRefs(orderStore)
 const { removeItem } = orderStore
 const { normalizeError, canWrite } = useUtilStore()
-const toast = useAppToast()
+const { showSuccess, showError } = useAppToast()
 const code = computed(() => String(route.params.id))
 const order = computed(() =>
   orders.value.find((item) => String(item.cn_ordem_servico) === code.value),
@@ -94,9 +96,9 @@ async function removeOrderItem(item: TItemOrdemServico) {
     }
 
     await removeItem(data.cn_ordem_servico, data.cn_item)
-    toast.success('Item removido com sucesso.')
+    showSuccess('Item removido com sucesso.')
   } catch (error) {
-    toast.error(normalizeError(error))
+    showError(normalizeError(error))
   }
 }
 
@@ -116,9 +118,17 @@ async function loadOrder() {
   await Promise.all([orderStore.loadOrder(code.value), orderStore.loadParametros()])
 }
 usePageLoad(loadOrder)
-watch(code, () => loadOrder().catch((error) => toast.error(normalizeError(error))))
+watch(code, () => loadOrder().catch((error) => showError(normalizeError(error))))
 function updateSale(sale: { cn_venda: string }) {
   if (order.value) order.value.cn_venda = sale.cn_venda
+}
+function isActionDisabled(action: string, item: TItemOrdemServico) {
+  return action === 'remove' && item.ca_tipo === 'SERVICO' && item.ca_status_servico !== 'PENDENTE'
+}
+
+function onGridAction({ action, data }: { action: string; data: TItemOrdemServico }) {
+  if (action === 'edit') editItem(data)
+  if (action === 'remove') void removeOrderItem(data)
 }
 </script>
 
@@ -228,72 +238,40 @@ function updateSale(sale: { cn_venda: string }) {
       <div v-if="canWrite('ORDEM_SERVICO')" class="flex justify-end mb-4">
         <Button label="Adicionar" icon="pi pi-plus" @click="newItem" />
       </div>
-      <DataTable
-        :pt="{ emptyMessage: { class: 'hidden' } }"
-        :value="order.itens"
-        rowGroupMode="subheader"
-        groupRowsBy="ca_tipo"
-        sortField="ca_tipo"
-        :sortOrder="1"
-        dataKey="cn_item"
-        size="small"
-        stripedRows
-        scrollable
-        tableStyle="min-width: 55rem"
+      <GridPage
+        :items="order.itens"
+        :data-key="OrdemServicoDetalhePageConfig.dataKey"
+        :columns="OrdemServicoDetalhePageConfig.columns"
+        table-min-width="55rem"
+        :action-header="OrdemServicoDetalhePageConfig.actionHeader"
+        :actions="canWrite('ORDEM_SERVICO') ? OrdemServicoDetalhePageConfig.actions : []"
+        @action="onGridAction"
+        row-group-mode="subheader"
+        group-rows-by="ca_tipo"
+        sort-field="ca_tipo"
+        :sort-order="1"
+        :is-action-disabled="isActionDisabled"
       >
         <template #groupheader="{ data }">
           <span class="font-semibold text-primary-600">{{
             data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços'
           }}</span>
         </template>
-        <Column v-if="canWrite('ORDEM_SERVICO')" header="Ações" class="min-w-24">
-          <template #body="{ data }">
-            <div class="flex">
-              <Button
-                icon="pi pi-pencil"
-                severity="secondary"
-                text
-                rounded
-                aria-label="Editar item"
-                @click="editItem(data)"
-              />
-              <Button
-                icon="pi pi-trash"
-                severity="danger"
-                text
-                rounded
-                :disabled="data.ca_tipo === 'SERVICO' && data.ca_status_servico !== 'PENDENTE'"
-                aria-label="Remover item"
-                @click="removeOrderItem(data)"
-              />
-            </div>
-          </template>
-        </Column>
-        <Column header="Tipo">
-          <template #body="{ data }">
-            <Tag :value="data.ca_tipo === 'PRODUTO' ? 'Produto' : 'Serviço'" severity="secondary" />
-          </template>
-        </Column>
-        <Column field="an_descr" header="Descrição" />
-        <Column header="Tempo de serviço">
-          <template #body="{ data }"
-            ><TempoServicoItem
-              :item="data"
-              :editable="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
-              @saved="updateItemTime"
-          /></template>
-        </Column>
-        <Column field="ca_unidade" header="Unidade" />
-        <Column header="Quantidade">
-          <template #body="{ data }">{{ formatQuantity(data.qt_quantidade) }}</template>
-        </Column>
-        <Column header="Preço unitário" :bodyStyle="{ textAlign: 'end' }">
-          <template #body="{ data }">{{ formatOrderCurrency(data.vl_unitario) }}</template>
-        </Column>
-        <Column header="Total" :bodyStyle="{ textAlign: 'end' }">
-          <template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
-        </Column>
-      </DataTable>
+        <template #cell-ca_tipo="{ data }">
+          <Tag :value="data.ca_tipo === 'PRODUTO' ? 'Produto' : 'Serviço'" severity="secondary" />
+        </template>
+        <template #cell-tempo="{ data }"
+          ><TempoServicoItem
+            :item="data"
+            :editable="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
+            @saved="updateItemTime"
+        /></template>
+        <template #cell-qt_quantidade="{ data }">{{ formatQuantity(data.qt_quantidade) }}</template>
+        <template #cell-vl_unitario="{ data }">{{
+          formatOrderCurrency(data.vl_unitario)
+        }}</template>
+        <template #cell-vl_total="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
+      </GridPage>
     </Fieldset>
     <Fieldset legend="Totais">
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-5 border-t border-surface-200 pt-4">
