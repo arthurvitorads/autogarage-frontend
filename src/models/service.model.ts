@@ -1,7 +1,7 @@
-import type { IFormService } from '@/interface/pages/ServicoPage'
+import type { IFormServico } from '@/interface/pages/ServicoPage'
 
 export class ServiceModel {
-  static createForm(): IFormService {
+  static createForm(): IFormServico {
     return {
       an_nome: '',
       an_categoria: null,

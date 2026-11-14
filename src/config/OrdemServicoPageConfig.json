@@ -4,36 +4,44 @@
     {
       "field": "nu_numero",
       "header": "O.S.",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "an_cliente",
-      "header": "Cliente"
+      "header": "Cliente",
+      "width": 260
     },
     {
       "field": "placa",
-      "header": "Placa"
+      "header": "Placa",
+      "width": 120
     },
     {
       "field": "veiculo",
-      "header": "Veículo"
+      "header": "Veículo",
+      "width": 220
     },
     {
       "field": "ca_status",
-      "header": "Status"
+      "header": "Status",
+      "width": 160
     },
     {
       "field": "dt_entrada",
-      "header": "Entrada"
+      "header": "Entrada",
+      "width": 200
     },
     {
       "field": "dt_previsao",
-      "header": "Previsão"
+      "header": "Previsão",
+      "width": 200
     },
     {
       "field": "total",
       "header": "Total",
-      "align": "end"
+      "align": "end",
+      "width": 120
     }
   ],
   "actionHeader": "Ações",

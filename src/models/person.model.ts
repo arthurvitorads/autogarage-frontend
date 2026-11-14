@@ -1,7 +1,7 @@
-import type { IFormPerson } from '@/interface/pages/PessoaPage'
+import type { IFormPessoa } from '@/interface/pages/PessoaPage'
 
 export class PersonModel {
-  static createForm(): IFormPerson {
+  static createForm(): IFormPessoa {
     return {
       tipo: 'PF',
       bo_categ_cliente: true,

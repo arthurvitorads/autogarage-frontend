@@ -4,9 +4,9 @@ import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   IClienteOrdemServico,
-  IManutServiceOrder,
-  IManutOrderClassification,
-  TManutServiceOrderItem,
+  IManutOrdemServico,
+  IManutClassificacaoOrdemServico,
+  TManutItemOrdemServico,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'
 import * as orderService from '@/services/ordem-api.service'
@@ -42,7 +42,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     else ordens.value[index] = dados
   }
   async function saveClassificacao(
-    values: IManutOrderClassification,
+    values: IManutClassificacaoOrdemServico,
   ): Promise<IClassificacaoOrdemServico> {
     const { dados } = await orderService.saveClassification(values)
     if (dados.bo_padrao)
@@ -56,7 +56,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     else classificacoes.value[index] = dados
     return dados
   }
-  async function saveOrdem(values: IManutServiceOrder): Promise<IAdmOrdemServico> {
+  async function saveOrdem(values: IManutOrdemServico): Promise<IAdmOrdemServico> {
     const { dados } = await orderService.saveOrder(values)
     const index = ordens.value.findIndex(
       (item) => String(item.cn_ordem_servico) === String(dados.cn_ordem_servico),
@@ -77,7 +77,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     return dados
   }
 
-  async function saveItem(values: TManutServiceOrderItem): Promise<TItemOrdemServico> {
+  async function saveItem(values: TManutItemOrdemServico): Promise<TItemOrdemServico> {
     const { dados } = await orderService.saveItem(values)
     const ordem = ordens.value.find(
       (item) => String(item.cn_ordem_servico) === String(values.cn_ordem_servico),

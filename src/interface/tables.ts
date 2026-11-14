@@ -1,24 +1,24 @@
-import type { IManutAddress, IManutPerson } from '@/interface/pages/PessoaPage'
-import type { IManutProduct } from '@/interface/pages/ProdutoPage'
-import type { IManutService } from '@/interface/pages/ServicoPage'
-import type { IManutAuxiliary } from '@/interface/pages/CadastroAuxiliar'
+import type { IManutEndereco, IManutPessoa } from '@/interface/pages/PessoaPage'
+import type { IManutProduto } from '@/interface/pages/ProdutoPage'
+import type { IManutServico } from '@/interface/pages/ServicoPage'
+import type { IManutAuxiliar } from '@/interface/pages/CadastroAuxiliar'
 import type {
-  IManutOrderClassification,
-  IManutServiceOrder,
-  TManutServiceOrderItem,
+  IManutClassificacaoOrdemServico,
+  IManutOrdemServico,
+  TManutItemOrdemServico,
   TServiceOrderStatus,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'
 
-export interface IAdmCadastroAuxiliar extends IManutAuxiliary {
+export interface IAdmCadastroAuxiliar extends IManutAuxiliar {
   cn_cadastro: number
 }
 
-export interface IClassificacaoOrdemServico extends IManutOrderClassification {
+export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServico {
   cn_classificacao: TServiceOrderCode
 }
 
-export interface IAdmOrdemServico extends IManutServiceOrder {
+export interface IAdmOrdemServico extends IManutOrdemServico {
   cn_venda: string | null
   ca_status: TServiceOrderStatus
   an_motivo_cancelamento: string
@@ -39,7 +39,7 @@ export interface IAdmPerfil {
   dt_alt: Date
 }
 
-export interface ICadEndereco extends Omit<IManutAddress, 'cn_estado'> {
+export interface ICadEndereco extends Omit<IManutEndereco, 'cn_estado'> {
   cn_endereco: string
   cn_estado: string | null
   cn_pessoa: string
@@ -48,18 +48,18 @@ export interface ICadEndereco extends Omit<IManutAddress, 'cn_estado'> {
   dt_alt: string
 }
 
-export interface ICadPessoa extends Omit<IManutPerson, 'endereco'> {
+export interface ICadPessoa extends Omit<IManutPessoa, 'endereco'> {
   cn_pessoa: string
   dt_inc: string
   dt_alt: string
   endereco: ICadEndereco | null
 }
 
-export interface IAdmProduto extends IManutProduct {
+export interface IAdmProduto extends IManutProduto {
   cn_produto: number
 }
 
-export interface IAdmServico extends IManutService {
+export interface IAdmServico extends IManutServico {
   cn_servico: number
 }
 
@@ -114,7 +114,7 @@ export interface IEndEstado {
   dt_alt: string
 }
 
-export type TItemOrdemServico = TManutServiceOrderItem & {
+export type TItemOrdemServico = TManutItemOrdemServico & {
   ca_status_servico: 'PENDENTE' | 'EM_ANDAMENTO' | 'PAUSADO' | 'FINALIZADO' | 'CANCELADO'
   qt_tempo_segundos: number
   dt_inicio_tempo: string | null

@@ -4,28 +4,34 @@
     {
       "field": "nu_numero",
       "header": "Número",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "an_cliente",
-      "header": "Cliente"
+      "header": "Cliente",
+      "width": 260
     },
     {
       "field": "ca_documento",
-      "header": "Documento"
+      "header": "Documento",
+      "width": 160
     },
     {
       "field": "ca_origem",
-      "header": "Origem"
+      "header": "Origem",
+      "width": 120
     },
     {
       "field": "dt_venda",
-      "header": "Data"
+      "header": "Data",
+      "width": 200
     },
     {
       "field": "vl_total",
       "header": "Total",
-      "align": "end"
+      "align": "end",
+      "width": 120
     }
   ],
   "actionHeader": "Ações",

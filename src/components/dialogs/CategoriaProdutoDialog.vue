@@ -4,7 +4,7 @@ import FloatLabel from 'primevue/floatlabel'
 import { AuxiliaryModel } from '@/models/auxiliary.model'
 import type { IDialogProps } from '@/interface/dialog'
 import type { IFormPageRef, TGenericData } from '@/interface/util'
-import type { IFormDescription } from '@/interface/pages/CadastroAuxiliar'
+import type { IFormDescricao } from '@/interface/pages/CadastroAuxiliar'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
@@ -40,7 +40,7 @@ const { showSuccess, showError } = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const formData = ref<IFormDescription>(AuxiliaryModel.createDescriptionForm())
+const formData = ref<IFormDescricao>(AuxiliaryModel.createDescriptionForm())
 
 function selectCategory(category: IAdmCadastroAuxiliar | null) {
   selectedCategory.value = category
@@ -51,7 +51,7 @@ function selectCategory(category: IAdmCadastroAuxiliar | null) {
   formKey.value++
 }
 
-async function onSubmit(values: IFormDescription) {
+async function onSubmit(values: IFormDescricao) {
   const errors: TGenericData = {}
   const description = values.an_descr.trim()
   if (!description) errors.an_descr = 'Campo obrigatório.'

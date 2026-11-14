@@ -1,11 +1,25 @@
-import type { ICadPessoa } from '@/interface/tables'
 import { IDialogProps } from '../dialog'
 
 import { Pessoa } from '@/models/pessoa.model'
 
+import type { ICadPessoa } from '@/interface/tables'
+
 import type { ITipoPessoa } from '@/interface/enum'
 
-export interface IManutAddress {
+export interface IPessoaGrid extends ICadPessoa {
+  nome: string
+  tipo: string
+  documento: string
+  telefone: string
+  categorias: string
+  status: string
+  inclusao: string
+  alteracao: string
+}
+
+// Manut
+
+export interface IManutEndereco {
   ca_cep: string
   an_logradouro: string
   an_numero: string
@@ -15,7 +29,7 @@ export interface IManutAddress {
   cn_estado: string
 }
 
-export interface IManutPerson {
+export interface IManutPessoa {
   ca_tipo: ITipoPessoa
   an_nome: string | null
   ca_cpf: string | null
@@ -29,21 +43,10 @@ export interface IManutPerson {
   an_cargo: string
   nm_comissao_func: number
   bo_sts_reg: boolean
-  endereco: IManutAddress
+  endereco: IManutEndereco
 }
 
-export interface IPessoaGridRow extends ICadPessoa {
-  nome: string
-  tipo: string
-  documento: string
-  telefone: string
-  categorias: string
-  status: string
-  inclusao: string
-  alteracao: string
-}
-
-export interface IFormPerson {
+export interface IFormPessoa {
   tipo: ITipoPessoa
   bo_categ_cliente: boolean
   bo_categ_func: boolean
@@ -66,9 +69,7 @@ export interface IFormPerson {
   cn_estado: string
 }
 
-// Manut
-
-export interface IManutPersonDialogProps extends IDialogProps {
+export interface IManutPessoaDialogProps extends IDialogProps {
   person?: Pessoa | null
   people?: Pessoa[]
 }

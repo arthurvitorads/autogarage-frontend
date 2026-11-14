@@ -1,7 +1,7 @@
-import type { IFormProfile } from '@/interface/pages/PerfilPage'
+import type { IFormPerfil } from '@/interface/pages/PerfilPage'
 
 export class ProfileModel {
-  static createForm(): IFormProfile {
+  static createForm(): IFormPerfil {
     return {
       an_descr: '',
       bo_sts_reg: true,

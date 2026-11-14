@@ -4,7 +4,7 @@ import FloatLabel from 'primevue/floatlabel'
 import { AuxiliaryModel } from '@/models/auxiliary.model'
 import type { IDialogProps } from '@/interface/dialog'
 import type { IFormPageRef, TGenericData } from '@/interface/util'
-import type { IFormAuxiliary } from '@/interface/pages/CadastroAuxiliar'
+import type { IFormAuxiliar } from '@/interface/pages/CadastroAuxiliar'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
@@ -40,7 +40,7 @@ const { showSuccess, showError } = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const formData = ref<IFormAuxiliary>(AuxiliaryModel.createForm())
+const formData = ref<IFormAuxiliar>(AuxiliaryModel.createForm())
 
 function selectUnit(unit: IAdmCadastroAuxiliar | null) {
   selectedUnit.value = unit
@@ -51,7 +51,7 @@ function selectUnit(unit: IAdmCadastroAuxiliar | null) {
   formKey.value++
 }
 
-async function onSubmit(values: IFormAuxiliary) {
+async function onSubmit(values: IFormAuxiliar) {
   const errors: TGenericData = {}
   const description = values.an_descr.trim()
   const abbreviation = values.ca_sigla.trim().toUpperCase()

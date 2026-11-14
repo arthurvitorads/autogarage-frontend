@@ -14,7 +14,7 @@ import Message from 'primevue/message'
 
 import StatusField from '@/components/field/StatusField.vue'
 
-import type { IManutPersonDialogProps } from '@/interface/pages/PessoaPage'
+import type { IManutPessoaDialogProps } from '@/interface/pages/PessoaPage'
 
 import { PersonModel } from '@/models/person.model'
 import type { IFormPageRef } from '@/interface/util'
@@ -27,7 +27,7 @@ import type { Pessoa } from '@/models/pessoa.model'
 import { TipoPessoa } from '@/interface/enum'
 import { getStates } from '@/services/address.service'
 import { createPerson, personToRequest, updatePerson } from '@/services/person.service'
-import type { IFormPerson } from '@/interface/pages/PessoaPage'
+import type { IFormPessoa } from '@/interface/pages/PessoaPage'
 import type { TGenericData } from '@/interface/util'
 
 import {
@@ -44,7 +44,7 @@ import { fetchCnpj } from '@/services/documento.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
-const props = defineProps<IManutPersonDialogProps>()
+const props = defineProps<IManutPessoaDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -94,7 +94,7 @@ const companyFields = [
 type TCampoCnpj = (typeof companyFields)[number]
 let filledCompanyFields: Partial<Record<TCampoCnpj, string>> = {}
 
-const formData = ref<IFormPerson>(PersonModel.createForm())
+const formData = ref<IFormPessoa>(PersonModel.createForm())
 type TPersonCategory = 'bo_categ_cliente' | 'bo_categ_func'
 const personCategories: { label: string; value: TPersonCategory }[] = [
   { label: 'Cliente', value: 'bo_categ_cliente' },
@@ -328,7 +328,7 @@ async function queryPostalCode(fillOnlyEmpty = false) {
   }
 }
 
-async function onSubmit(values: IFormPerson) {
+async function onSubmit(values: IFormPessoa) {
   if (loadingPostalCode.value || loadingCnpj.value || loadingStates.value || !states.value.length)
     return
 

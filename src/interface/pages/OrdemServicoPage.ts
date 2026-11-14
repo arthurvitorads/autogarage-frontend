@@ -15,13 +15,13 @@ export interface IClienteOrdemServico {
   tipo: ITipoPessoa
 }
 
-export interface IFormOrderClassification {
+export interface IFormClassificacaoOrdemServico {
   an_descr: string
   ca_cor: string
   bo_padrao: boolean
 }
 
-export interface IManutOrderClassification extends IFormOrderClassification {
+export interface IManutClassificacaoOrdemServico extends IFormClassificacaoOrdemServico {
   cn_classificacao?: TServiceOrderCode
 }
 
@@ -34,7 +34,7 @@ export interface IServiceOrderVehicle {
   qt_quilometragem: number | null
 }
 
-export interface IFormServiceOrder extends IServiceOrderVehicle {
+export interface IFormOrdemServico extends IServiceOrderVehicle {
   cn_pessoa: string | number | null
   cn_classificacao: TServiceOrderCode | null
   dt_entrada: string
@@ -45,7 +45,7 @@ export interface IFormServiceOrder extends IServiceOrderVehicle {
 }
 
 // Contratos de manutenção e resposta da API de ordens.
-export interface IManutServiceOrder {
+export interface IManutOrdemServico {
   cn_ordem_servico?: TServiceOrderCode
   cn_pessoa: string | number
   cn_classificacao: TServiceOrderCode
@@ -59,21 +59,21 @@ export interface IManutServiceOrder {
 
 export type TServiceOrderItemType = 'PRODUTO' | 'SERVICO'
 
-export interface IFormServiceOrderItem {
+export interface IFormItemOrdemServico {
   ca_tipo: TServiceOrderItemType
   cn_referencia: TServiceOrderCode | null
   qt_quantidade: number | null
   vl_unitario: number | null
 }
 
-interface IManutServiceOrderItemBase {
+interface IManutItemOrdemServicoBase {
   cn_ordem_servico: TServiceOrderCode
   cn_item?: TServiceOrderCode
   qt_quantidade: number
   vl_unitario: number
 }
 
-export type TManutServiceOrderItem = IManutServiceOrderItemBase &
+export type TManutItemOrdemServico = IManutItemOrdemServicoBase &
   (
     | {
         ca_tipo: 'PRODUTO'
@@ -85,7 +85,7 @@ export type TManutServiceOrderItem = IManutServiceOrderItemBase &
       }
   )
 
-export interface IManutServiceOrderDialogProps extends IDialogProps {
+export interface IManutOrdemServicoDialogProps extends IDialogProps {
   order?: IAdmOrdemServico | null
 }
 

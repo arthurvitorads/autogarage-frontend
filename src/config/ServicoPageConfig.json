@@ -4,28 +4,34 @@
     {
       "field": "cn_servico",
       "header": "Código",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "an_nome",
-      "header": "Nome"
+      "header": "Nome",
+      "width": 280
     },
     {
       "field": "an_categoria",
-      "header": "Categoria"
+      "header": "Categoria",
+      "width": 160
     },
     {
       "field": "vl_preco",
       "header": "Preço",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "nu_tempo_estimado",
-      "header": "Tempo estimado"
+      "header": "Tempo estimado",
+      "width": 160
     },
     {
       "field": "bo_sts_reg",
-      "header": "Status"
+      "header": "Status",
+      "width": 120
     }
   ],
   "actionHeader": "Ações",

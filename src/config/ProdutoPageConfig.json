@@ -4,49 +4,60 @@
     {
       "field": "cn_produto",
       "header": "Código",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "an_nome",
-      "header": "Nome"
+      "header": "Nome",
+      "width": 280
     },
     {
       "field": "an_referencia",
-      "header": "Referência"
+      "header": "Referência",
+      "width": 120
     },
     {
       "field": "an_categoria",
-      "header": "Categoria"
+      "header": "Categoria",
+      "width": 160
     },
     {
       "field": "an_marca",
-      "header": "Marca"
+      "header": "Marca",
+      "width": 160
     },
     {
       "field": "ca_unidade",
-      "header": "Unidade"
+      "header": "Unidade",
+      "width": 100
     },
     {
       "field": "vl_custo",
       "header": "Custo",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "vl_venda",
       "header": "Venda",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "qt_estoque",
-      "header": "Estoque"
+      "header": "Estoque",
+      "width": 120
     },
     {
       "field": "qt_estoque_min",
-      "header": "Mínimo"
+      "header": "Mínimo",
+      "width": 120
     },
     {
       "field": "bo_sts_reg",
-      "header": "Status"
+      "header": "Status",
+      "width": 120
     }
   ],
   "actionHeader": "Ações",

@@ -3,7 +3,7 @@ import { useUtilStore } from '@/stores/util.store'
 import { apiPage, apiRequest } from '@/services/api.service'
 
 import type { IMeUser } from '@/interface/pages/LoginPage'
-import type { IFormUser, IUpdateUser } from '@/interface/pages/UsuarioPage'
+import type { IFormUsuario, IUpdateUser } from '@/interface/pages/UsuarioPage'
 
 export function updateUser(id: string | number, values: IUpdateUser) {
   return apiRequest<IAdmUsuario>('/usuarios/atualizar', {
@@ -14,7 +14,7 @@ export function updateUser(id: string | number, values: IUpdateUser) {
   })
 }
 
-export function createUser(values: IFormUser) {
+export function createUser(values: IFormUsuario) {
   return apiRequest<IAdmUsuario>('/usuarios', {
     an_nome: values.an_nome.trim(),
     an_email: values.an_email.trim().toLowerCase(),

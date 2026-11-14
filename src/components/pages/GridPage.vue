@@ -26,7 +26,7 @@ const props = defineProps<{
   isActionVisible?: (action: string, row: TRow) => boolean
   isActionDisabled?: (action: string, row: TRow) => boolean
   dataKey: string
-  columns: { field: string; header: string; minWidth?: string; align?: string }[]
+  columns: { field: string; header: string; width?: number; minWidth?: string; align?: string }[]
   actions?: { action: string; label: string; icon: string; severity?: string }[]
   actionHeader?: string
   pageSize?: number
@@ -78,6 +78,11 @@ async function loadGrid(query?: string) {
   } finally {
     if (currentRequest === requestId) loading.value = false
   }
+}
+
+function columnStyle(column: (typeof props.columns)[number]) {
+  const width = column.width === undefined ? undefined : String(column.width) + 'px'
+  return { width, minWidth: column.minWidth ?? width }
 }
 
 function changePage(event: DataTablePageEvent) {
@@ -141,7 +146,7 @@ defineExpose({ loadGrid, loading, rows, total })
       :key="column.field"
       :field="column.field"
       :header="column.header"
-      :style="{ minWidth: column.minWidth }"
+      :style="columnStyle(column)"
       :bodyStyle="{ textAlign: column.align }"
     >
       <template #body="{ data }">

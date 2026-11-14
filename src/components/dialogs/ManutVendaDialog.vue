@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { IManutSaleDialogProps } from '@/interface/pages/VendaPage'
+import type { IManutVendaDialogProps } from '@/interface/pages/VendaPage'
 import type { IAdmVenda } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
 import { SaleModel } from '@/models/sale.model'
-import type { IFormSale } from '@/interface/pages/VendaPage'
+import type { IFormVenda } from '@/interface/pages/VendaPage'
 import { computed, reactive, ref, toRefs, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Select from 'primevue/select'
@@ -16,8 +16,8 @@ import Column from 'primevue/column'
 import Dialog from 'primevue/dialog'
 
 import type {
-  IFormSaleItem,
-  IManutSaleItem,
+  IFormItemVenda,
+  IManutItemVenda,
   TBillableOrder,
   TSaleCustomer,
 } from '@/interface/pages/VendaPage'
@@ -32,8 +32,8 @@ import {
   formatCurrencyOrdem as formatOrderCurrency,
 } from '@/services/ordem-servico.service'
 
-const props = defineProps<IManutSaleDialogProps>()
-const formData = reactive<IFormSale>(SaleModel.createForm())
+const props = defineProps<IManutVendaDialogProps>()
+const formData = reactive<IFormVenda>(SaleModel.createForm())
 const { origin, personId, orderId, notes, requestKey, items } = toRefs(formData)
 const emit = defineEmits<{ 'update:visible': [visible: boolean]; saved: [venda: IAdmVenda] }>()
 const catalog = ref<Awaited<ReturnType<typeof getCatalogItemOptions>>['dados'] | null>(null)
@@ -48,7 +48,7 @@ const customer = ref<TSaleCustomer | null>(null)
 const saving = ref(false)
 const loadingData = ref(false)
 const loadError = ref('')
-const item = ref<IFormSaleItem>(SaleModel.createItem())
+const item = ref<IFormItemVenda>(SaleModel.createItem())
 const originOptions = [
   { label: 'Venda avulsa', value: 'DIRETA' },
   { label: 'Por ordem de serviço', value: 'ORDEM_SERVICO' },

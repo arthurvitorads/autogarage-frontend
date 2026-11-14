@@ -24,14 +24,14 @@ export type TSaleCustomer = Pick<
     | null
 }
 
-export interface IFormSaleItem {
+export interface IFormItemVenda {
   ca_tipo: 'PRODUTO' | 'SERVICO'
   cn_referencia: number | null
   qt_quantidade: number | null
   vl_unitario: number | null
 }
 
-export interface IManutSaleItem {
+export interface IManutItemVenda {
   ca_tipo: 'PRODUTO' | 'SERVICO'
   cn_produto: number | null
   cn_servico: number | null
@@ -39,12 +39,12 @@ export interface IManutSaleItem {
   vl_unitario: number
 }
 
-export interface IManutSale {
+export interface IManutVenda {
   cn_pessoa: string | number
   cn_ordem_servico?: string | number
   ca_chave_requisicao: string
   an_obs: string
-  itens?: IManutSaleItem[]
+  itens?: IManutItemVenda[]
 }
 
 export interface ITimeReport {
@@ -74,12 +74,12 @@ export interface ISaleReportResponse extends IPageResponse<IAdmVenda> {
 }
 export type TSaleOrigin = 'DIRETA' | 'ORDEM_SERVICO'
 
-export interface ISaleDraftItem extends IManutSaleItem {
+export interface ISaleDraftItem extends IManutItemVenda {
   an_descr: string
   vl_total: number
 }
 
-export interface IFormSale {
+export interface IFormVenda {
   origin: TSaleOrigin
   personId: string | number | null
   orderId: string | number | null
@@ -88,7 +88,7 @@ export interface IFormSale {
   items: ISaleDraftItem[]
 }
 
-export interface IManutSaleDialogProps extends IDialogProps {
+export interface IManutVendaDialogProps extends IDialogProps {
   order?: IAdmOrdemServico | null
 }
 

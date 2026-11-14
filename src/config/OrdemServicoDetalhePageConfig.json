@@ -3,33 +3,40 @@
   "columns": [
     {
       "field": "ca_tipo",
-      "header": "Tipo"
+      "header": "Tipo",
+      "width": 120
     },
     {
       "field": "an_descr",
-      "header": "Descrição"
+      "header": "Descrição",
+      "width": 280
     },
     {
       "field": "tempo",
-      "header": "Tempo de serviço"
+      "header": "Tempo de serviço",
+      "width": 120
     },
     {
       "field": "ca_unidade",
-      "header": "Unidade"
+      "header": "Unidade",
+      "width": 100
     },
     {
       "field": "qt_quantidade",
-      "header": "Quantidade"
+      "header": "Quantidade",
+      "width": 120
     },
     {
       "field": "vl_unitario",
       "header": "Preço unitário",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "vl_total",
       "header": "Total",
-      "align": "end"
+      "align": "end",
+      "width": 120
     }
   ],
   "actionHeader": "Ações",

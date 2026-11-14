@@ -4,34 +4,38 @@
     {
       "field": "cn_usuario",
       "header": "Código",
-      "align": "end"
+      "align": "end",
+      "width": 120
     },
     {
       "field": "an_nome",
-      "header": "Nome"
+      "header": "Nome",
+      "width": 280
     },
     {
       "field": "an_email",
-      "header": "E-mail"
+      "header": "E-mail",
+      "width": 280
     },
     {
       "field": "an_perfil",
       "header": "Perfil",
-      "minWidth": "15rem"
+      "width": 240
     },
     {
       "field": "bo_sts_reg",
-      "header": "Status"
+      "header": "Status",
+      "width": 120
     },
     {
       "field": "dt_inc",
       "header": "Dt. inclusão",
-      "minWidth": "12.5rem"
+      "width": 200
     },
     {
       "field": "dt_alt",
       "header": "Dt. alteração",
-      "minWidth": "12.5rem"
+      "width": 200
     }
   ],
   "actionHeader": "Ações",

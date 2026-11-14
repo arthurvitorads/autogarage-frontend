@@ -1,6 +1,6 @@
 import type { IAdmProduto } from '@/interface/tables'
 import type { IDialogProps } from '@/interface/dialog'
-export interface IFormProduct {
+export interface IFormProduto {
   an_nome: string
   an_referencia: string
   an_categoria: string | null
@@ -14,8 +14,8 @@ export interface IFormProduct {
   bo_sts_reg: boolean
 }
 
-export interface IManutProduct extends Omit<
-  IFormProduct,
+export interface IManutProduto extends Omit<
+  IFormProduto,
   'vl_custo' | 'vl_venda' | 'qt_estoque' | 'qt_estoque_min' | 'an_categoria' | 'an_marca'
 > {
   cn_produto?: number
@@ -27,7 +27,7 @@ export interface IManutProduct extends Omit<
   qt_estoque_min: number
 }
 
-export interface IManutProductDialogProps extends IDialogProps {
+export interface IManutProdutoDialogProps extends IDialogProps {
   product?: IAdmProduto | null
   products: IAdmProduto[]
 }

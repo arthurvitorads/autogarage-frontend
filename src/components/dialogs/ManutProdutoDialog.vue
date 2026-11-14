@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IManutProductDialogProps } from '@/interface/pages/ProdutoPage'
+import type { IManutProdutoDialogProps } from '@/interface/pages/ProdutoPage'
 import type { IAdmCadastroAuxiliar } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
 import { ProductModel } from '@/models/product.model'
@@ -22,7 +22,7 @@ import CategoriaProdutoDialog from '@/components/dialogs/CategoriaProdutoDialog.
 import MarcaDialog from '@/components/dialogs/MarcaDialog.vue'
 import UnidadeDialog from '@/components/dialogs/UnidadeDialog.vue'
 
-import type { IFormProduct, IManutProduct } from '@/interface/pages/ProdutoPage'
+import type { IFormProduto, IManutProduto } from '@/interface/pages/ProdutoPage'
 import type { TGenericData } from '@/interface/util'
 
 import { isQuantidadeValida as isValidQuantity } from '@/services/estoque.service'
@@ -31,11 +31,11 @@ import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
-const props = defineProps<IManutProductDialogProps>()
+const props = defineProps<IManutProdutoDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [produto: IManutProduct]
+  saved: [produto: IManutProduto]
 }>()
 
 const { showSuccess, showError } = useAppToast()
@@ -73,9 +73,9 @@ function selectUnit(unit: IAdmCadastroAuxiliar) {
   delete formErrors.value.ca_unidade
 }
 
-const formData = ref<IFormProduct>(ProductModel.createForm())
+const formData = ref<IFormProduto>(ProductModel.createForm())
 
-async function onSubmit(values: IFormProduct) {
+async function onSubmit(values: IFormProduto) {
   const errors: TGenericData = {}
 
   if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
@@ -126,7 +126,7 @@ async function onSubmit(values: IFormProduct) {
   setLoading(true)
 
   try {
-    const product: IManutProduct = {
+    const product: IManutProduto = {
       ...(props.product ? { cn_produto: props.product.cn_produto } : {}),
       an_nome: values.an_nome.trim(),
       an_referencia: values.an_referencia.trim(),

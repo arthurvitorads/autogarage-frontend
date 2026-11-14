@@ -1,7 +1,7 @@
-import type { IFormProduct } from '@/interface/pages/ProdutoPage'
+import type { IFormProduto } from '@/interface/pages/ProdutoPage'
 
 export class ProductModel {
-  static createForm(): IFormProduct {
+  static createForm(): IFormProduto {
     return {
       an_nome: '',
       an_referencia: '',

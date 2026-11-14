@@ -1,9 +1,9 @@
 import type { IAdmCadastroAuxiliar, IAdmProduto, IAdmServico } from '@/interface/tables'
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { IManutProduct } from '@/interface/pages/ProdutoPage'
-import type { IManutService } from '@/interface/pages/ServicoPage'
-import type { IManutAuxiliary } from '@/interface/pages/CadastroAuxiliar'
+import type { IManutProduto } from '@/interface/pages/ProdutoPage'
+import type { IManutServico } from '@/interface/pages/ServicoPage'
+import type { IManutAuxiliar } from '@/interface/pages/CadastroAuxiliar'
 import * as catalogService from '@/services/catalogo.service'
 import { useUtilStore } from '@/stores/util.store'
 
@@ -52,21 +52,21 @@ export const useCatalogoStore = defineStore('catalogo', () => {
     servicos.value = services
     cadastrosAuxiliares.value = auxiliariesResponse.dados
   }
-  async function saveProduto(values: IManutProduct): Promise<IAdmProduto> {
+  async function saveProduto(values: IManutProduto): Promise<IAdmProduto> {
     const { dados } = await catalogService.saveProduct(values)
     const index = produtos.value.findIndex((item) => item.cn_produto === dados.cn_produto)
     if (index < 0) produtos.value.push(dados)
     else produtos.value[index] = dados
     return dados
   }
-  async function saveServico(values: IManutService): Promise<IAdmServico> {
+  async function saveServico(values: IManutServico): Promise<IAdmServico> {
     const { dados } = await catalogService.saveService(values)
     const index = servicos.value.findIndex((item) => item.cn_servico === dados.cn_servico)
     if (index < 0) servicos.value.push(dados)
     else servicos.value[index] = dados
     return dados
   }
-  async function saveCadastroAuxiliar(values: IManutAuxiliary): Promise<IAdmCadastroAuxiliar> {
+  async function saveCadastroAuxiliar(values: IManutAuxiliar): Promise<IAdmCadastroAuxiliar> {
     const { dados } = await catalogService.saveAuxiliary(values)
     const index = cadastrosAuxiliares.value.findIndex(
       (item) => item.cn_cadastro === dados.cn_cadastro,

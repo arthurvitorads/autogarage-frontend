@@ -70,16 +70,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmVenda }) {
   <div class="grid-page flex flex-col h-full min-h-0 min-w-0 gap-4">
     <div class="flex flex-col flex-1 min-h-0 min-w-0 border border-surface-200 rounded-xl">
       <div class="flex flex-wrap justify-between items-center gap-3 m-5">
-        <div>
-          <h1 class="text-xl font-semibold">Faturamento — Vendas</h1>
-          <p class="text-surface-500">{{ grid?.total ?? 0 }} venda(s)</p>
-        </div>
-        <Button
-          v-if="canWrite('FATURAMENTO')"
-          label="Nova venda"
-          icon="pi pi-plus"
-          @click="newSale"
-        />
         <div class="flex gap-2 w-full max-w-xl">
           <InputText
             v-model="filter"
@@ -95,6 +85,12 @@ function onGridAction({ action, data }: { action: string; data: IAdmVenda }) {
             @click="grid?.loadGrid(filter.trim())"
           />
         </div>
+        <Button
+          v-if="canWrite('FATURAMENTO')"
+          label="Nova venda"
+          icon="pi pi-plus"
+          @click="newSale"
+        />
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <GridPage

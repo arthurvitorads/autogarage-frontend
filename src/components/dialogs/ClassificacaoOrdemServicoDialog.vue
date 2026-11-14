@@ -19,8 +19,8 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type {
-  IFormOrderClassification,
-  IManutOrderClassification,
+  IFormClassificacaoOrdemServico,
+  IManutClassificacaoOrdemServico,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
@@ -48,7 +48,7 @@ const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 
-const formData = ref<IFormOrderClassification>(
+const formData = ref<IFormClassificacaoOrdemServico>(
   OrderClassificationModel.createForm(classifications.value.length === 0),
 )
 
@@ -73,7 +73,7 @@ function newClassification() {
   loadClassification()
 }
 
-async function onSubmit(values: IFormOrderClassification) {
+async function onSubmit(values: IFormClassificacaoOrdemServico) {
   const errors: TGenericData = {}
 
   if (!values.an_descr.trim()) errors.an_descr = 'Campo obrigatório.'
@@ -85,7 +85,7 @@ async function onSubmit(values: IFormOrderClassification) {
   setLoading(true)
 
   try {
-    const data: IManutOrderClassification = {
+    const data: IManutClassificacaoOrdemServico = {
       ...(selectClassification.value !== null
         ? { cn_classificacao: selectClassification.value }
         : {}),

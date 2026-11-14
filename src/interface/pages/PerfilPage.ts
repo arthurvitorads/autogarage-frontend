@@ -1,6 +1,6 @@
 import type { IAdmPerfil } from '@/interface/tables'
 import type { IDialogProps } from '@/interface/dialog'
-export interface IManutProfile {
+export interface IManutPerfil {
   cn_perfil?: number
   an_descr: string
   bo_sts_reg: boolean
@@ -8,12 +8,12 @@ export interface IManutProfile {
   dt_alt?: Date
 }
 
-export interface IFormProfile {
+export interface IFormPerfil {
   an_descr: string
   bo_sts_reg: boolean
 }
 
-export interface IManutProfileDialogProps extends IDialogProps {
+export interface IManutPerfilDialogProps extends IDialogProps {
   profile?: IAdmPerfil | null
 }
 

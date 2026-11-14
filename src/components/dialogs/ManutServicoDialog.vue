@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IManutServiceDialogProps } from '@/interface/pages/ServicoPage'
+import type { IManutServicoDialogProps } from '@/interface/pages/ServicoPage'
 import type { IAdmCadastroAuxiliar } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
 import { ServiceModel } from '@/models/service.model'
@@ -20,18 +20,18 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
 
-import type { IFormService, IManutService } from '@/interface/pages/ServicoPage'
+import type { IFormServico, IManutServico } from '@/interface/pages/ServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 
-const props = defineProps<IManutServiceDialogProps>()
+const props = defineProps<IManutServicoDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [servico: IManutService]
+  saved: [servico: IManutServico]
 }>()
 
 const { showSuccess, showError } = useAppToast()
@@ -54,9 +54,9 @@ const formRef = ref<IFormPageRef | null>(null)
 const isValidated = ref(false)
 const isEditing = computed(() => !!props.service)
 
-const formData = ref<IFormService>(ServiceModel.createForm())
+const formData = ref<IFormServico>(ServiceModel.createForm())
 
-async function onSubmit(values: IFormService) {
+async function onSubmit(values: IFormServico) {
   const errors: TGenericData = {}
 
   if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
@@ -89,7 +89,7 @@ async function onSubmit(values: IFormService) {
   setLoading(true)
 
   try {
-    const service: IManutService = {
+    const service: IManutServico = {
       ...(props.service ? { cn_servico: props.service.cn_servico } : {}),
       an_nome: values.an_nome.trim(),
       an_categoria: values.an_categoria ?? '',

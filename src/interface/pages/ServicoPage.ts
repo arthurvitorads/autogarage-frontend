@@ -1,6 +1,6 @@
 import type { IAdmServico } from '@/interface/tables'
 import type { IDialogProps } from '@/interface/dialog'
-export interface IFormService {
+export interface IFormServico {
   an_nome: string
   an_categoria: string | null
   vl_preco: number | null
@@ -9,8 +9,8 @@ export interface IFormService {
   bo_sts_reg: boolean
 }
 
-export interface IManutService extends Omit<
-  IFormService,
+export interface IManutServico extends Omit<
+  IFormServico,
   'vl_preco' | 'nu_tempo_estimado' | 'an_categoria'
 > {
   cn_servico?: number
@@ -19,6 +19,6 @@ export interface IManutService extends Omit<
   nu_tempo_estimado?: number
 }
 
-export interface IManutServiceDialogProps extends IDialogProps {
+export interface IManutServicoDialogProps extends IDialogProps {
   service?: IAdmServico | null
 }

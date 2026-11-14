@@ -3,9 +3,9 @@ import type { IClassificacaoOrdemServico, IAdmOrdemServico } from '@/interface/t
 import { apiPage, apiRequest } from '@/services/api.service'
 import type {
   IClienteOrdemServico,
-  IManutServiceOrder,
-  IManutOrderClassification,
-  TManutServiceOrderItem,
+  IManutOrdemServico,
+  IManutClassificacaoOrdemServico,
+  TManutItemOrdemServico,
   TServiceOrderCode,
   TServiceOrderAction,
 } from '@/interface/pages/OrdemServicoPage'
@@ -22,14 +22,14 @@ export function getCustomers() {
   return apiRequest<IClienteOrdemServico[]>('/paramPessoa')
 }
 
-export function saveOrder(values: IManutServiceOrder) {
+export function saveOrder(values: IManutOrdemServico) {
   return apiRequest<IAdmOrdemServico>(
     values.cn_ordem_servico === undefined ? '/ordensServico' : '/ordensServico/atualizar',
     values,
   )
 }
 
-export function saveClassification(values: IManutOrderClassification) {
+export function saveClassification(values: IManutClassificacaoOrdemServico) {
   return apiRequest<IClassificacaoOrdemServico>(
     values.cn_classificacao === undefined
       ? '/classificacoesOrdens'
@@ -38,7 +38,7 @@ export function saveClassification(values: IManutOrderClassification) {
   )
 }
 
-export function saveItem(values: TManutServiceOrderItem) {
+export function saveItem(values: TManutItemOrdemServico) {
   return apiRequest<TItemOrdemServico>(
     values.cn_item === undefined ? '/ordensServico/itens' : '/ordensServico/itens/atualizar',
     values,

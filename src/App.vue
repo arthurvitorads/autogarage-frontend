@@ -6,6 +6,6 @@ import ConfirmDialog from 'primevue/confirmdialog'
 <template>
   <LoaderPage />
   <ConfirmDialog />
-  <Toast position="top-right" />
+  <Toast position="top-center" />
   <RouterView />
 </template>

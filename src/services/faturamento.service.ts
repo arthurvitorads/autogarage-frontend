@@ -1,6 +1,6 @@
 import type { IAdmVenda } from '@/interface/tables'
 import { apiList, apiPage, apiRequest } from '@/services/api.service'
-import type { IManutSale, TBillableOrder, TSaleCustomer } from '@/interface/pages/VendaPage'
+import type { IManutVenda, TBillableOrder, TSaleCustomer } from '@/interface/pages/VendaPage'
 
 export function getBillableOrders() {
   return apiList<TBillableOrder>('/faturamento/ordens/listar')
@@ -21,6 +21,6 @@ export function getSale(id: string) {
   return apiRequest<IAdmVenda>('/faturamento/vendas/detalhar', { cn_venda: id })
 }
 
-export function createSale(values: IManutSale) {
+export function createSale(values: IManutVenda) {
   return apiRequest<IAdmVenda>('/faturamento/vendas', values)
 }

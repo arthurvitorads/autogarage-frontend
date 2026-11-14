@@ -1,11 +1,11 @@
-import type { IFormAuxiliary, IFormDescription } from '@/interface/pages/CadastroAuxiliar'
+import type { IFormAuxiliar, IFormDescricao } from '@/interface/pages/CadastroAuxiliar'
 
 export class AuxiliaryModel {
-  static createDescriptionForm(): IFormDescription {
+  static createDescriptionForm(): IFormDescricao {
     return { an_descr: '' }
   }
 
-  static createForm(): IFormAuxiliary {
+  static createForm(): IFormAuxiliar {
     return {
       an_descr: '',
       ca_sigla: '',

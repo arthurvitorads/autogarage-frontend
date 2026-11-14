@@ -3,25 +3,25 @@ import { apiPage, apiRequest } from '@/services/api.service'
 
 import type { Pessoa } from '@/models/pessoa.model'
 
-import type { IManutPerson, IPessoaGridRow } from '@/interface/pages/PessoaPage'
+import type { IManutPessoa, IPessoaGrid } from '@/interface/pages/PessoaPage'
 
 export function getPeople(page = 1, limit = 20, search = '') {
-  return apiPage<IPessoaGridRow>('/pessoa/listar', page, limit, search)
+  return apiPage<IPessoaGrid>('/pessoa/listar', page, limit, search)
 }
 
 export function getPersonById(id: string | number) {
   return apiRequest<ICadPessoa>('/pessoa/detalhar', { cn_pessoa: id })
 }
 
-export function createPerson(values: IManutPerson) {
+export function createPerson(values: IManutPessoa) {
   return apiRequest<ICadPessoa>('/pessoa', values)
 }
 
-export function updatePerson(id: string | number, values: IManutPerson) {
+export function updatePerson(id: string | number, values: IManutPessoa) {
   return apiRequest<ICadPessoa>('/pessoa/atualizar', { ...values, cn_pessoa: id })
 }
 
-export function personToRequest(pessoa: Pessoa): IManutPerson {
+export function personToRequest(pessoa: Pessoa): IManutPessoa {
   return {
     ca_tipo: pessoa.tipo,
     an_nome: pessoa.tipo === 'PF' ? pessoa.nome : null,

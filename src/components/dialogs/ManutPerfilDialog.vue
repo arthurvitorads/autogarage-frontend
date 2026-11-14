@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IManutProfileDialogProps } from '@/interface/pages/PerfilPage'
+import type { IManutPerfilDialogProps } from '@/interface/pages/PerfilPage'
 import FloatLabel from 'primevue/floatlabel'
 import { ProfileModel } from '@/models/profile.model'
 import { computed, ref, watch } from 'vue'
@@ -12,14 +12,14 @@ import Button from 'primevue/button'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IFormProfile } from '@/interface/pages/PerfilPage'
+import type { IFormPerfil } from '@/interface/pages/PerfilPage'
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { createProfile, updateProfile } from '@/services/perfil.service'
 
-const props = defineProps<IManutProfileDialogProps>()
+const props = defineProps<IManutPerfilDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -36,9 +36,9 @@ const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.profile)
 
-const formData = ref<IFormProfile>(ProfileModel.createForm())
+const formData = ref<IFormPerfil>(ProfileModel.createForm())
 
-async function onSubmit(values: IFormProfile) {
+async function onSubmit(values: IFormPerfil) {
   setLoading(true)
 
   const errors: TGenericData = {}

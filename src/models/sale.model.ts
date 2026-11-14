@@ -1,8 +1,8 @@
 import type { IAdmOrdemServico } from '@/interface/tables'
-import type { IFormSale, IFormSaleItem } from '@/interface/pages/VendaPage'
+import type { IFormVenda, IFormItemVenda } from '@/interface/pages/VendaPage'
 
 export class SaleModel {
-  static createForm(order?: IAdmOrdemServico | null): IFormSale {
+  static createForm(order?: IAdmOrdemServico | null): IFormVenda {
     return {
       origin: order ? 'ORDEM_SERVICO' : 'DIRETA',
       personId: order?.cn_pessoa ?? null,
@@ -13,7 +13,7 @@ export class SaleModel {
     }
   }
 
-  static createItem(): IFormSaleItem {
+  static createItem(): IFormItemVenda {
     return {
       ca_tipo: 'PRODUTO',
       cn_referencia: null,

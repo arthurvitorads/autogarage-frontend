@@ -20,8 +20,8 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type {
-  IFormServiceOrderItem,
-  TManutServiceOrderItem,
+  IFormItemOrdemServico,
+  TManutItemOrdemServico,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
@@ -59,7 +59,7 @@ const itemTypes = [
   { label: 'Serviço', value: 'SERVICO' },
 ]
 
-const formData = ref<IFormServiceOrderItem>(
+const formData = ref<IFormItemOrdemServico>(
   ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO'),
 )
 const options = computed(
@@ -92,7 +92,7 @@ function loadPrice() {
   delete formErrors.value.vl_unitario
 }
 
-async function onSubmit(values: IFormServiceOrderItem) {
+async function onSubmit(values: IFormItemOrdemServico) {
   const errors: TGenericData = {}
 
   if (!selectedReference.value) errors.cn_referencia = 'Selecione um produto ou serviço ativo.'
@@ -137,7 +137,7 @@ async function onSubmit(values: IFormServiceOrderItem) {
       qt_quantidade: values.qt_quantidade,
       vl_unitario: values.vl_unitario,
     }
-    const data: TManutServiceOrderItem =
+    const data: TManutItemOrdemServico =
       values.ca_tipo === 'PRODUTO'
         ? {
             ...dadosBase,

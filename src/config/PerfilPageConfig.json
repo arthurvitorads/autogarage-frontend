@@ -5,26 +5,27 @@
       "field": "cn_perfil",
       "header": "Código",
       "align": "end",
-      "minWidth": "7.5rem"
+      "width": 120
     },
     {
       "field": "an_descr",
-      "header": "Nome"
+      "header": "Nome",
+      "width": 280
     },
     {
       "field": "bo_sts_reg",
       "header": "Status",
-      "minWidth": "7.5rem"
+      "width": 120
     },
     {
       "field": "dt_inc",
       "header": "Dt. inclusão",
-      "minWidth": "12.5rem"
+      "width": 200
     },
     {
       "field": "dt_alt",
       "header": "Dt. alteração",
-      "minWidth": "12.5rem"
+      "width": 200
     }
   ],
   "actionHeader": "Ações",

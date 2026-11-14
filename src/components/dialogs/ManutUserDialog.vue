@@ -2,7 +2,7 @@
 import FloatLabel from 'primevue/floatlabel'
 import { UserModel } from '@/models/user.model'
 import type { IFormPageRef } from '@/interface/util'
-import type { IManutUserDialogProps } from '@/interface/pages/UsuarioPage'
+import type { IManutUsuarioDialogProps } from '@/interface/pages/UsuarioPage'
 import { computed, ref, watch } from 'vue'
 
 import Fieldset from 'primevue/fieldset'
@@ -16,7 +16,7 @@ import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IFormUser } from '@/interface/pages/UsuarioPage'
+import type { IFormUsuario } from '@/interface/pages/UsuarioPage'
 import type { TGenericData } from '@/interface/util'
 
 import { validateEmail } from '@/services/util.service'
@@ -25,7 +25,7 @@ import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import DomainField from '../field/DomainField.vue'
 
-const props = defineProps<IManutUserDialogProps>()
+const props = defineProps<IManutUsuarioDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -44,9 +44,9 @@ const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.user)
 
-const formData = ref<IFormUser>(UserModel.createForm())
+const formData = ref<IFormUsuario>(UserModel.createForm())
 
-async function onSubmit(values: IFormUser) {
+async function onSubmit(values: IFormUsuario) {
   setLoading(true)
 
   const errors: TGenericData = {}

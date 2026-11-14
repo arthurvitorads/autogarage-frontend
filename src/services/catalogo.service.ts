@@ -1,8 +1,8 @@
 import type { IAdmCadastroAuxiliar, IAdmProduto, IAdmServico } from '@/interface/tables'
 import { apiList, apiPage, apiRequest } from '@/services/api.service'
-import type { IManutProduct } from '@/interface/pages/ProdutoPage'
-import type { IManutService } from '@/interface/pages/ServicoPage'
-import type { IManutAuxiliary } from '@/interface/pages/CadastroAuxiliar'
+import type { IManutProduto } from '@/interface/pages/ProdutoPage'
+import type { IManutServico } from '@/interface/pages/ServicoPage'
+import type { IManutAuxiliar } from '@/interface/pages/CadastroAuxiliar'
 
 export interface ICatalogItemOption {
   cn_referencia: number
@@ -29,21 +29,21 @@ export function getAuxiliaries() {
   return apiRequest<IAdmCadastroAuxiliar[]>('/cadastrosAuxiliares/listar')
 }
 
-export function saveProduct(values: IManutProduct) {
+export function saveProduct(values: IManutProduto) {
   return apiRequest<IAdmProduto>(
     values.cn_produto === undefined ? '/produtos' : '/produtos/atualizar',
     values,
   )
 }
 
-export function saveService(values: IManutService) {
+export function saveService(values: IManutServico) {
   return apiRequest<IAdmServico>(
     values.cn_servico === undefined ? '/servicos' : '/servicos/atualizar',
     values,
   )
 }
 
-export function saveAuxiliary(values: IManutAuxiliary) {
+export function saveAuxiliary(values: IManutAuxiliar) {
   return apiRequest<IAdmCadastroAuxiliar>(
     values.cn_cadastro === undefined ? '/cadastrosAuxiliares' : '/cadastrosAuxiliares/atualizar',
     values,

@@ -1,7 +1,7 @@
-import type { IFormServiceOrderItem } from '@/interface/pages/OrdemServicoPage'
+import type { IFormItemOrdemServico } from '@/interface/pages/OrdemServicoPage'
 
 export class ServiceOrderItemModel {
-  static createForm(itemType: 'PRODUTO' | 'SERVICO' = 'PRODUTO'): IFormServiceOrderItem {
+  static createForm(itemType: 'PRODUTO' | 'SERVICO' = 'PRODUTO'): IFormItemOrdemServico {
     return {
       ca_tipo: itemType,
       cn_referencia: null,

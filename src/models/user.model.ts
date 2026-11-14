@@ -1,7 +1,7 @@
-import type { IFormUser } from '@/interface/pages/UsuarioPage'
+import type { IFormUsuario } from '@/interface/pages/UsuarioPage'
 
 export class UserModel {
-  static createForm(): IFormUser {
+  static createForm(): IFormUsuario {
     return {
       an_nome: '',
       an_email: '',

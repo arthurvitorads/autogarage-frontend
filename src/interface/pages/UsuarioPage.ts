@@ -5,7 +5,7 @@ export interface IUpdateUser {
   cn_perfil?: string | number | null
 }
 
-export interface IFormUser {
+export interface IFormUsuario {
   an_nome: string
   an_email: string
   ca_senha: string
@@ -13,7 +13,7 @@ export interface IFormUser {
   bo_sts_reg: boolean
 }
 
-export interface IManutUserDialogProps {
+export interface IManutUsuarioDialogProps {
   visible: boolean
   user?: IAdmUsuario | null
 }

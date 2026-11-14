@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { IManutServiceOrderDialogProps } from '@/interface/pages/OrdemServicoPage'
+import type { IManutOrdemServicoDialogProps } from '@/interface/pages/OrdemServicoPage'
 import type { IClassificacaoOrdemServico, IAdmOrdemServico } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
 import { ServiceOrderModel } from '@/models/service-order.model'
@@ -20,7 +20,7 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
-import type { IFormServiceOrder, IManutServiceOrder } from '@/interface/pages/OrdemServicoPage'
+import type { IFormOrdemServico, IManutOrdemServico } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import {
@@ -32,7 +32,7 @@ import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
-const props = defineProps<IManutServiceOrderDialogProps>()
+const props = defineProps<IManutOrdemServicoDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
@@ -63,7 +63,7 @@ const customerOptions = computed(() =>
   })),
 )
 
-const formData = ref<IFormServiceOrder>(
+const formData = ref<IFormOrdemServico>(
   ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null),
 )
 
@@ -72,7 +72,7 @@ function selectClassification(item: IClassificacaoOrdemServico) {
   delete formErrors.value.cn_classificacao
 }
 
-async function onSubmit(values: IFormServiceOrder) {
+async function onSubmit(values: IFormOrdemServico) {
   const errors = validateOrderData(values)
 
   if (!customers.value.some((customer) => String(customer.cn_pessoa) === String(values.cn_pessoa)))
@@ -91,7 +91,7 @@ async function onSubmit(values: IFormServiceOrder) {
   try {
     if (values.cn_pessoa === null || values.cn_classificacao === null) return
 
-    const data: IManutServiceOrder = {
+    const data: IManutOrdemServico = {
       ...(props.order ? { cn_ordem_servico: props.order.cn_ordem_servico } : {}),
       cn_pessoa: values.cn_pessoa,
       cn_classificacao: values.cn_classificacao,

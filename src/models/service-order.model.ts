@@ -1,8 +1,8 @@
-import type { IFormServiceOrder } from '@/interface/pages/OrdemServicoPage'
+import type { IFormOrdemServico } from '@/interface/pages/OrdemServicoPage'
 import { dataHoraLocal } from '@/services/ordem-servico.service'
 
 export class ServiceOrderModel {
-  static createForm(defaultClassification: string | number | null = null): IFormServiceOrder {
+  static createForm(defaultClassification: string | number | null = null): IFormOrdemServico {
     return {
       cn_pessoa: null,
       cn_classificacao: defaultClassification,
