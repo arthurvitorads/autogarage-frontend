@@ -1,9 +1,7 @@
+import type { TItemOrdemServico } from '@/interface/tables'
+import type { IDialogProps } from '@/interface/dialog'
+import type { IAdmOrdemServico, ICadPessoa, IAdmVenda } from '@/interface/tables'
 import type { IPageResponse } from '@/interface/api-response'
-import type {
-  IAdmOrdemServico,
-  TItemOrdemServico,
-} from '@/interface/pages/OrdemServicoPage'
-import type { ICadPessoa } from '@/interface/pages/PessoaPage'
 
 export type TBillableOrder = Pick<
   IAdmOrdemServico,
@@ -24,36 +22,6 @@ export type TSaleCustomer = Pick<
         estado: { ca_uf: string } | null
       })
     | null
-}
-
-export interface IItemVenda {
-  cn_item_venda: string
-  ca_tipo: 'PRODUTO' | 'SERVICO'
-  cn_produto: number | null
-  cn_servico: number | null
-  an_descr: string
-  ca_unidade: string
-  qt_quantidade: number
-  vl_unitario: number
-  vl_total: number
-  qt_tempo_segundos: number
-}
-
-export interface IAdmVenda {
-  cn_venda: string
-  nu_numero: number
-  cn_pessoa: string
-  cn_ordem_servico: string | null
-  ca_origem: 'ORDEM_SERVICO' | 'DIRETA'
-  an_cliente: string
-  ca_documento: string
-  an_email: string
-  an_telefone: string
-  an_endereco: string
-  an_obs: string
-  dt_venda: string
-  vl_total: number
-  itens: IItemVenda[]
 }
 
 export interface IFormSaleItem {
@@ -118,4 +86,12 @@ export interface IFormSale {
   notes: string
   requestKey: string
   items: ISaleDraftItem[]
+}
+
+export interface IManutSaleDialogProps extends IDialogProps {
+  order?: IAdmOrdemServico | null
+}
+
+export interface ISaleDetailsDialogProps extends IDialogProps {
+  sale: IAdmVenda | null
 }

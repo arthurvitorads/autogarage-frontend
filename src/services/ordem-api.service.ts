@@ -1,11 +1,10 @@
+import type { TItemOrdemServico } from '@/interface/tables'
+import type { IClassificacaoOrdemServico, IAdmOrdemServico } from '@/interface/tables'
 import { apiPage, apiRequest } from '@/services/api.service'
 import type {
-  IAdmOrdemServico,
   IClienteOrdemServico,
   IManutServiceOrder,
   IManutOrderClassification,
-  IClassificacaoOrdemServico,
-  TItemOrdemServico,
   TManutServiceOrderItem,
   TServiceOrderCode,
   TServiceOrderAction,

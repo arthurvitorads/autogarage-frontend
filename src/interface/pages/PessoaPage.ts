@@ -1,3 +1,4 @@
+import type { ICadPessoa } from '@/interface/tables'
 import { IDialogProps } from '../dialog'
 
 import { Pessoa } from '@/models/pessoa.model'
@@ -12,15 +13,6 @@ export interface IManutAddress {
   an_bairro: string
   an_cidade: string
   cn_estado: string
-}
-
-export interface ICadEndereco extends Omit<IManutAddress, 'cn_estado'> {
-  cn_endereco: string
-  cn_estado: string | null
-  cn_pessoa: string
-  bo_sts_reg: boolean
-  dt_inc: string
-  dt_alt: string
 }
 
 export interface IManutPerson {
@@ -38,13 +30,6 @@ export interface IManutPerson {
   nm_comissao_func: number
   bo_sts_reg: boolean
   endereco: IManutAddress
-}
-
-export interface ICadPessoa extends Omit<IManutPerson, 'endereco'> {
-  cn_pessoa: string
-  dt_inc: string
-  dt_alt: string
-  endereco: ICadEndereco | null
 }
 
 export interface IPessoaGridRow extends ICadPessoa {
@@ -87,4 +72,3 @@ export interface IManutPersonDialogProps extends IDialogProps {
   person?: Pessoa | null
   people?: Pessoa[]
 }
-

@@ -1,4 +1,4 @@
-import type { IAdmOrdemServico } from '@/interface/pages/OrdemServicoPage'
+import type { IAdmOrdemServico } from '@/interface/tables'
 import type { IFormSale, IFormSaleItem } from '@/interface/pages/VendaPage'
 
 export class SaleModel {

@@ -12,7 +12,3 @@ export interface IManutAuxiliary extends IFormAuxiliary {
   cn_cadastro?: number
   ca_tipo: TAuxiliaryType
 }
-
-export interface IAdmCadastroAuxiliar extends IManutAuxiliary {
-  cn_cadastro: number
-}

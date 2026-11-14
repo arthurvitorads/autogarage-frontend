@@ -1,10 +1,6 @@
+import type { IAdmVenda } from '@/interface/tables'
 import { apiList, apiPage, apiRequest } from '@/services/api.service'
-import type {
-  IAdmVenda,
-  IManutSale,
-  TBillableOrder,
-  TSaleCustomer,
-} from '@/interface/pages/VendaPage'
+import type { IManutSale, TBillableOrder, TSaleCustomer } from '@/interface/pages/VendaPage'
 
 export function getBillableOrders() {
   return apiList<TBillableOrder>('/faturamento/ordens/listar')

@@ -1,3 +1,5 @@
+import type { IAdmProduto } from '@/interface/tables'
+import type { IDialogProps } from '@/interface/dialog'
 export interface IFormProduct {
   an_nome: string
   an_referencia: string
@@ -25,6 +27,7 @@ export interface IManutProduct extends Omit<
   qt_estoque_min: number
 }
 
-export interface IAdmProduto extends IManutProduct {
-  cn_produto: number
+export interface IManutProductDialogProps extends IDialogProps {
+  product?: IAdmProduto | null
+  products: IAdmProduto[]
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IAdmVenda } from '@/interface/tables'
 import { ref, watch, useTemplateRef } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -8,8 +9,6 @@ import InputText from 'primevue/inputtext'
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutVendaDialog from '@/components/dialogs/ManutVendaDialog.vue'
 import DetalhesVendaDialog from '@/components/dialogs/DetalhesVendaDialog.vue'
-
-import type { IAdmVenda } from '@/interface/pages/VendaPage'
 
 import { usePageLoad } from '@/composables/usePageLoad'
 import { getSalesPage, getSale } from '@/services/faturamento.service'
@@ -75,21 +74,42 @@ function onGridAction({ action, data }: { action: string; data: IAdmVenda }) {
           <h1 class="text-xl font-semibold">Faturamento — Vendas</h1>
           <p class="text-surface-500">{{ grid?.total ?? 0 }} venda(s)</p>
         </div>
-        <Button v-if="canWrite('FATURAMENTO')" label="Nova venda" icon="pi pi-plus" @click="newSale" />
+        <Button
+          v-if="canWrite('FATURAMENTO')"
+          label="Nova venda"
+          icon="pi pi-plus"
+          @click="newSale"
+        />
         <div class="flex gap-2 w-full max-w-xl">
-          <InputText v-model="filter" class="flex-1 min-w-0" placeholder="Pesquisar número, cliente ou documento..."
-            aria-label="Pesquisar vendas" @keyup.enter="grid?.loadGrid(filter.trim())" />
-          <Button icon="pi pi-search" aria-label="Pesquisar" :disabled="grid?.loading"
-            @click="grid?.loadGrid(filter.trim())" />
+          <InputText
+            v-model="filter"
+            class="flex-1 min-w-0"
+            placeholder="Pesquisar número, cliente ou documento..."
+            aria-label="Pesquisar vendas"
+            @keyup.enter="grid?.loadGrid(filter.trim())"
+          />
+          <Button
+            icon="pi pi-search"
+            aria-label="Pesquisar"
+            :disabled="grid?.loading"
+            @click="grid?.loadGrid(filter.trim())"
+          />
         </div>
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
-        <GridPage ref="grid" :fetch-page="getSalesPage" :data-key="VendaPageConfig.dataKey"
-          :columns="VendaPageConfig.columns" table-min-width="58rem" :action-header="VendaPageConfig.actionHeader"
-          :actions="VendaPageConfig.actions" @action="onGridAction">
+        <GridPage
+          ref="grid"
+          :fetch-page="getSalesPage"
+          :data-key="VendaPageConfig.dataKey"
+          :columns="VendaPageConfig.columns"
+          table-min-width="58rem"
+          :action-header="VendaPageConfig.actionHeader"
+          :actions="VendaPageConfig.actions"
+          @action="onGridAction"
+        >
           <template #cell-ca_origem="{ data }">{{
             data.ca_origem === 'DIRETA' ? 'Avulsa' : 'O.S.'
-            }}</template>
+          }}</template>
           <template #cell-dt_venda="{ data }">{{ formatDateTime(data.dt_venda) }}</template>
           <template #cell-vl_total="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
         </GridPage>

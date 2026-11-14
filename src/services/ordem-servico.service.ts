@@ -1,8 +1,6 @@
-import type {
-  IAdmOrdemServico,
-  IFormServiceOrder,
-  TItemOrdemServico,
-} from '@/interface/pages/OrdemServicoPage'
+import type { TItemOrdemServico } from '@/interface/tables'
+import type { IAdmOrdemServico } from '@/interface/tables'
+import type { IFormServiceOrder } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import { isQuantidadeValida } from '@/services/estoque.service'

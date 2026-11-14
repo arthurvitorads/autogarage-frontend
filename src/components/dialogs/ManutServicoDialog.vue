@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { IManutServiceDialogProps } from '@/interface/pages/ServicoPage'
+import type { IAdmCadastroAuxiliar } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
 import { ServiceModel } from '@/models/service.model'
 import type { IFormPageRef } from '@/interface/util'
-import type { IManutServiceDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
@@ -19,12 +20,7 @@ import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
 
-import type {
-  IAdmServico,
-  IFormService,
-  IManutService,
-} from '@/interface/pages/ServicoPage'
-import type { IAdmCadastroAuxiliar } from '@/interface/pages/CadastroAuxiliar'
+import type { IFormService, IManutService } from '@/interface/pages/ServicoPage'
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
@@ -123,13 +119,13 @@ watch(
 
     formData.value = service
       ? {
-        an_nome: service.an_nome,
-        an_categoria: service.an_categoria,
-        vl_preco: service.vl_preco,
-        nu_tempo_estimado: service.nu_tempo_estimado ?? null,
-        an_obs: service.an_obs,
-        bo_sts_reg: service.bo_sts_reg,
-      }
+          an_nome: service.an_nome,
+          an_categoria: service.an_categoria,
+          vl_preco: service.vl_preco,
+          nu_tempo_estimado: service.nu_tempo_estimado ?? null,
+          an_obs: service.an_obs,
+          bo_sts_reg: service.bo_sts_reg,
+        }
       : ServiceModel.createForm()
     formErrors.value = {}
     isValidated.value = false
@@ -140,48 +136,111 @@ watch(
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar serviço' : 'Novo serviço'" modal
-    :style="{ width: '72rem', maxWidth: '95vw', maxHeight: '90vh' }">
-    <FormPage ref="formRef" :key="formKey" novalidate class="flex flex-col gap-4" v-model:errors="formErrors"
-      :initialValues="formData" @submit="onSubmit(formData)" @input="isValidated = false" @change="isValidated = false">
+  <Dialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar serviço' : 'Novo serviço'"
+    modal
+    :style="{ width: '72rem', maxWidth: '95vw', maxHeight: '90vh' }"
+  >
+    <FormPage
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      class="flex flex-col gap-4"
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit(formData)"
+      @input="isValidated = false"
+      @change="isValidated = false"
+    >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-10" name="an_nome" v-slot="{ invalid, field }">
+          <FieldForm
+            class="m-[4px] col-span-12 sm:col-span-10"
+            name="an_nome"
+            v-slot="{ invalid, field }"
+          >
             <FloatLabel variant="on">
-              <InputText id="ManutServicoDialog-an_nome" maxlength="4000" v-model="formData.an_nome" :name="field"
-                :invalid="invalid" fluid />
+              <InputText
+                id="ManutServicoDialog-an_nome"
+                maxlength="4000"
+                v-model="formData.an_nome"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
               <label for="ManutServicoDialog-an_nome">Nome *</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-2" name="bo_sts_reg">
             <StatusField v-model="formData.bo_sts_reg" />
           </FieldForm>
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4" name="an_categoria"
-            v-slot="{ invalid, field }">
+          <FieldForm
+            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="an_categoria"
+            v-slot="{ invalid, field }"
+          >
             <div class="flex gap-2">
               <FloatLabel variant="on" class="flex-1 min-w-0">
-                <Select inputId="ManutServicoDialog-an_categoria" v-model="formData.an_categoria" :name="field"
-                  :options="serviceCategories" :invalid="invalid" showClear fluid />
+                <Select
+                  inputId="ManutServicoDialog-an_categoria"
+                  v-model="formData.an_categoria"
+                  :name="field"
+                  :options="serviceCategories"
+                  :invalid="invalid"
+                  showClear
+                  fluid
+                />
                 <label for="ManutServicoDialog-an_categoria">Categoria</label>
               </FloatLabel>
-              <Button type="button" icon="pi pi-plus" severity="secondary" aria-label="Cadastrar categoria"
-                @click="categoryDialogVisible = true" />
+              <Button
+                type="button"
+                icon="pi pi-plus"
+                severity="secondary"
+                aria-label="Cadastrar categoria"
+                @click="categoryDialogVisible = true"
+              />
             </div>
           </FieldForm>
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4" name="vl_preco"
-            v-slot="{ invalid, field }">
+          <FieldForm
+            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="vl_preco"
+            v-slot="{ invalid, field }"
+          >
             <FloatLabel variant="on">
-              <InputNumber inputId="ManutServicoDialog-vl_preco" v-model="formData.vl_preco" :name="field"
-                :invalid="invalid" fluid locale="pt-BR" mode="currency" currency="BRL" :max="999999999.99" :min="0" />
+              <InputNumber
+                inputId="ManutServicoDialog-vl_preco"
+                v-model="formData.vl_preco"
+                :name="field"
+                :invalid="invalid"
+                fluid
+                locale="pt-BR"
+                mode="currency"
+                currency="BRL"
+                :max="999999999.99"
+                :min="0"
+              />
               <label for="ManutServicoDialog-vl_preco">Preço do serviço *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4" name="nu_tempo_estimado"
-            v-slot="{ invalid, field }">
+          <FieldForm
+            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
+            name="nu_tempo_estimado"
+            v-slot="{ invalid, field }"
+          >
             <FloatLabel variant="on">
-              <InputNumber inputId="ManutServicoDialog-nu_tempo_estimado" v-model="formData.nu_tempo_estimado"
-                :name="field" :invalid="invalid" fluid locale="pt-BR" :max="999999" :min="0" :maxFractionDigits="0" />
+              <InputNumber
+                inputId="ManutServicoDialog-nu_tempo_estimado"
+                v-model="formData.nu_tempo_estimado"
+                :name="field"
+                :invalid="invalid"
+                fluid
+                locale="pt-BR"
+                :max="999999"
+                :min="0"
+                :maxFractionDigits="0"
+              />
               <label for="ManutServicoDialog-nu_tempo_estimado">Tempo estimado (minutos)</label>
             </FloatLabel>
           </FieldForm>
@@ -195,8 +254,19 @@ watch(
     </FormPage>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
-        <Button type="button" label="Gravar" :disabled="loading" :loading="loading" @click="formRef?.submit()" />
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
       </div>
     </template>
   </Dialog>

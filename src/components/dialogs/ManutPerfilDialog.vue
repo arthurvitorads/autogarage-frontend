@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { IManutProfileDialogProps } from '@/interface/pages/PerfilPage'
 import FloatLabel from 'primevue/floatlabel'
 import { ProfileModel } from '@/models/profile.model'
-import type { IManutProfileDialogProps } from '@/interface/dialog'
 import { computed, ref, watch } from 'vue'
 
 import Dialog from 'primevue/dialog'
@@ -12,7 +12,7 @@ import Button from 'primevue/button'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IAdmPerfil, IFormProfile } from '@/interface/pages/PerfilPage'
+import type { IFormProfile } from '@/interface/pages/PerfilPage'
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
@@ -78,9 +78,9 @@ watch(
 
     formData.value = props.profile
       ? {
-        an_descr: props.profile.an_descr ?? '',
-        bo_sts_reg: props.profile.bo_sts_reg ?? true,
-      }
+          an_descr: props.profile.an_descr ?? '',
+          bo_sts_reg: props.profile.bo_sts_reg ?? true,
+        }
       : ProfileModel.createForm()
 
     formErrors.value = {}
@@ -92,14 +92,31 @@ watch(
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar perfil' : 'Novo perfil'" modal class="w-140">
-    <FormPage class="grid gap-x-2 grid-cols-12" :key="formKey" v-model:errors="formErrors" :initialValues="formData"
-      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })" @input="isValidated = false"
-      @change="isValidated = false">
+  <Dialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Editar perfil' : 'Novo perfil'"
+    modal
+    class="w-140"
+  >
+    <FormPage
+      class="grid gap-x-2 grid-cols-12"
+      :key="formKey"
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
+      @input="isValidated = false"
+      @change="isValidated = false"
+    >
       <FieldForm class="m-[4px] col-span-8" name="an_descr" v-slot="{ invalid, field }">
         <FloatLabel variant="on">
-          <InputText id="ManutPerfilDialog-an_descr" maxlength="4000" :name="field" :invalid="invalid" fluid />
+          <InputText
+            id="ManutPerfilDialog-an_descr"
+            maxlength="4000"
+            :name="field"
+            :invalid="invalid"
+            fluid
+          />
           <label for="ManutPerfilDialog-an_descr">Descrição</label>
         </FloatLabel>
       </FieldForm>
@@ -107,7 +124,12 @@ watch(
         <StatusField v-model="formData.bo_sts_reg" />
       </FieldForm>
       <div class="col-span-12 flex justify-end gap-2 mt-4">
-        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
         <Button type="submit" label="Gravar" />
       </div>
     </FormPage>

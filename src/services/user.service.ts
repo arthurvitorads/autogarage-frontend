@@ -1,8 +1,9 @@
+import type { IAdmUsuario } from '@/interface/tables'
 import { useUtilStore } from '@/stores/util.store'
 import { apiPage, apiRequest } from '@/services/api.service'
 
 import type { IMeUser } from '@/interface/pages/LoginPage'
-import type { IAdmUsuario, IFormUser, IUpdateUser } from '@/interface/pages/UsuarioPage'
+import type { IFormUser, IUpdateUser } from '@/interface/pages/UsuarioPage'
 
 export function updateUser(id: string | number, values: IUpdateUser) {
   return apiRequest<IAdmUsuario>('/usuarios/atualizar', {

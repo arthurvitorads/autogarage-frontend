@@ -1,12 +1,11 @@
+import type { TItemOrdemServico } from '@/interface/tables'
+import type { IClassificacaoOrdemServico, IAdmOrdemServico } from '@/interface/tables'
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type {
-  IAdmOrdemServico,
   IClienteOrdemServico,
   IManutServiceOrder,
   IManutOrderClassification,
-  IClassificacaoOrdemServico,
-  TItemOrdemServico,
   TManutServiceOrderItem,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'

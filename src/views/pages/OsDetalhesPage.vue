@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { TItemOrdemServico } from '@/interface/tables'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
@@ -14,10 +15,7 @@ import DetalhesOrdemServicoDialog from '@/components/dialogs/DetalhesOrdemServic
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 import ItemOrdemServicoDialog from '@/components/dialogs/ItemOrdemServicoDialog.vue'
 
-import type {
-  TItemOrdemServico,
-  TServiceOrderAction,
-} from '@/interface/pages/OrdemServicoPage'
+import type { TServiceOrderAction } from '@/interface/pages/OrdemServicoPage'
 
 import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 import { usePageLoad } from '@/composables/usePageLoad'
@@ -136,7 +134,13 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
   <div v-if="order && !isOrderClosed(order)" class="flex flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
-        <Button icon="pi pi-arrow-left" severity="secondary" text aria-label="Voltar ao painel" @click="backToPanel" />
+        <Button
+          icon="pi pi-arrow-left"
+          severity="secondary"
+          text
+          aria-label="Voltar ao painel"
+          @click="backToPanel"
+        />
         <div>
           <h1 class="text-xl font-semibold">
             O.S. #{{ String(order.nu_numero).padStart(6, '0') }}
@@ -145,16 +149,32 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-3">
-        <span class="rounded-full px-3 py-1 font-semibold" :style="{
-          backgroundColor: orderStatus?.cor ?? '#64748b',
-          color: statusTextColor(orderStatus?.cor ?? '#64748b'),
-        }">{{ orderStatus?.label ?? 'Status indisponível' }}</span>
-        <Button v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'ABERTO'" label="Iniciar serviço"
-          icon="pi pi-play" @click="moveOrder('INICIAR')" />
-        <Button v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'" label="Finalizar"
-          icon="pi pi-check" @click="moveOrder('FINALIZAR')" />
-        <Button v-if="canWrite('ORDEM_SERVICO')" label="Cancelar O.S." severity="secondary"
-          @click="moveOrder('CANCELAR')" />
+        <span
+          class="rounded-full px-3 py-1 font-semibold"
+          :style="{
+            backgroundColor: orderStatus?.cor ?? '#64748b',
+            color: statusTextColor(orderStatus?.cor ?? '#64748b'),
+          }"
+          >{{ orderStatus?.label ?? 'Status indisponível' }}</span
+        >
+        <Button
+          v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'ABERTO'"
+          label="Iniciar serviço"
+          icon="pi pi-play"
+          @click="moveOrder('INICIAR')"
+        />
+        <Button
+          v-if="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
+          label="Finalizar"
+          icon="pi pi-check"
+          @click="moveOrder('FINALIZAR')"
+        />
+        <Button
+          v-if="canWrite('ORDEM_SERVICO')"
+          label="Cancelar O.S."
+          severity="secondary"
+          @click="moveOrder('CANCELAR')"
+        />
       </div>
     </div>
     <Fieldset legend="Dados gerais">
@@ -216,28 +236,39 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
       <div v-if="canWrite('ORDEM_SERVICO')" class="flex justify-end mb-4">
         <Button label="Adicionar" icon="pi pi-plus" @click="newItem" />
       </div>
-      <GridPage :items="order.itens" :data-key="OrdemServicoDetalhePageConfig.dataKey"
-        :columns="OrdemServicoDetalhePageConfig.columns" table-min-width="55rem"
+      <GridPage
+        :items="order.itens"
+        :data-key="OrdemServicoDetalhePageConfig.dataKey"
+        :columns="OrdemServicoDetalhePageConfig.columns"
+        table-min-width="55rem"
         :action-header="OrdemServicoDetalhePageConfig.actionHeader"
-        :actions="canWrite('ORDEM_SERVICO') ? OrdemServicoDetalhePageConfig.actions : []" @action="onGridAction"
-        row-group-mode="subheader" group-rows-by="ca_tipo" sort-field="ca_tipo" :sort-order="1"
-        :is-action-disabled="isActionDisabled">
+        :actions="canWrite('ORDEM_SERVICO') ? OrdemServicoDetalhePageConfig.actions : []"
+        @action="onGridAction"
+        row-group-mode="subheader"
+        group-rows-by="ca_tipo"
+        sort-field="ca_tipo"
+        :sort-order="1"
+        :is-action-disabled="isActionDisabled"
+      >
         <template #groupheader="{ data }">
           <span class="font-semibold text-primary-600">{{
             data.ca_tipo === 'PRODUTO' ? 'Produtos' : 'Serviços'
-            }}</span>
+          }}</span>
         </template>
         <template #cell-ca_tipo="{ data }">
           <Tag :value="data.ca_tipo === 'PRODUTO' ? 'Produto' : 'Serviço'" severity="secondary" />
         </template>
         <template #cell-tempo="{ data }">
-          <TempoServicoItem :item="data" :editable="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
-            @saved="updateItemTime" />
+          <TempoServicoItem
+            :item="data"
+            :editable="canWrite('ORDEM_SERVICO') && order.ca_status === 'EM_ANDAMENTO'"
+            @saved="updateItemTime"
+          />
         </template>
         <template #cell-qt_quantidade="{ data }">{{ formatQuantity(data.qt_quantidade) }}</template>
         <template #cell-vl_unitario="{ data }">{{
           formatOrderCurrency(data.vl_unitario)
-          }}</template>
+        }}</template>
         <template #cell-vl_total="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template>
       </GridPage>
     </Fieldset>
@@ -270,14 +301,30 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
       </div>
     </Fieldset>
     <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="order" />
-    <ItemOrdemServicoDialog v-model:visible="itemDialogVisible" :orderCode="order.cn_ordem_servico"
-      :item="selectItem" />
+    <ItemOrdemServicoDialog
+      v-model:visible="itemDialogVisible"
+      :orderCode="order.cn_ordem_servico"
+      :item="selectItem"
+    />
   </div>
   <div v-else-if="!order" class="flex flex-col items-start gap-4">
     <p>Esta ordem de serviço não está disponível.</p>
-    <Button label="Voltar ao painel" icon="pi pi-arrow-left" severity="secondary" @click="backToPanel" />
+    <Button
+      label="Voltar ao painel"
+      icon="pi pi-arrow-left"
+      severity="secondary"
+      @click="backToPanel"
+    />
   </div>
-  <MovimentarOrdemServicoDialog v-model:visible="orderMovementVisible" :order="order ?? null" :action="action" />
-  <DetalhesOrdemServicoDialog :visible="!!order && isOrderClosed(order)" :order="order ?? null" @faturada="updateSale"
-    @update:visible="backToPanel" />
+  <MovimentarOrdemServicoDialog
+    v-model:visible="orderMovementVisible"
+    :order="order ?? null"
+    :action="action"
+  />
+  <DetalhesOrdemServicoDialog
+    :visible="!!order && isOrderClosed(order)"
+    :order="order ?? null"
+    @faturada="updateSale"
+    @update:visible="backToPanel"
+  />
 </template>

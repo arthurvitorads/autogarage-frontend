@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import type { IProfileAccessDialogProps } from '@/interface/pages/PerfilPage'
 import { computed, ref, watch } from 'vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Select from 'primevue/select'
 import { accessModules, type TModuleAccess } from '@/interface/access'
-import type { IProfileAccessDialogProps } from '@/interface/dialog'
 import { getProfileAccess, saveProfileAccess } from '@/services/perfil.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IClassificacaoOrdemServico } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
 import { OrderClassificationModel } from '@/models/order-classification.model'
 import type { IFormPageRef } from '@/interface/util'
@@ -20,7 +21,6 @@ import FieldForm from '@/components/field/FieldForm.vue'
 import type {
   IFormOrderClassification,
   IManutOrderClassification,
-  IClassificacaoOrdemServico,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
@@ -59,10 +59,10 @@ function loadClassification() {
 
   formData.value = selectedClassification
     ? {
-      an_descr: selectedClassification.an_descr,
-      ca_cor: selectedClassification.ca_cor,
-      bo_padrao: selectedClassification.bo_padrao,
-    }
+        an_descr: selectedClassification.an_descr,
+        ca_cor: selectedClassification.ca_cor,
+        bo_padrao: selectedClassification.bo_padrao,
+      }
     : OrderClassificationModel.createForm(classifications.value.length === 0)
   formErrors.value = {}
   formKey.value++
@@ -122,57 +122,124 @@ watch(
 </script>
 
 <template>
-  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Classificações da O.S.' : 'Classificações da O.S.'" modal
-    :style="{ width: '48rem', maxWidth: '95vw', maxHeight: '90vh' }">
+  <Dialog
+    :visible="visible"
+    @update:visible="emit('update:visible', $event)"
+    :header="isEditing ? 'Classificações da O.S.' : 'Classificações da O.S.'"
+    modal
+    :style="{ width: '48rem', maxWidth: '95vw', maxHeight: '90vh' }"
+  >
     <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
       <Button label="Novo" icon="pi pi-plus" @click="newClassification" />
     </div>
     <DataTable :value="classifications" size="small" scrollable scrollHeight="14rem" class="mb-4">
-      <Column v-if="canWrite('CADASTROS')" header="Ações"><template #body="{ data }"><Button icon="pi pi-pencil"
-            severity="secondary" text aria-label="Editar classificação"
-            @click="selectClassification = data.cn_classificacao" /></template></Column>
+      <Column v-if="canWrite('CADASTROS')" header="Ações"
+        ><template #body="{ data }"
+          ><Button
+            icon="pi pi-pencil"
+            severity="secondary"
+            text
+            aria-label="Editar classificação"
+            @click="selectClassification = data.cn_classificacao" /></template
+      ></Column>
       <Column field="an_descr" header="Descrição" />
-      <Column header="Cor"><template #body="{ data }"><span class="inline-block w-5 h-5 rounded"
-            :style="{ background: data.ca_cor }"></span></template></Column>
-      <Column header="Padrão"><template #body="{ data }">{{ data.bo_padrao ? 'Sim' : 'Não' }}</template></Column>
+      <Column header="Cor"
+        ><template #body="{ data }"
+          ><span
+            class="inline-block w-5 h-5 rounded"
+            :style="{ background: data.ca_cor }"
+          ></span></template
+      ></Column>
+      <Column header="Padrão"
+        ><template #body="{ data }">{{ data.bo_padrao ? 'Sim' : 'Não' }}</template></Column
+      >
       <template #empty>Nenhuma classificação disponível.</template>
     </DataTable>
-    <FormPage v-if="canWrite('CADASTROS')" ref="formRef" :key="formKey" novalidate v-model:errors="formErrors"
-      :initialValues="formData" @submit="onSubmit(formData)">
+    <FormPage
+      v-if="canWrite('CADASTROS')"
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      @submit="onSubmit(formData)"
+    >
       <Fieldset legend="Dados da classificação">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-9" name="an_descr" v-slot="{ invalid, field }">
+          <FieldForm
+            class="m-[4px] col-span-12 sm:col-span-9"
+            name="an_descr"
+            v-slot="{ invalid, field }"
+          >
             <FloatLabel variant="on">
-              <InputText id="ClassificacaoOrdemServicoDialog-an_descr" maxlength="4000" v-model="formData.an_descr"
-                :name="field" :invalid="invalid" fluid />
+              <InputText
+                id="ClassificacaoOrdemServicoDialog-an_descr"
+                maxlength="4000"
+                v-model="formData.an_descr"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
               <label for="ClassificacaoOrdemServicoDialog-an_descr">Nome *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-3" name="ca_cor" v-slot="{ invalid, field }">
+          <FieldForm
+            class="m-[4px] col-span-12 sm:col-span-3"
+            name="ca_cor"
+            v-slot="{ invalid, field }"
+          >
             <FloatLabel variant="on">
-              <InputText id="ClassificacaoOrdemServicoDialog-ca_cor" maxlength="4000" v-model="formData.ca_cor"
-                :name="field" type="color" :invalid="invalid" fluid class="h-10" aria-label="Cor da classificação" />
+              <InputText
+                id="ClassificacaoOrdemServicoDialog-ca_cor"
+                maxlength="4000"
+                v-model="formData.ca_cor"
+                :name="field"
+                type="color"
+                :invalid="invalid"
+                fluid
+                class="h-10"
+                aria-label="Cor da classificação"
+              />
               <label for="ClassificacaoOrdemServicoDialog-ca_cor">Cor *</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm class="m-[4px] col-span-12" name="bo_padrao" label="Padrão para novas ordens" v-slot="{ field }">
-            <ToggleSwitch v-model="formData.bo_padrao" :name="field"
-              aria-label="Usar como classificação padrão em novas ordens" />
+          <FieldForm
+            class="m-[4px] col-span-12"
+            name="bo_padrao"
+            label="Padrão para novas ordens"
+            v-slot="{ field }"
+          >
+            <ToggleSwitch
+              v-model="formData.bo_padrao"
+              :name="field"
+              aria-label="Usar como classificação padrão em novas ordens"
+            />
           </FieldForm>
           <div class="col-span-12 mt-2">
-            <span class="inline-flex rounded-full px-3 py-1 font-semibold"
-              :style="{ backgroundColor: formData.ca_cor, color: statusTextColor(formData.ca_cor) }">{{
-                formData.an_descr ||
-              'Prévia da classificação' }}</span>
+            <span
+              class="inline-flex rounded-full px-3 py-1 font-semibold"
+              :style="{ backgroundColor: formData.ca_cor, color: statusTextColor(formData.ca_cor) }"
+              >{{ formData.an_descr || 'Prévia da classificação' }}</span
+            >
           </div>
         </div>
       </Fieldset>
     </FormPage>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
-        <Button type="button" label="Cancelar" severity="secondary" @click="emit('update:visible', false)" />
-        <Button type="button" label="Gravar" :disabled="loading" :loading="loading" @click="formRef?.submit()" />
+        <Button
+          type="button"
+          label="Cancelar"
+          severity="secondary"
+          @click="emit('update:visible', false)"
+        />
+        <Button
+          type="button"
+          label="Gravar"
+          :disabled="loading"
+          :loading="loading"
+          @click="formRef?.submit()"
+        />
       </div>
     </template>
   </Dialog>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { IAdmPerfil } from '@/interface/tables'
 import { onMounted, ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
@@ -8,8 +9,6 @@ import Tag from 'primevue/tag'
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutPerfilDialog from '@/components/dialogs/ManutPerfilDialog.vue'
 import PerfilAcessosDialog from '@/components/dialogs/PerfilAcessosDialog.vue'
-
-import type { IAdmPerfil } from '@/interface/pages/PerfilPage'
 
 import { formatDateTime } from '@/services/util.service'
 import { getProfiles } from '@/services/perfil.service'
@@ -57,24 +56,49 @@ function onGridAction({ action, data }: { action: string; data: IAdmPerfil }) {
     <div class="flex flex-col flex-1 min-h-0 min-w-0 border border-surface-200 rounded-xl">
       <div class="flex justify-between m-5">
         <div class="flex justify-center gap-2 w-140">
-          <InputText v-model="filter" placeholder="Digite o que deseja pesquisar..." class="flex-1 min-w-0"
-            :disabled="grid?.loading" @keyup.enter="grid?.loadGrid(filter.trim())" />
-          <Button icon="pi pi-search" :disabled="grid?.loading" @click="grid?.loadGrid(filter.trim())" />
+          <InputText
+            v-model="filter"
+            placeholder="Digite o que deseja pesquisar..."
+            class="flex-1 min-w-0"
+            :disabled="grid?.loading"
+            @keyup.enter="grid?.loadGrid(filter.trim())"
+          />
+          <Button
+            icon="pi pi-search"
+            :disabled="grid?.loading"
+            @click="grid?.loadGrid(filter.trim())"
+          />
         </div>
         <div class="flex">
-          <Button v-if="canWrite('ADMINISTRACAO')" label="Novo" icon="pi pi-plus" @click="newProfile" />
+          <Button
+            v-if="canWrite('ADMINISTRACAO')"
+            label="Novo"
+            icon="pi pi-plus"
+            @click="newProfile"
+          />
         </div>
       </div>
 
       <div class="flex-1 min-h-0 min-w-0" style="margin: 0px 8px 0px 8px">
-        <GridPage ref="grid" :fetch-page="getProfiles" :data-key="PerfilPageConfig.dataKey"
-          :columns="PerfilPageConfig.columns" table-min-width="50rem" :action-header="PerfilPageConfig.actionHeader"
-          :actions="canWrite('ADMINISTRACAO')
+        <GridPage
+          ref="grid"
+          :fetch-page="getProfiles"
+          :data-key="PerfilPageConfig.dataKey"
+          :columns="PerfilPageConfig.columns"
+          table-min-width="50rem"
+          :action-header="PerfilPageConfig.actionHeader"
+          :actions="
+            canWrite('ADMINISTRACAO')
               ? PerfilPageConfig.actions
               : PerfilPageConfig.actions.filter((item) => item.action !== 'edit')
-            " @action="onGridAction">
+          "
+          @action="onGridAction"
+        >
           <template #cell-bo_sts_reg="{ data }">
-            <Tag :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'" :severity="data.bo_sts_reg ? 'success' : 'danger'" />
+            <Tag
+              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+              :severity="data.bo_sts_reg ? 'success' : 'danger'"
+            />
           </template>
           <template #cell-dt_inc="{ data }">
             <span>{{ formatDateTime(data.dt_inc) }}</span>
@@ -86,6 +110,10 @@ function onGridAction({ action, data }: { action: string; data: IAdmPerfil }) {
       </div>
     </div>
   </div>
-  <ManutPerfilDialog v-model:visible="manutProfileVisible" :profile="selectProfile" @saved="grid?.loadGrid()" />
+  <ManutPerfilDialog
+    v-model:visible="manutProfileVisible"
+    :profile="selectProfile"
+    @saved="grid?.loadGrid()"
+  />
   <PerfilAcessosDialog v-model:visible="accessDialogVisible" :profile="accessProfile" />
 </template>

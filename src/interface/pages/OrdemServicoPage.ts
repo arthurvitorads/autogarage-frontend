@@ -1,3 +1,6 @@
+import type { TItemOrdemServico } from '@/interface/tables'
+import type { IAdmOrdemServico } from '@/interface/tables'
+import type { IDialogProps } from '@/interface/dialog'
 import type { ITipoPessoa } from '@/interface/enum'
 
 export type TServiceOrderStatus = 'ABERTO' | 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO'
@@ -20,10 +23,6 @@ export interface IFormOrderClassification {
 
 export interface IManutOrderClassification extends IFormOrderClassification {
   cn_classificacao?: TServiceOrderCode
-}
-
-export interface IClassificacaoOrdemServico extends IManutOrderClassification {
-  cn_classificacao: TServiceOrderCode
 }
 
 export interface IServiceOrderVehicle {
@@ -86,26 +85,21 @@ export type TManutServiceOrderItem = IManutServiceOrderItemBase &
       }
   )
 
-export type TItemOrdemServico = TManutServiceOrderItem & {
-  ca_status_servico: 'PENDENTE' | 'EM_ANDAMENTO' | 'PAUSADO' | 'FINALIZADO' | 'CANCELADO'
-  qt_tempo_segundos: number
-  dt_inicio_tempo: string | null
-  dt_servidor: string
-  cn_item: TServiceOrderCode
-  an_descr: string
-  ca_unidade: string
-  vl_total: number
+export interface IManutServiceOrderDialogProps extends IDialogProps {
+  order?: IAdmOrdemServico | null
 }
 
-export interface IAdmOrdemServico extends IManutServiceOrder {
-  cn_venda: string | null
-  ca_status: TServiceOrderStatus
-  an_motivo_cancelamento: string
-  dt_inicio: string | null
-  dt_finalizacao: string | null
-  dt_cancelamento: string | null
-  cn_ordem_servico: TServiceOrderCode
-  nu_numero: number
-  an_cliente: string
-  itens: TItemOrdemServico[]
+export interface IServiceOrderItemDialogProps extends IDialogProps {
+  orderCode: TServiceOrderCode
+  item?: TItemOrdemServico | null
+  itemType?: TServiceOrderItemType
+}
+
+export interface IMoveServiceOrderDialogProps extends IDialogProps {
+  order: IAdmOrdemServico | null
+  action: TServiceOrderAction
+}
+
+export interface IServiceOrderDetailsDialogProps extends IDialogProps {
+  order: IAdmOrdemServico | null
 }
