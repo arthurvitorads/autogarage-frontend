@@ -16,27 +16,27 @@
       "width": 50
     },
     {
-      "field": "nome",
+      "field": "an_nome",
       "header": "Nome",
       "width": 300
     },
     {
-      "field": "tipo",
+      "field": "ca_tipo",
       "header": "Tipo",
       "width": 90
     },
     {
-      "field": "documento",
+      "field": "ca_cpf",
       "header": "Documento",
       "width": 160
     },
     {
-      "field": "categorias",
+      "field": "bo_categ_cliente",
       "header": "Categorias",
       "width": 180
     },
     {
-      "field": "telefone",
+      "field": "an_telefone",
       "header": "Telefone",
       "width": 160
     },
@@ -46,18 +46,18 @@
       "width": 280
     },
     {
-      "field": "status",
+      "field": "bo_sts_reg",
       "header": "Status",
       "width": 120
     },
     {
-      "field": "inclusao",
+      "field": "dt_inc",
       "header": "Dt. inclusão",
       "width": 140,
       "align": "center"
     },
     {
-      "field": "alteracao",
+      "field": "dt_alt",
       "header": "Dt. alteração",
       "width": 140,
       "align": "center"

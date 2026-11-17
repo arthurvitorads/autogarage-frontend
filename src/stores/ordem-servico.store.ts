@@ -50,7 +50,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
         item.bo_padrao = false
       })
     const index = classificacoes.value.findIndex(
-      (item) => String(item.cn_classificacao) === String(dados.cn_classificacao),
+      (item) => String(item.cn_classificacao_os) === String(dados.cn_classificacao_os),
     )
     if (index < 0) classificacoes.value.push(dados)
     else classificacoes.value[index] = dados

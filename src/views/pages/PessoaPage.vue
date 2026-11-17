@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { ICadPessoa } from '@/interface/tables'
 import { onMounted, ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
@@ -8,11 +7,12 @@ import Button from 'primevue/button'
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutPessoaDialog from '@/components/dialogs/ManutPessoaDialog.vue'
 
-import type { Pessoa } from '@/models/pessoa.model'
-
 import { IGridActionEvent } from '@/interface/util'
 
+import type { ICadPessoa } from '@/interface/tables'
+
 import { getPeople } from '@/services/person.service'
+import { maskCpf, maskCnpj, maskTelefone } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -26,7 +26,7 @@ const filter = ref('')
 
 // form
 const manutPessoaVisible = ref(false)
-const selectedPessoa = ref<Pessoa | null>(null)
+const selectedPessoa = ref<ICadPessoa | null>(null)
 
 function onGridAction({ action, data }: IGridActionEvent<ICadPessoa>) {
   switch (action) {
@@ -44,33 +44,13 @@ function openNewForm() {
 }
 
 function openEdit(data: ICadPessoa) {
-  selectedPessoa.value = {
-    cn_pessoa: data.cn_pessoa,
-    bo_categ_cliente: data.bo_categ_cliente,
-    bo_categ_func: data.bo_categ_func,
-    bo_sts_reg: data.bo_sts_reg,
-    email: data.an_email ?? '',
-    telefone: data.an_telefone ?? '',
-    cargo: data.an_cargo ?? '',
-    nm_comissao_func: data.nm_comissao_func ?? 0,
-    tipo: data.ca_tipo,
-    nome: data.an_nome ?? '',
-    cpf: data.ca_cpf ?? '',
-    razaoSocial: data.an_razao_social ?? '',
-    nomeFantasia: data.an_nome_fantasia ?? '',
-    cnpj: data.ca_cnpj ?? '',
-    endereco: {
-      cep: data.endereco?.ca_cep ?? '',
-      logradouro: data.endereco?.an_logradouro ?? '',
-      numero: data.endereco?.an_numero ?? '',
-      complemento: data.endereco?.an_complemento ?? '',
-      bairro: data.endereco?.an_bairro ?? '',
-      cidade: data.endereco?.an_cidade ?? '',
-      cn_estado: data.endereco?.cn_estado ?? '',
-    },
-  }
+  selectedPessoa.value = data
 
   manutPessoaVisible.value = true
+}
+
+function formatPersonDate(value: string) {
+  return new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
 onMounted(() => {
@@ -109,7 +89,26 @@ onMounted(() => {
           :actions="canWrite('CADASTROS') ? config.actions : []"
           :actionHeader="config.actionHeader"
           @action="onGridAction"
-        />
+        >
+          <template #cell-an_nome="{ data }">
+            {{ (data.ca_tipo === 'PF' ? data.an_nome : data.an_razao_social) ?? '' }}
+          </template>
+          <template #cell-ca_tipo="{ data }">
+            {{ data.ca_tipo === 'PF' ? 'Física' : 'Jurídica' }}
+          </template>
+          <template #cell-ca_cpf="{ data }">
+            {{ data.ca_tipo === 'PF' ? maskCpf(data.ca_cpf ?? '') : maskCnpj(data.ca_cnpj ?? '') }}
+          </template>
+          <template #cell-bo_categ_cliente="{ data }">
+            {{ [data.bo_categ_cliente && 'Cliente', data.bo_categ_func && 'Funcionário'].filter(Boolean).join(', ') }}
+          </template>
+          <template #cell-an_telefone="{ data }">{{ maskTelefone(data.an_telefone ?? '') }}</template>
+          <template #cell-bo_sts_reg="{ data }">
+            {{ data.bo_sts_reg ? 'Ativo' : 'Inativo' }}
+          </template>
+          <template #cell-dt_inc="{ data }">{{ formatPersonDate(data.dt_inc) }}</template>
+          <template #cell-dt_alt="{ data }">{{ formatPersonDate(data.dt_alt) }}</template>
+        </GridPage>
       </div>
     </div>
   </div>

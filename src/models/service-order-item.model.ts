@@ -4,7 +4,8 @@ export class ServiceOrderItemModel {
   static createForm(itemType: 'PRODUTO' | 'SERVICO' = 'PRODUTO'): IFormItemOrdemServico {
     return {
       ca_tipo: itemType,
-      cn_referencia: null,
+      cn_produto: null,
+      cn_servico: null,
       qt_quantidade: 1,
       vl_unitario: 0,
     }

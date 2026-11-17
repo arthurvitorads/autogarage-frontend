@@ -5,7 +5,8 @@ import type { IManutServico } from '@/interface/pages/ServicoPage'
 import type { IManutAuxiliar } from '@/interface/pages/CadastroAuxiliar'
 
 export interface ICatalogItemOption {
-  cn_referencia: number
+  cn_produto?: number
+  cn_servico?: number
   an_nome: string
   ca_unidade: string
   vl_preco: number

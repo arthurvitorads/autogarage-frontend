@@ -67,8 +67,9 @@ const options = computed(
     (formData.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ??
     [],
 )
+const referenceField = computed(() => formData.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico')
 const selectedReference = computed(() =>
-  options.value.find((item) => item.cn_referencia === formData.value.cn_referencia),
+  options.value.find((item) => item[referenceField.value] === formData.value[referenceField.value]),
 )
 const totalItem = computed(() => {
   if (formData.value.qt_quantidade === null || formData.value.vl_unitario === null) return null
@@ -81,21 +82,22 @@ const totalItem = computed(() => {
 })
 
 function changeType() {
-  formData.value.cn_referencia = null
+  formData.value.cn_produto = null
+  formData.value.cn_servico = null
   formData.value.vl_unitario = 0
   formErrors.value = {}
 }
 
 function loadPrice() {
   formData.value.vl_unitario = selectedReference.value?.vl_preco ?? 0
-  delete formErrors.value.cn_referencia
+  delete formErrors.value[referenceField.value]
   delete formErrors.value.vl_unitario
 }
 
 async function onSubmit(values: IFormItemOrdemServico) {
   const errors: TGenericData = {}
 
-  if (!selectedReference.value) errors.cn_referencia = 'Selecione um produto ou serviço ativo.'
+  if (!selectedReference.value) errors[referenceField.value] = 'Selecione um produto ou serviço ativo.'
 
   if (!isValidQuantity(values.qt_quantidade) || values.qt_quantidade === 0)
     errors.qt_quantidade = 'Informe uma quantidade maior que zero, com até três casas decimais.'
@@ -124,8 +126,9 @@ async function onSubmit(values: IFormItemOrdemServico) {
   setLoading(true)
 
   try {
+    const reference = values.ca_tipo === 'PRODUTO' ? values.cn_produto : values.cn_servico
     if (
-      values.cn_referencia === null ||
+      reference === null ||
       values.qt_quantidade === null ||
       values.vl_unitario === null
     )
@@ -142,12 +145,12 @@ async function onSubmit(values: IFormItemOrdemServico) {
         ? {
             ...dadosBase,
             ca_tipo: 'PRODUTO',
-            cn_produto: values.cn_referencia,
+            cn_produto: reference,
           }
         : {
             ...dadosBase,
             ca_tipo: 'SERVICO',
-            cn_servico: values.cn_referencia,
+            cn_servico: reference,
           }
 
     await saveItem(data)
@@ -171,8 +174,8 @@ watch(
     formData.value = ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO')
     if (item) {
       formData.value.ca_tipo = item.ca_tipo
-      if (item.ca_tipo === 'PRODUTO') formData.value.cn_referencia = item.cn_produto
-      else formData.value.cn_referencia = item.cn_servico
+      formData.value.cn_produto = item.ca_tipo === 'PRODUTO' ? item.cn_produto : null
+      formData.value.cn_servico = item.ca_tipo === 'SERVICO' ? item.cn_servico : null
       formData.value.qt_quantidade = item.qt_quantidade
       formData.value.vl_unitario = item.vl_unitario
     }
@@ -224,23 +227,23 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-9"
-            name="cn_referencia"
+            :name="referenceField"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <Select
-                inputId="ItemOrdemServicoDialog-cn_referencia"
-                v-model="formData.cn_referencia"
+                :inputId="'ItemOrdemServicoDialog-' + referenceField"
+                v-model="formData[referenceField]"
                 :name="field"
                 :options="options"
                 optionLabel="an_nome"
-                optionValue="cn_referencia"
+                :optionValue="referenceField"
                 :invalid="invalid"
                 filter
                 fluid
                 @change="loadPrice"
               />
-              <label for="ItemOrdemServicoDialog-cn_referencia">{{
+              <label :for="'ItemOrdemServicoDialog-' + referenceField">{{
                 formData.ca_tipo === 'PRODUTO' ? 'Produto *' : 'Serviço *'
               }}</label>
             </FloatLabel>

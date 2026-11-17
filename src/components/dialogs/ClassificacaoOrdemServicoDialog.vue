@@ -54,7 +54,7 @@ const formData = ref<IFormClassificacaoOrdemServico>(
 
 function loadClassification() {
   const selectedClassification = classifications.value.find(
-    (item) => item.cn_classificacao === selectClassification.value,
+    (item) => item.cn_classificacao_os === selectClassification.value,
   )
 
   formData.value = selectedClassification
@@ -87,7 +87,7 @@ async function onSubmit(values: IFormClassificacaoOrdemServico) {
   try {
     const data: IManutClassificacaoOrdemServico = {
       ...(selectClassification.value !== null
-        ? { cn_classificacao: selectClassification.value }
+        ? { cn_classificacao_os: selectClassification.value }
         : {}),
       an_descr: values.an_descr.trim(),
       ca_cor: values.ca_cor,
@@ -140,7 +140,7 @@ watch(
             severity="secondary"
             text
             aria-label="Editar classificação"
-            @click="selectClassification = data.cn_classificacao" /></template
+            @click="selectClassification = data.cn_classificacao_os" /></template
       ></Column>
       <Column field="an_descr" header="Descrição" />
       <Column header="Cor"

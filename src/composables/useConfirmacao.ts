@@ -6,7 +6,7 @@ export function useConfirmacao() {
     new Promise<boolean>((resolve) => {
       confirm.require({
         header: 'Confirmação',
-        message: 'Deseja realizar o processo?',
+        message: 'Deseja confirmar a operação?',
         acceptLabel: 'Sim',
         rejectLabel: 'Não',
         rejectProps: { severity: 'secondary' },

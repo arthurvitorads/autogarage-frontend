@@ -1,21 +1,8 @@
 import { IDialogProps } from '../dialog'
 
-import { Pessoa } from '@/models/pessoa.model'
-
 import type { ICadPessoa } from '@/interface/tables'
 
 import type { ITipoPessoa } from '@/interface/enum'
-
-export interface IPessoaGrid extends ICadPessoa {
-  nome: string
-  tipo: string
-  documento: string
-  telefone: string
-  categorias: string
-  status: string
-  inclusao: string
-  alteracao: string
-}
 
 // Manut
 
@@ -46,30 +33,35 @@ export interface IManutPessoa {
   endereco: IManutEndereco
 }
 
-export interface IFormPessoa {
-  tipo: ITipoPessoa
-  bo_categ_cliente: boolean
-  bo_categ_func: boolean
-  bo_sts_reg: boolean
-  nome: string
-  cpf: string
-  cnpj: string
-  razaoSocial: string
-  nomeFantasia: string
-  email: string
-  telefone: string
-  cargo: string
+export interface IFormPessoa
+  extends Omit<
+    IManutPessoa,
+    | 'endereco'
+    | 'an_nome'
+    | 'ca_cpf'
+    | 'ca_cnpj'
+    | 'an_razao_social'
+    | 'an_nome_fantasia'
+    | 'nm_comissao_func'
+  >, IManutEndereco {
+  an_nome: string
+  ca_cpf: string
+  ca_cnpj: string
+  an_razao_social: string
+  an_nome_fantasia: string
   nm_comissao_func: number | null
-  cep: string
-  logradouro: string
-  numero: string
-  complemento: string
-  bairro: string
-  cidade: string
-  cn_estado: string
 }
 
 export interface IManutPessoaDialogProps extends IDialogProps {
-  person?: Pessoa | null
-  people?: Pessoa[]
+  person?: ICadPessoa | null
+  people?: ICadPessoa[]
 }
+
+// Generic types
+
+export type TPersonCategory = 'bo_categ_cliente' | 'bo_categ_func'
+
+export const personCategories: { label: string; value: TPersonCategory }[] = [
+  { label: 'Cliente', value: 'bo_categ_cliente' },
+  { label: 'Funcionário', value: 'bo_categ_func' },
+]

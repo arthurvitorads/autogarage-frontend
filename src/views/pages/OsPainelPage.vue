@@ -107,7 +107,7 @@ function openOrder(order: IAdmOrdemServico) {
 }
 
 function getClassification(code: TServiceOrderCode) {
-  return classifications.value.find((item) => String(item.cn_classificacao) === String(code))
+  return classifications.value.find((item) => String(item.cn_classificacao_os) === String(code))
 }
 
 usePageLoad(async () => {
@@ -158,7 +158,7 @@ function updateSale(sale: { cn_venda: string }) {
         v-model="classificationFilter"
         :options="classifications"
         optionLabel="an_descr"
-        optionValue="cn_classificacao"
+        optionValue="cn_classificacao_os"
         placeholder="Todas as classificações"
         showClear
         :disabled="loadingGrid"
@@ -201,15 +201,15 @@ function updateSale(sale: { cn_venda: string }) {
           >
         </div>
         <p class="text-sm text-surface-500">
-          {{ getClassification(order.cn_classificacao)?.an_descr || 'Sem classificação' }}
+          {{ getClassification(order.cn_classificacao_os)?.an_descr || 'Sem classificação' }}
         </p>
         <div class="min-w-0">
-          <p class="text-2xl font-bold tracking-wide">{{ order.veiculo.an_placa }}</p>
+          <p class="text-2xl font-bold tracking-wide">{{ order.an_placa }}</p>
           <p
             class="text-surface-600 mt-1 truncate"
-            :title="order.veiculo.an_marca + ' ' + order.veiculo.an_modelo"
+            :title="order.an_marca + ' ' + order.an_modelo"
           >
-            {{ order.veiculo.an_marca }} {{ order.veiculo.an_modelo }}
+            {{ order.an_marca }} {{ order.an_modelo }}
           </p>
         </div>
         <p class="font-semibold truncate" :title="order.an_cliente">

@@ -5,7 +5,7 @@ export class ServiceOrderModel {
   static createForm(defaultClassification: string | number | null = null): IFormOrdemServico {
     return {
       cn_pessoa: null,
-      cn_classificacao: defaultClassification,
+      cn_classificacao_os: defaultClassification,
       dt_entrada: dataHoraLocal(),
       dt_previsao: '',
       an_responsavel: '',

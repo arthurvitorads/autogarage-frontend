@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { storeToRefs } from 'pinia'
 
 import Dialog from 'primevue/dialog'
 import Fieldset from 'primevue/fieldset'
@@ -10,26 +9,26 @@ import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import Button from 'primevue/button'
-import Message from 'primevue/message'
 
 import StatusField from '@/components/field/StatusField.vue'
 import FormPage from '@/components/pages/FormPage.vue'
 import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { IManutPessoaDialogProps } from '@/interface/pages/PessoaPage'
-
 import { PersonModel } from '@/models/person.model'
-import type { Pessoa } from '@/models/pessoa.model'
+
+import { personCategories, type IManutPessoa, type IManutPessoaDialogProps } from '@/interface/pages/PessoaPage'
+import type { IFormPessoa, TPersonCategory } from '@/interface/pages/PessoaPage'
 
 import type { IEndEstado } from '@/interface/tables'
-import type { IFormPageRef } from '@/interface/util'
 
-
-import { TipoPessoa } from '@/interface/enum'
+import { createPerson, updatePerson } from '@/services/person.service'
 import { getStates } from '@/services/address.service'
-import { createPerson, personToRequest, updatePerson } from '@/services/person.service'
-import type { IFormPessoa } from '@/interface/pages/PessoaPage'
-import type { TGenericData } from '@/interface/util'
+import { fetchCep } from '@/services/cep.service'
+import { fetchCnpj } from '@/services/documento.service'
+import { useAppToast } from '@/services/toast.service'
+import { useUtilStore } from '@/stores/util.store'
+
+import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 
 import {
   validateCPF,
@@ -39,11 +38,14 @@ import {
   unMaskDocument,
   maskCpf,
   maskCnpj,
+  maskCep,
+  maskPersonPhone,
 } from '@/services/util.service'
-import { fetchCep } from '@/services/cep.service'
-import { fetchCnpj } from '@/services/documento.service'
-import { useAppToast } from '@/services/toast.service'
-import { useUtilStore } from '@/stores/util.store'
+
+import type { IFormPageRef } from '@/interface/util'
+import type { TGenericData } from '@/interface/util'
+
+import { personTypes } from '@/interface/enum'
 
 const props = defineProps<IManutPessoaDialogProps>()
 
@@ -54,30 +56,19 @@ const emit = defineEmits<{
 
 const { showError, showWarn, showSuccess } = useAppToast()
 const { normalizeError, setLoading } = useUtilStore()
-const { loading } = storeToRefs(useUtilStore())
+
+const confirmAction = useConfirmation()
+
+const formData = ref<IFormPessoa>(PersonModel.createForm())
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 
+const loadingButton = ref(false)
+const estadosData = ref<IEndEstado[]>([])
+
 const isEditing = computed(() => !!props.person)
-const isEmployee = computed(() => formData.value.bo_categ_func)
-
-const personTypes = [
-  { label: 'Física', value: TipoPessoa.PF },
-  { label: 'Jurídica', value: TipoPessoa.PJ },
-]
-
-const loadingPostalCode = ref(false)
-const postalCodeMessage = ref('')
-const loadingCnpj = ref(false)
-
-const formData = ref<IFormPessoa>(PersonModel.createForm())
-type TPersonCategory = 'bo_categ_cliente' | 'bo_categ_func'
-const personCategories: { label: string; value: TPersonCategory }[] = [
-  { label: 'Cliente', value: 'bo_categ_cliente' },
-  { label: 'Funcionário', value: 'bo_categ_func' },
-]
 
 const selectedCategories = computed({
   get: () =>
@@ -86,133 +77,86 @@ const selectedCategories = computed({
     for (const { value } of personCategories) formData.value[value] = values.includes(value)
   },
 })
-const states = ref<IEndEstado[]>([])
-const loadingStates = ref(false)
 
-function stateIdForUf(uf: string) {
-  return states.value.find((state) => state.ca_uf === uf.trim().toUpperCase())?.cn_estado ?? ''
+function handleEstado(uf: string) {
+  return estadosData.value.find((e) => e.ca_uf === uf.trim().toUpperCase())?.cn_estado ?? ''
 }
 
-async function loadStates() {
-  if (loadingStates.value) return
+async function loadEstados() {
+  estadosData.value = []
 
-  loadingStates.value = true
-  states.value = []
   try {
-    states.value = (await getStates()).filter((state) => state.ca_pais === 'BR')
-    if (!states.value.length) showError('Nenhuma UF brasileira foi cadastrada.')
+    estadosData.value = await getStates()
+
+    if (!estadosData.value.length)
+      showError('Nenhuma UF foi cadastrada.')
   } catch (error) {
     showError(normalizeError(error))
-  } finally {
-    loadingStates.value = false
   }
-}
-
-function maskCep(value: string) {
-  return onlyNumbers(value)
-    .slice(0, 8)
-    .replace(/^(\d{5})(\d)/, '$1-$2')
-}
-
-function maskPersonPhone(value: string) {
-  const digits = onlyNumbers(value).slice(0, 11)
-  if (digits.length <= 2) return digits
-
-  const number = digits.slice(2)
-  const prefixLength = digits.length === 11 ? 5 : 4
-  const localNumber =
-    number.length > prefixLength
-      ? number.slice(0, prefixLength) + '-' + number.slice(prefixLength)
-      : number
-  return '(' + digits.slice(0, 2) + ') ' + localNumber
 }
 
 async function handleCnpj() {
-  if (loadingCnpj.value) return
+  const cnpj = unMaskDocument(formData.value.ca_cnpj).toUpperCase()
 
-  const form = formData.value
-  const cnpj = unMaskDocument(form.cnpj).toUpperCase()
-  if (!validateCNPJ(cnpj)) {
-    formErrors.value.cnpj = 'Informe um CNPJ válido.'
-    return
-  }
+  if (!validateCNPJ(cnpj))
+    return formErrors.value.ca_cnpj = 'Informe um CNPJ válido.'
 
-  loadingCnpj.value = true
-  delete formErrors.value.cnpj
+  setLoading(true)
+
   try {
-    const empresa = await fetchCnpj(cnpj)
-    if (!props.visible || form !== formData.value || form.tipo !== 'PJ' ||
-        cnpj !== unMaskDocument(form.cnpj).toUpperCase()) return
+    const response = await fetchCnpj(cnpj)
 
-    if (!empresa) {
-      formErrors.value.cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
-      showWarn(formErrors.value.cnpj)
+    if (!response) {
+      formErrors.value.ca_cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
+      showWarn(formErrors.value.ca_cnpj)
       return
     }
 
-    form.razaoSocial = empresa.razao_social.trim()
-    if (empresa.nome_fantasia) form.nomeFantasia = empresa.nome_fantasia.trim()
-    if (empresa.email) form.email = empresa.email.trim()
-    if (empresa.ddd_telefone_1) form.telefone = maskPersonPhone(empresa.ddd_telefone_1)
-    else if (empresa.ddd_telefone_2) form.telefone = maskPersonPhone(empresa.ddd_telefone_2)
-    if (empresa.cep) form.cep = maskCep(empresa.cep)
-    if (empresa.logradouro) {
-      form.logradouro = empresa.logradouro.trim()
-      const streetType = empresa.descricao_tipo_de_logradouro?.trim()
-      if (streetType && !form.logradouro.toUpperCase().startsWith(streetType.toUpperCase() + ' '))
-        form.logradouro = streetType + ' ' + form.logradouro
-    }
-    if (empresa.numero) form.numero = empresa.numero.trim()
-    if (empresa.complemento) form.complemento = empresa.complemento.trim()
-    if (empresa.bairro) form.bairro = empresa.bairro.trim()
-    if (empresa.municipio) form.cidade = empresa.municipio.trim()
-    if (empresa.uf) form.cn_estado = stateIdForUf(empresa.uf) || form.cn_estado
+    formData.value.an_razao_social = response.an_razao_social
+    formData.value.an_nome_fantasia = response.an_nome_fantasia
+    formData.value.an_email = response.an_email
+    formData.value.an_telefone = response.an_telefone ?? ''
+    formData.value.ca_cep = maskCep(response.ca_cep)
+    formData.value.an_logradouro = response.an_logradouro
+    formData.value.an_numero = response.an_numero
+    formData.value.an_complemento = response.an_complemento
+    formData.value.an_bairro = response.an_bairro
+    formData.value.an_cidade = response.an_cidade
+    formData.value.cn_estado = handleEstado(response.ca_uf)
 
     formErrors.value = {}
+
     showSuccess('Processo realizado com sucesso.')
   } catch (error) {
-    if (!props.visible || form !== formData.value || form.tipo !== 'PJ' ||
-        cnpj !== unMaskDocument(form.cnpj).toUpperCase()) return
-
-    formErrors.value.cnpj = normalizeError(error)
-    showError(formErrors.value.cnpj)
+    showError(normalizeError(error))
   } finally {
-    loadingCnpj.value = false
+    setLoading(false)
   }
 }
 
 async function handleCep() {
-  if (loadingPostalCode.value) return
+  const cep = formData.value.ca_cep.replace(/\D/g, '')
 
-  const form = formData.value
-  const cep = onlyNumbers(form.cep)
   if (cep.length !== 8) {
-    formErrors.value.cep = 'Informe um CEP com 8 dígitos.'
+    formErrors.value.ca_cep = 'Informe um CEP com 8 dígitos.'
     return
   }
 
-  loadingPostalCode.value = true
-  postalCodeMessage.value = ''
+  setLoading(true)
+
   try {
-    const address = await fetchCep(cep)
-    if (!props.visible || form !== formData.value || cep !== onlyNumbers(form.cep)) return
+    const response = await fetchCep(cep)
 
-    if (address.logradouro) form.logradouro = address.logradouro
-    if (address.bairro) form.bairro = address.bairro
-    if (address.localidade) form.cidade = address.localidade
-    form.cn_estado = stateIdForUf(address.uf) || form.cn_estado
-    delete formErrors.value.cep
-    delete formErrors.value.logradouro
-    delete formErrors.value.bairro
-    delete formErrors.value.cidade
-    delete formErrors.value.cn_estado
+    formErrors.value = {}
+
+    formData.value.an_logradouro = response.an_logradouro
+    formData.value.an_bairro = response.an_bairro
+    formData.value.an_cidade = response.an_cidade
+    formData.value.cn_estado = handleEstado(response.ca_uf) || formData.value.cn_estado
   } catch (error) {
-    if (!props.visible || form !== formData.value || cep !== onlyNumbers(form.cep)) return
-
-    postalCodeMessage.value = normalizeError(error) + ' Preencha o endereço manualmente.'
-    showWarn(postalCodeMessage.value)
+    showWarn(normalizeError(error))
   } finally {
-    loadingPostalCode.value = false
+    setLoading(false)
   }
 }
 
@@ -222,37 +166,37 @@ async function onSubmit(values: IFormPessoa) {
   if (!values.bo_categ_cliente && !values.bo_categ_func)
     errors.bo_categ_cliente = 'Selecione pelo menos uma categoria.'
 
-  if (values.tipo === 'PF') {
-    if (!values.nome.trim()) errors.nome = 'Campo obrigatório.'
+  if (values.ca_tipo === 'PF') {
+    if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
 
-    if (!validateCPF(values.cpf)) errors.cpf = 'Informe um CPF válido.'
+    if (!validateCPF(values.ca_cpf)) errors.ca_cpf = 'Informe um CPF válido.'
   } else {
-    if (!values.razaoSocial.trim()) errors.razaoSocial = 'Campo obrigatório.'
+    if (!values.an_razao_social.trim()) errors.an_razao_social = 'Campo obrigatório.'
 
-    if (!values.nomeFantasia.trim()) errors.nomeFantasia = 'Campo obrigatório.'
+    if (!values.an_nome_fantasia.trim()) errors.an_nome_fantasia = 'Campo obrigatório.'
 
-    if (!validateCNPJ(values.cnpj)) errors.cnpj = 'Informe um CNPJ válido.'
+    if (!validateCNPJ(values.ca_cnpj)) errors.ca_cnpj = 'Informe um CNPJ válido.'
   }
 
-  if (!values.email.trim()) errors.email = 'Campo obrigatório.'
-  else if (!validateEmail(values.email.trim())) errors.email = 'Informe um e-mail válido.'
+  if (!values.an_email.trim()) errors.an_email = 'Campo obrigatório.'
+  else if (!validateEmail(values.an_email.trim())) errors.an_email = 'Informe um e-mail válido.'
 
-  if (!values.telefone.trim()) errors.telefone = 'Campo obrigatório.'
+  if (!values.an_telefone.trim()) errors.an_telefone = 'Campo obrigatório.'
   else if (
-    !/^[0-9 ()+.-]+$/.test(values.telefone) ||
-    ![10, 11].includes(onlyNumbers(values.telefone).length)
+    !/^[0-9 ()+.-]+$/.test(values.an_telefone) ||
+    ![10, 11].includes(onlyNumbers(values.an_telefone).length)
   )
-    errors.telefone = 'Informe um telefone com DDD (10 ou 11 dígitos).'
+    errors.an_telefone = 'Informe um telefone com DDD (10 ou 11 dígitos).'
 
-  if (!/^\d{5}-?\d{3}$/.test(values.cep.trim())) errors.cep = 'Informe um CEP válido.'
+  if (!/^\d{5}-?\d{3}$/.test(values.ca_cep.trim())) errors.ca_cep = 'Informe um CEP válido.'
 
-  if (!values.logradouro.trim()) errors.logradouro = 'Campo obrigatório.'
+  if (!values.an_logradouro.trim()) errors.an_logradouro = 'Campo obrigatório.'
 
-  if (!values.numero.trim()) errors.numero = 'Campo obrigatório.'
+  if (!values.an_numero.trim()) errors.an_numero = 'Campo obrigatório.'
 
-  if (!values.bairro.trim()) errors.bairro = 'Campo obrigatório.'
+  if (!values.an_bairro.trim()) errors.an_bairro = 'Campo obrigatório.'
 
-  if (!values.cidade.trim()) errors.cidade = 'Campo obrigatório.'
+  if (!values.an_cidade.trim()) errors.an_cidade = 'Campo obrigatório.'
 
   if (!values.cn_estado)
     errors.cn_estado = 'Selecione uma UF válida.'
@@ -266,64 +210,52 @@ async function onSubmit(values: IFormPessoa) {
   )
     errors.nm_comissao_func = 'A comissão deve estar entre 0% e 100%.'
 
-  const document = unMaskDocument(values.tipo === 'PF' ? values.cpf : values.cnpj).toUpperCase()
+  const document = unMaskDocument(values.ca_tipo === 'PF' ? values.ca_cpf : values.ca_cnpj).toUpperCase()
   const duplicateDocument = (props.people ?? []).some(
     (person) =>
       person !== props.person &&
       (props.person?.cn_pessoa === undefined || person.cn_pessoa !== props.person.cn_pessoa) &&
-      unMaskDocument(person.tipo === 'PF' ? person.cpf : person.cnpj).toUpperCase() === document,
+      unMaskDocument((person.ca_tipo === 'PF' ? person.ca_cpf : person.ca_cnpj) ?? '').toUpperCase() === document,
   )
 
-  if (duplicateDocument) errors[values.tipo === 'PF' ? 'cpf' : 'cnpj'] = 'Documento já cadastrado.'
+  if (duplicateDocument) errors[values.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj'] = 'Documento já cadastrado.'
 
   formErrors.value = errors
   if (Object.keys(errors).length) return
 
+  if (!(await confirmAction())) return
+
   setLoading(true)
 
   try {
-    const personData = {
-      ...(props.person?.cn_pessoa !== undefined ? { cn_pessoa: props.person.cn_pessoa } : {}),
+    const fisica = values.ca_tipo === 'PF'
+    const person: IManutPessoa = {
+      ca_tipo: values.ca_tipo,
+      an_nome: fisica ? values.an_nome.trim() : null,
+      ca_cpf: fisica ? document : null,
+      ca_cnpj: fisica ? null : document,
+      an_razao_social: fisica ? null : values.an_razao_social.trim(),
+      an_nome_fantasia: fisica ? null : values.an_nome_fantasia.trim(),
+      an_email: values.an_email.trim().toLowerCase(),
+      an_telefone: onlyNumbers(values.an_telefone),
       bo_categ_cliente: values.bo_categ_cliente,
       bo_categ_func: values.bo_categ_func,
       bo_sts_reg: values.bo_sts_reg,
-      email: values.email.trim().toLowerCase(),
-      telefone: onlyNumbers(values.telefone),
+      an_cargo: values.bo_categ_func ? values.an_cargo.trim() : '',
+      nm_comissao_func: values.bo_categ_func ? values.nm_comissao_func ?? 0 : 0,
       endereco: {
-        cep: onlyNumbers(values.cep),
-        logradouro: values.logradouro.trim(),
-        numero: values.numero.trim(),
-        complemento: values.complemento.trim(),
-        bairro: values.bairro.trim(),
-        cidade: values.cidade.trim(),
+        ca_cep: onlyNumbers(values.ca_cep),
+        an_logradouro: values.an_logradouro.trim(),
+        an_numero: values.an_numero.trim(),
+        an_complemento: values.an_complemento.trim(),
+        an_bairro: values.an_bairro.trim(),
+        an_cidade: values.an_cidade.trim(),
         cn_estado: values.cn_estado,
       },
-      ...(values.bo_categ_func
-        ? {
-            cargo: values.cargo.trim(),
-            nm_comissao_func: values.nm_comissao_func ?? 0,
-          }
-        : {}),
     }
-    const person: Pessoa =
-      values.tipo === 'PF'
-        ? {
-            ...personData,
-            tipo: 'PF',
-            nome: values.nome.trim(),
-            cpf: document,
-          }
-        : {
-            ...personData,
-            tipo: 'PJ',
-            razaoSocial: values.razaoSocial.trim(),
-            nomeFantasia: values.nomeFantasia.trim(),
-            cnpj: document,
-          }
 
-    if (props.person?.cn_pessoa !== undefined)
-      await updatePerson(props.person.cn_pessoa, personToRequest(person))
-    else await createPerson(personToRequest(person))
+    if (props.person) await updatePerson(props.person.cn_pessoa, person)
+    else await createPerson(person)
     showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
     emit('saved')
@@ -340,32 +272,40 @@ watch(
     if (!visible) return
 
     const form = PersonModel.createForm()
+
     if (person) {
-      Object.assign(form, person.endereco)
-      form.cep = maskCep(form.cep)
-      form.tipo = person.tipo
+      const endereco = person.endereco
+      if (endereco) {
+        form.ca_cep = maskCep(endereco.ca_cep ?? '')
+        form.an_logradouro = endereco.an_logradouro ?? ''
+        form.an_numero = endereco.an_numero ?? ''
+        form.an_complemento = endereco.an_complemento ?? ''
+        form.an_bairro = endereco.an_bairro ?? ''
+        form.an_cidade = endereco.an_cidade ?? ''
+        form.cn_estado = endereco.cn_estado ?? ''
+      }
+      form.ca_tipo = person.ca_tipo
       form.bo_categ_cliente = person.bo_categ_cliente
       form.bo_categ_func = person.bo_categ_func
       form.bo_sts_reg = person.bo_sts_reg
-      form.email = person.email
-      form.telefone = maskPersonPhone(person.telefone)
-      form.cargo = person.cargo ?? ''
+      form.an_email = person.an_email ?? ''
+      form.an_telefone = maskPersonPhone(person.an_telefone ?? '')
+      form.an_cargo = person.an_cargo ?? ''
       form.nm_comissao_func = person.nm_comissao_func ?? 0
-      if (person.tipo === 'PF') {
-        form.nome = person.nome
-        form.cpf = maskCpf(person.cpf)
+      if (person.ca_tipo === 'PF') {
+        form.an_nome = person.an_nome ?? ''
+        form.ca_cpf = maskCpf(person.ca_cpf ?? '')
       } else {
-        form.razaoSocial = person.razaoSocial
-        form.nomeFantasia = person.nomeFantasia
-        form.cnpj = maskCnpj(person.cnpj)
+        form.an_razao_social = person.an_razao_social ?? ''
+        form.an_nome_fantasia = person.an_nome_fantasia ?? ''
+        form.ca_cnpj = maskCnpj(person.ca_cnpj ?? '')
       }
     }
 
     formData.value = form
     formErrors.value = {}
-    postalCodeMessage.value = ''
     formKey.value++
-    if (!states.value.length) void loadStates()
+    loadEstados()
   },
   { immediate: true },
 )
@@ -415,12 +355,12 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-2"
-            name="tipo"
+            name="ca_tipo"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <Select
-                v-model="formData.tipo"
+                v-model="formData.ca_tipo"
                 inputId="tipo-pessoa"
                 aria-label="Tipo de pessoa"
                 :options="personTypes"
@@ -433,40 +373,40 @@ watch(
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PF'"
+            v-if="formData.ca_tipo === 'PF'"
             class="m-[4px] col-span-12 sm:col-span-2"
-            name="cpf"
+            name="ca_cpf"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
-                v-model="formData.cpf"
+                v-model="formData.ca_cpf"
                 :name="field"
                 :invalid="invalid"
                 fluid
                 maxlength="14"
-                @update:modelValue="formData.cpf = maskCpf($event ?? '')"
+                @update:modelValue="formData.ca_cpf = maskCpf($event ?? '')"
               />
               <label :for="`person-${field}`">CPF</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PJ'"
+            v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-2"
-            name="cnpj"
+            name="ca_cnpj"
             v-slot="{ invalid, field }"
           >
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
                 <InputText
                   :id="`person-${field}`"
-                  :modelValue="formData.cnpj"
+                  :modelValue="formData.ca_cnpj"
                   :name="field"
                   :invalid="invalid"
                   maxlength="18"
                   fluid
-                  @update:modelValue="formData.cnpj = maskCnpj($event ?? '')"
+                  @update:modelValue="formData.ca_cnpj = maskCnpj($event ?? '')"
                 />
                 <label :for="`person-${field}`">CNPJ</label>
               </FloatLabel>
@@ -474,22 +414,22 @@ watch(
                 type="button"
                 icon="pi pi-search"
                 aria-label="Consultar CNPJ"
-                :loading="loadingCnpj"
+                :loading="loadingButton"
                 @click="handleCnpj()"
               />
             </div>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PF'"
+            v-if="formData.ca_tipo === 'PF'"
             class="m-[4px] col-span-12 sm:col-span-8"
-            name="nome"
+            name="an_nome"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.nome"
+                v-model="formData.an_nome"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -498,16 +438,16 @@ watch(
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PJ'"
+            v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="razaoSocial"
+            name="an_razao_social"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.razaoSocial"
+                v-model="formData.an_razao_social"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -516,16 +456,16 @@ watch(
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PJ'"
+            v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="nomeFantasia"
+            name="an_nome_fantasia"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.nomeFantasia"
+                v-model="formData.an_nome_fantasia"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -534,17 +474,17 @@ watch(
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PJ'"
+            v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="telefone"
+            name="an_telefone"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="15"
-                v-model="formData.telefone"
-                @update:modelValue="formData.telefone = maskPersonPhone($event ?? '')"
+                v-model="formData.an_telefone"
+                @update:modelValue="formData.an_telefone = maskPersonPhone($event ?? '')"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -555,14 +495,14 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="email"
+            name="an_email"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.email"
+                v-model="formData.an_email"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -572,17 +512,17 @@ watch(
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            v-if="formData.tipo === 'PF'"
+            v-if="formData.ca_tipo === 'PF'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="telefone"
+            name="an_telefone"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="15"
-                v-model="formData.telefone"
-                @update:modelValue="formData.telefone = maskPersonPhone($event ?? '')"
+                v-model="formData.an_telefone"
+                @update:modelValue="formData.an_telefone = maskPersonPhone($event ?? '')"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -595,20 +535,17 @@ watch(
       </Fieldset>
       <Fieldset legend="Endereço">
         <div class="grid grid-cols-12 gap-x-4">
-          <Message v-if="postalCodeMessage" severity="warn" class="col-span-12 mb-3">{{
-            postalCodeMessage
-          }}</Message>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3"
-            name="cep"
+            name="ca_cep"
             v-slot="{ invalid, field }"
           >
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
                 <InputText
                   :id="`person-${field}`"
-                  v-model="formData.cep"
-                  @update:modelValue="formData.cep = maskCep($event ?? '')"
+                  v-model="formData.ca_cep"
+                  @update:modelValue="formData.ca_cep = maskCep($event ?? '')"
                   inputmode="numeric"
                   :name="field"
                   maxlength="9"
@@ -621,21 +558,21 @@ watch(
                 type="button"
                 icon="pi pi-search"
                 aria-label="Consultar CEP"
-                :loading="loadingPostalCode"
+                :loading="loadingButton"
                 @click="handleCep()"
               />
             </div>
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-8 lg:col-span-7"
-            name="logradouro"
+            name="an_logradouro"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.logradouro"
+                v-model="formData.an_logradouro"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -645,14 +582,14 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2"
-            name="numero"
+            name="an_numero"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.numero"
+                v-model="formData.an_numero"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -662,14 +599,14 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-9 lg:col-span-3"
-            name="complemento"
+            name="an_complemento"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.complemento"
+                v-model="formData.an_complemento"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -679,14 +616,14 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-5 lg:col-span-4"
-            name="bairro"
+            name="an_bairro"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.bairro"
+                v-model="formData.an_bairro"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -696,14 +633,14 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3"
-            name="cidade"
+            name="an_cidade"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.cidade"
+                v-model="formData.an_cidade"
                 :name="field"
                 :invalid="invalid"
                 fluid
@@ -720,12 +657,10 @@ watch(
               <Select
                 v-model="formData.cn_estado"
                 :name="field"
-                :options="states"
+                :options="estadosData"
                 optionLabel="ca_uf"
                 optionValue="cn_estado"
                 :invalid="invalid"
-                :loading="loadingStates"
-                :disabled="loadingStates || !states.length"
                 fluid
               >
                 <template #option="{ option }">
@@ -737,14 +672,14 @@ watch(
           </FieldForm>
         </div>
       </Fieldset>
-      <Fieldset v-if="isEmployee" legend="Dados do funcionário">
+      <Fieldset :disabled="!formData.bo_categ_func" legend="Dados do funcionário">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-8" name="cargo" v-slot="{ field }">
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-8" name="an_cargo" v-slot="{ field }">
             <FloatLabel variant="on">
               <InputText
                 :id="`person-${field}`"
                 maxlength="4000"
-                v-model="formData.cargo"
+                v-model="formData.an_cargo"
                 :name="field"
                 fluid
               />
@@ -785,8 +720,6 @@ watch(
         <Button
           type="button"
           label="Gravar"
-          :disabled="loading"
-          :loading="loading"
           @click="formRef?.submit()"
         />
       </div>

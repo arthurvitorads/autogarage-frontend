@@ -21,11 +21,11 @@ export function filtrarOrdensServico(
           String(ordem.nu_numero),
           String(ordem.nu_numero).padStart(6, '0'),
           ordem.an_cliente,
-          ordem.veiculo.an_placa,
-          ordem.veiculo.an_marca,
-          ordem.veiculo.an_modelo,
+          ordem.an_placa,
+          ordem.an_marca,
+          ordem.an_modelo,
         ].some((valor) => normalizeString(valor).includes(termo)) ||
-        (!!placa && ordem.veiculo.an_placa.includes(placa)),
+        (!!placa && ordem.an_placa.includes(placa)),
     )
     .slice()
     .sort((primeira, segunda) => segunda.nu_numero - primeira.nu_numero)
@@ -92,7 +92,7 @@ export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
 
   if (values.cn_pessoa === null || values.cn_pessoa === '')
     errors.cn_pessoa = 'Selecione o cliente.'
-  if (values.cn_classificacao === null) errors.cn_classificacao = 'Selecione a classificação.'
+  if (values.cn_classificacao_os === null) errors.cn_classificacao_os = 'Selecione a classificação.'
 
   if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(normalizarPlaca(values.an_placa)))
     errors.an_placa = 'Informe uma placa válida.'

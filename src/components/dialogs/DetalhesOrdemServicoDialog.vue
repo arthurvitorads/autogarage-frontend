@@ -43,7 +43,7 @@ function viewSale() {
 const { classificacoes: classifications } = storeToRefs(useServiceOrderStore())
 const classification = computed(() =>
   classifications.value.find(
-    (item) => String(item.cn_classificacao) === String(props.order?.cn_classificacao),
+    (item) => String(item.cn_classificacao_os) === String(props.order?.cn_classificacao_os),
   ),
 )
 </script>
@@ -103,27 +103,27 @@ const classification = computed(() =>
         <dl class="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div>
             <dt class="text-surface-500">Placa</dt>
-            <dd>{{ order.veiculo.an_placa }}</dd>
+            <dd>{{ order.an_placa }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Marca</dt>
-            <dd>{{ order.veiculo.an_marca }}</dd>
+            <dd>{{ order.an_marca }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Modelo</dt>
-            <dd>{{ order.veiculo.an_modelo }}</dd>
+            <dd>{{ order.an_modelo }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Ano</dt>
-            <dd>{{ order.veiculo.nu_ano }}</dd>
+            <dd>{{ order.nu_ano }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Cor</dt>
-            <dd>{{ order.veiculo.an_cor }}</dd>
+            <dd>{{ order.an_cor }}</dd>
           </div>
           <div>
             <dt class="text-surface-500">Quilometragem</dt>
-            <dd>{{ order.veiculo.qt_quilometragem }}</dd>
+            <dd>{{ order.qt_quilometragem }}</dd>
           </div>
         </dl>
       </Fieldset>

@@ -48,7 +48,7 @@ const order = computed(() =>
 const orderStatus = computed(() => (order.value ? getOrderStatus(order.value.ca_status) : null))
 const classification = computed(() =>
   classifications.value.find(
-    (item) => String(item.cn_classificacao) === String(order.value?.cn_classificacao),
+    (item) => String(item.cn_classificacao_os) === String(order.value?.cn_classificacao_os),
   ),
 )
 const orderMovementVisible = ref(false)
@@ -202,31 +202,31 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
       <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <div>
           <dt class="text-surface-500">Placa</dt>
-          <dd class="font-bold mt-1">{{ order.veiculo.an_placa }}</dd>
+          <dd class="font-bold mt-1">{{ order.an_placa }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Marca</dt>
-          <dd class="mt-1">{{ order.veiculo.an_marca }}</dd>
+          <dd class="mt-1">{{ order.an_marca }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Modelo</dt>
-          <dd class="mt-1">{{ order.veiculo.an_modelo }}</dd>
+          <dd class="mt-1">{{ order.an_modelo }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Ano</dt>
-          <dd class="mt-1">{{ order.veiculo.nu_ano }}</dd>
+          <dd class="mt-1">{{ order.nu_ano }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Cor</dt>
-          <dd class="mt-1">{{ order.veiculo.an_cor }}</dd>
+          <dd class="mt-1">{{ order.an_cor }}</dd>
         </div>
         <div>
           <dt class="text-surface-500">Quilometragem</dt>
           <dd class="mt-1">
             {{
-              order.veiculo.qt_quilometragem === null
+              order.qt_quilometragem === null
                 ? ''
-                : formatQuantity(order.veiculo.qt_quilometragem) + ' km'
+                : formatQuantity(order.qt_quilometragem) + ' km'
             }}
           </dd>
         </div>

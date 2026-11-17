@@ -216,3 +216,22 @@ export function maskTelefone(value: string) {
   if (telefone.length === 10) return telefone.replace(/^(\d{2})(\d{4})(\d{4})$/, '($1) $2-$3')
   return value
 }
+
+export function maskCep(value: string) {
+  return onlyNumbers(value)
+    .slice(0, 8)
+    .replace(/^(\d{5})(\d)/, '$1-$2')
+}
+
+export function maskPersonPhone(value: string) {
+  const digits = onlyNumbers(value).slice(0, 11)
+  if (digits.length <= 2) return digits
+
+  const number = digits.slice(2)
+  const prefixLength = digits.length === 11 ? 5 : 4
+  const localNumber =
+    number.length > prefixLength
+      ? number.slice(0, prefixLength) + '-' + number.slice(prefixLength)
+      : number
+  return '(' + digits.slice(0, 2) + ') ' + localNumber
+}

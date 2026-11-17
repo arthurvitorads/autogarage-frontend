@@ -31,7 +31,7 @@ export function saveOrder(values: IManutOrdemServico) {
 
 export function saveClassification(values: IManutClassificacaoOrdemServico) {
   return apiRequest<IClassificacaoOrdemServico>(
-    values.cn_classificacao === undefined
+    values.cn_classificacao_os === undefined
       ? '/classificacoesOrdens'
       : '/classificacoesOrdens/atualizar',
     values,

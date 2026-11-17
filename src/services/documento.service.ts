@@ -1,9 +1,9 @@
-import type { ICnpjBrasilApiResponse } from '@/interface/util'
+import type { IConsultaCnpj } from '@/interface/util'
 import { apiRequest } from '@/services/api.service'
 
 export async function fetchCnpj(cnpj: string) {
-  const { dados } = await apiRequest<ICnpjBrasilApiResponse | null>('/pessoa/consultar-cnpj', {
-    cnpj,
+  const { dados } = await apiRequest<IConsultaCnpj | null>('/pessoa/consultar-cnpj', {
+    ca_cnpj: cnpj,
   })
   return dados
 }

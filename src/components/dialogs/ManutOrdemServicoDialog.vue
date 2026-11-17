@@ -59,17 +59,17 @@ const maxYear = new Date().getFullYear() + 1
 const customerOptions = computed(() =>
   customers.value.map((customer) => ({
     ...customer,
-    an_label: customer.an_nome + ' — ' + customer.an_documento,
+    an_label: (customer.an_nome ?? customer.an_razao_social ?? '') + ' — ' + (customer.ca_cpf ?? customer.ca_cnpj ?? ''),
   })),
 )
 
 const formData = ref<IFormOrdemServico>(
-  ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null),
+  ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null),
 )
 
 function handleClassificacao(item: IClassificacaoOrdemServico) {
-  formData.value.cn_classificacao = item.cn_classificacao
-  delete formErrors.value.cn_classificacao
+  formData.value.cn_classificacao_os = item.cn_classificacao_os
+  delete formErrors.value.cn_classificacao_os
 }
 
 async function onSubmit(values: IFormOrdemServico) {
@@ -78,8 +78,8 @@ async function onSubmit(values: IFormOrdemServico) {
   if (!customers.value.some((customer) => String(customer.cn_pessoa) === String(values.cn_pessoa)))
     errors.cn_pessoa = 'Selecione um cliente ativo disponível.'
 
-  if (!classifications.value.some((item) => item.cn_classificacao === values.cn_classificacao))
-    errors.cn_classificacao = 'Selecione uma classificação válida.'
+  if (!classifications.value.some((item) => item.cn_classificacao_os === values.cn_classificacao_os))
+    errors.cn_classificacao_os = 'Selecione uma classificação válida.'
 
   formErrors.value = errors
   if (Object.keys(errors).length) return
@@ -89,23 +89,21 @@ async function onSubmit(values: IFormOrdemServico) {
   setLoading(true)
 
   try {
-    if (values.cn_pessoa === null || values.cn_classificacao === null) return
+    if (values.cn_pessoa === null || values.cn_classificacao_os === null) return
 
     const data: IManutOrdemServico = {
       ...(props.order ? { cn_ordem_servico: props.order.cn_ordem_servico } : {}),
       cn_pessoa: values.cn_pessoa,
-      cn_classificacao: values.cn_classificacao,
+      cn_classificacao_os: values.cn_classificacao_os,
       dt_entrada: new Date(values.dt_entrada).toISOString(),
       dt_previsao: values.dt_previsao ? new Date(values.dt_previsao).toISOString() : null,
       an_responsavel: values.an_responsavel.trim(),
-      veiculo: {
-        an_placa: normalizePlate(values.an_placa),
-        an_marca: values.an_marca.trim(),
-        an_modelo: values.an_modelo.trim(),
-        nu_ano: values.nu_ano,
-        an_cor: values.an_cor.trim(),
-        qt_quilometragem: values.qt_quilometragem,
-      },
+      an_placa: normalizePlate(values.an_placa),
+      an_marca: values.an_marca.trim(),
+      an_modelo: values.an_modelo.trim(),
+      nu_ano: values.nu_ano,
+      an_cor: values.an_cor.trim(),
+      qt_quilometragem: values.qt_quilometragem,
       an_solicitacao: values.an_solicitacao.trim(),
       an_obs: values.an_obs.trim(),
     }
@@ -130,15 +128,20 @@ watch(
     formData.value = order
       ? {
           cn_pessoa: order.cn_pessoa,
-          cn_classificacao: order.cn_classificacao,
+          cn_classificacao_os: order.cn_classificacao_os,
           dt_entrada: localDateTime(order.dt_entrada),
           dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
           an_responsavel: order.an_responsavel,
-          ...order.veiculo,
+          an_placa: order.an_placa,
+          an_marca: order.an_marca,
+          an_modelo: order.an_modelo,
+          nu_ano: order.nu_ano,
+          an_cor: order.an_cor,
+          qt_quilometragem: order.qt_quilometragem,
           an_solicitacao: order.an_solicitacao,
           an_obs: order.an_obs,
         }
-      : ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null)
+      : ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null)
     formErrors.value = {}
     formKey.value++
   },
@@ -201,22 +204,22 @@ watch(
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-3"
-            name="cn_classificacao"
+            name="cn_classificacao_os"
             v-slot="{ invalid, field }"
           >
             <div class="flex gap-2">
               <FloatLabel variant="on" class="flex-1 min-w-0">
                 <Select
-                  inputId="ManutOrdemServicoDialog-cn_classificacao"
-                  v-model="formData.cn_classificacao"
+                  inputId="ManutOrdemServicoDialog-cn_classificacao_os"
+                  v-model="formData.cn_classificacao_os"
                   :name="field"
                   :options="classifications"
                   optionLabel="an_descr"
-                  optionValue="cn_classificacao"
+                  optionValue="cn_classificacao_os"
                   :invalid="invalid"
                   fluid
                 />
-                <label for="ManutOrdemServicoDialog-cn_classificacao">Classificação *</label>
+                <label for="ManutOrdemServicoDialog-cn_classificacao_os">Classificação *</label>
               </FloatLabel>
               <Button
                 v-if="canWrite('CADASTROS')"

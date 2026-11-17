@@ -15,7 +15,7 @@ export interface IAdmCadastroAuxiliar extends IManutAuxiliar {
 }
 
 export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServico {
-  cn_classificacao: TServiceOrderCode
+  cn_classificacao_os: TServiceOrderCode
 }
 
 export interface IAdmOrdemServico extends IManutOrdemServico {

@@ -2,17 +2,13 @@ export interface TGenericData {
   [campo: string]: string
 }
 
-export interface IEnderecoViaCep {
-  cep: string
-  logradouro: string
-  complemento: string
-  bairro: string
-  localidade: string
-  uf: string
-}
-
-export interface IViaCepResponse extends IEnderecoViaCep {
-  erro?: boolean
+export interface IConsultaCep {
+  ca_cep: string
+  an_logradouro: string
+  an_complemento: string
+  an_bairro: string
+  an_cidade: string
+  ca_uf: string
 }
 
 export type DomainValue = string | number | null
@@ -37,21 +33,13 @@ export interface IDomainFieldProps {
   showClear?: boolean
   hideWhenEmpty?: boolean
 }
-export interface ICnpjBrasilApiResponse {
-  cnpj: string
-  razao_social: string
-  nome_fantasia?: string | null
-  email?: string | null
-  ddd_telefone_1?: string | null
-  ddd_telefone_2?: string | null
-  cep?: string | null
-  descricao_tipo_de_logradouro?: string | null
-  logradouro?: string | null
-  numero?: string | null
-  complemento?: string | null
-  bairro?: string | null
-  municipio?: string | null
-  uf?: string | null
+export interface IConsultaCnpj extends IConsultaCep {
+  ca_cnpj: string
+  an_razao_social: string
+  an_nome_fantasia: string
+  an_email: string
+  an_telefone: string | null
+  an_numero: string
 }
 export interface IFormPageRef {
   submit: () => void

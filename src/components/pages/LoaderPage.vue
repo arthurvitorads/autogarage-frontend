@@ -32,8 +32,7 @@ const { loading } = storeToRefs(utilStore)
   width: 100%;
   height: 100dvh;
 
-  background-color: rgb(245 245 245 / 10%);
-  backdrop-filter: blur(3px);
+  backdrop-filter: blur(2px);
 }
 
 .owner-loader-animation {

@@ -26,7 +26,8 @@ export type TSaleCustomer = Pick<
 
 export interface IFormItemVenda {
   ca_tipo: 'PRODUTO' | 'SERVICO'
-  cn_referencia: number | null
+  cn_produto: number | null
+  cn_servico: number | null
   qt_quantidade: number | null
   vl_unitario: number | null
 }
@@ -80,12 +81,12 @@ export interface ISaleDraftItem extends IManutItemVenda {
 }
 
 export interface IFormVenda {
-  origin: TSaleOrigin
-  personId: string | number | null
-  orderId: string | number | null
-  notes: string
-  requestKey: string
-  items: ISaleDraftItem[]
+  ca_origem: TSaleOrigin
+  cn_pessoa: string | number | null
+  cn_ordem_servico: string | number | null
+  an_obs: string
+  ca_chave_requisicao: string
+  itens: ISaleDraftItem[]
 }
 
 export interface IManutVendaDialogProps extends IDialogProps {

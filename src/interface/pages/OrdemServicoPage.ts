@@ -10,9 +10,11 @@ export type TServiceOrderCode = string | number
 
 export interface IClienteOrdemServico {
   cn_pessoa: string | number
-  an_nome: string
-  an_documento: string
-  tipo: ITipoPessoa
+  ca_tipo: ITipoPessoa
+  an_nome: string | null
+  an_razao_social: string | null
+  ca_cpf: string | null
+  ca_cnpj: string | null
 }
 
 export interface IFormClassificacaoOrdemServico {
@@ -22,7 +24,7 @@ export interface IFormClassificacaoOrdemServico {
 }
 
 export interface IManutClassificacaoOrdemServico extends IFormClassificacaoOrdemServico {
-  cn_classificacao?: TServiceOrderCode
+  cn_classificacao_os?: TServiceOrderCode
 }
 
 export interface IServiceOrderVehicle {
@@ -36,7 +38,7 @@ export interface IServiceOrderVehicle {
 
 export interface IFormOrdemServico extends IServiceOrderVehicle {
   cn_pessoa: string | number | null
-  cn_classificacao: TServiceOrderCode | null
+  cn_classificacao_os: TServiceOrderCode | null
   dt_entrada: string
   dt_previsao: string
   an_responsavel: string
@@ -45,14 +47,13 @@ export interface IFormOrdemServico extends IServiceOrderVehicle {
 }
 
 // Contratos de manutenção e resposta da API de ordens.
-export interface IManutOrdemServico {
+export interface IManutOrdemServico extends IServiceOrderVehicle {
   cn_ordem_servico?: TServiceOrderCode
   cn_pessoa: string | number
-  cn_classificacao: TServiceOrderCode
+  cn_classificacao_os: TServiceOrderCode
   dt_entrada: string
   dt_previsao: string | null
   an_responsavel: string
-  veiculo: IServiceOrderVehicle
   an_solicitacao: string
   an_obs: string
 }
@@ -61,7 +62,8 @@ export type TServiceOrderItemType = 'PRODUTO' | 'SERVICO'
 
 export interface IFormItemOrdemServico {
   ca_tipo: TServiceOrderItemType
-  cn_referencia: TServiceOrderCode | null
+  cn_produto: TServiceOrderCode | null
+  cn_servico: TServiceOrderCode | null
   qt_quantidade: number | null
   vl_unitario: number | null
 }

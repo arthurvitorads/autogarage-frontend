@@ -4,19 +4,20 @@ import type { IFormVenda, IFormItemVenda } from '@/interface/pages/VendaPage'
 export class SaleModel {
   static createForm(order?: IAdmOrdemServico | null): IFormVenda {
     return {
-      origin: order ? 'ORDEM_SERVICO' : 'DIRETA',
-      personId: order?.cn_pessoa ?? null,
-      orderId: order?.cn_ordem_servico ?? null,
-      notes: '',
-      requestKey: crypto.randomUUID(),
-      items: [],
+      ca_origem: order ? 'ORDEM_SERVICO' : 'DIRETA',
+      cn_pessoa: order?.cn_pessoa ?? null,
+      cn_ordem_servico: order?.cn_ordem_servico ?? null,
+      an_obs: '',
+      ca_chave_requisicao: crypto.randomUUID(),
+      itens: [],
     }
   }
 
   static createItem(): IFormItemVenda {
     return {
       ca_tipo: 'PRODUTO',
-      cn_referencia: null,
+      cn_produto: null,
+      cn_servico: null,
       qt_quantidade: 1,
       vl_unitario: 0,
     }
