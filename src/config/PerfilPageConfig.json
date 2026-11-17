@@ -1,4 +1,9 @@
 {
+  "fields": {
+    "an_descr": {
+      "required": true
+    }
+  },
   "dataKey": "cn_perfil",
   "columns": [
     {

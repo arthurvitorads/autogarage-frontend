@@ -90,15 +90,9 @@ export function dataHoraLocal(value = new Date().toISOString()): string {
 export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
   const errors: TGenericData = {}
 
-  if (values.cn_pessoa === null || values.cn_pessoa === '')
-    errors.cn_pessoa = 'Selecione o cliente.'
-  if (values.cn_classificacao_os === null) errors.cn_classificacao_os = 'Selecione a classificação.'
-
   if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(normalizarPlaca(values.an_placa)))
     errors.an_placa = 'Informe uma placa válida.'
 
-  if (!values.an_marca.trim()) errors.an_marca = 'Campo obrigatório.'
-  if (!values.an_modelo.trim()) errors.an_modelo = 'Campo obrigatório.'
 
   if (
     values.nu_ano !== null &&
@@ -119,7 +113,7 @@ export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
   const entrada = new Date(values.dt_entrada).getTime()
   const previsao = values.dt_previsao ? new Date(values.dt_previsao).getTime() : null
 
-  if (!values.dt_entrada || !Number.isFinite(entrada))
+  if (!Number.isFinite(entrada))
     errors.dt_entrada = 'Informe a data de entrada.'
 
   if (previsao !== null && (!Number.isFinite(previsao) || previsao < entrada))

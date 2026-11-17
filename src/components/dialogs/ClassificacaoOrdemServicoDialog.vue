@@ -16,6 +16,7 @@ import Button from 'primevue/button'
 
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/OrdemServicoPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type {
@@ -76,7 +77,6 @@ function newClassification() {
 async function onSubmit(values: IFormClassificacaoOrdemServico) {
   const errors: TGenericData = {}
 
-  if (!values.an_descr.trim()) errors.an_descr = 'Campo obrigatório.'
   if (!/^#[a-fA-F0-9]{6}$/.test(values.ca_cor)) errors.ca_cor = 'Selecione uma cor válida.'
 
   formErrors.value = errors
@@ -162,7 +162,9 @@ watch(
       novalidate
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit(formData)"
+      :modelValues="formData"
+      :fields="config.classificationFields"
+      @submit="onSubmit"
     >
       <Fieldset legend="Dados da classificação">
         <div class="grid grid-cols-12 gap-x-4">

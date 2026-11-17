@@ -17,6 +17,7 @@ import Button from 'primevue/button'
 
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/ServicoPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
 
@@ -58,8 +59,6 @@ const formData = ref<IFormServico>(ServiceModel.createForm())
 
 async function onSubmit(values: IFormServico) {
   const errors: TGenericData = {}
-
-  if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
 
   if (values.an_categoria && !serviceCategories.value.includes(values.an_categoria))
     errors.an_categoria = 'Selecione uma categoria.'
@@ -150,7 +149,9 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit(formData)"
+      :modelValues="formData"
+      :fields="config.fields"
+      @submit="onSubmit"
       @input="isValidated = false"
       @change="isValidated = false"
     >

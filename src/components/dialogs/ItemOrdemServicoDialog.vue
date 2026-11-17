@@ -17,6 +17,7 @@ import SelectButton from 'primevue/selectbutton'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/OrdemServicoPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type {
@@ -211,7 +212,9 @@ watch(
       novalidate
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit(formData)"
+      :modelValues="formData"
+      :fields="config.itemFields"
+      @submit="onSubmit"
     >
       <Fieldset legend="Dados do item">
         <div class="grid grid-cols-12 gap-x-4">

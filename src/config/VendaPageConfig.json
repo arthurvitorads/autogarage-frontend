@@ -1,4 +1,46 @@
 {
+  "fields": {
+    "ca_origem": {
+      "required": true
+    },
+    "cn_pessoa": {
+      "required": true
+    },
+    "ca_chave_requisicao": {
+      "required": true
+    },
+    "cn_ordem_servico": {
+      "requiredWhen": {
+        "ca_origem": "ORDEM_SERVICO"
+      }
+    },
+    "itens": {
+      "requiredWhen": {
+        "ca_origem": "DIRETA"
+      }
+    }
+  },
+  "itemFields": {
+    "ca_tipo": {
+      "required": true
+    },
+    "qt_quantidade": {
+      "required": true
+    },
+    "vl_unitario": {
+      "required": true
+    },
+    "cn_produto": {
+      "requiredWhen": {
+        "ca_tipo": "PRODUTO"
+      }
+    },
+    "cn_servico": {
+      "requiredWhen": {
+        "ca_tipo": "SERVICO"
+      }
+    }
+  },
   "dataKey": "cn_venda",
   "columns": [
     {

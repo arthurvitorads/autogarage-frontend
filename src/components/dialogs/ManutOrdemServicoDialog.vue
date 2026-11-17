@@ -17,6 +17,7 @@ import Button from 'primevue/button'
 
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/OrdemServicoPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
@@ -164,7 +165,9 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit(formData)"
+      :modelValues="formData"
+      :fields="config.fields"
+      @submit="onSubmit"
     >
       <Fieldset legend="Dados gerais">
         <div class="grid grid-cols-12 gap-x-4">

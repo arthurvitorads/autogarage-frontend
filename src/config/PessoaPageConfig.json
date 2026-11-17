@@ -62,5 +62,64 @@
       "width": 140,
       "align": "center"
     }
-  ]
+  ],
+  "fields": {
+    "ca_tipo": {
+      "required": true
+    },
+    "an_nome": {
+      "requiredWhen": {
+        "ca_tipo": "PF"
+      }
+    },
+    "ca_cpf": {
+      "requiredWhen": {
+        "ca_tipo": "PF"
+      }
+    },
+    "an_razao_social": {
+      "requiredWhen": {
+        "ca_tipo": "PJ"
+      }
+    },
+    "an_nome_fantasia": {
+      "requiredWhen": {
+        "ca_tipo": "PJ"
+      }
+    },
+    "ca_cnpj": {
+      "requiredWhen": {
+        "ca_tipo": "PJ"
+      }
+    },
+    "an_email": {
+      "required": true
+    },
+    "an_telefone": {
+      "required": true
+    },
+    "ca_cep": {
+      "required": true
+    },
+    "an_logradouro": {
+      "required": true
+    },
+    "an_numero": {
+      "required": true
+    },
+    "an_bairro": {
+      "required": true
+    },
+    "an_cidade": {
+      "required": true
+    },
+    "cn_estado": {
+      "required": true
+    },
+    "nm_comissao_func": {
+      "requiredWhen": {
+        "bo_categ_func": true
+      }
+    }
+  }
 }

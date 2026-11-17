@@ -1,4 +1,14 @@
 {
+  "fields": {
+    "an_nome": {
+      "required": true
+    }
+  },
+  "createFields": {
+    "an_email": {
+      "required": true
+    }
+  },
   "dataKey": "cn_usuario",
   "columns": [
     {

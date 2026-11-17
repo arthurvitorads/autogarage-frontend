@@ -15,6 +15,7 @@ import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/CadastroAuxiliarConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 import { useUtilStore } from '@/stores/util.store'
@@ -55,7 +56,6 @@ async function onSubmit(values: IFormAuxiliar) {
   const errors: TGenericData = {}
   const description = values.an_descr.trim()
   const abbreviation = values.ca_sigla.trim().toUpperCase()
-  if (!description) errors.an_descr = 'Campo obrigatório.'
   if (!/^[A-Z0-9]{1,10}$/.test(abbreviation))
     errors.ca_sigla = 'Informe uma sigla com até 10 letras ou números.'
   formErrors.value = errors
@@ -143,7 +143,9 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit(formData)"
+      :modelValues="formData"
+      :fields="config.unitFields"
+      @submit="onSubmit"
     >
       <Fieldset legend="Dados da unidade">
         <div class="grid grid-cols-12 gap-x-4">

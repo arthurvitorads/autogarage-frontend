@@ -1,4 +1,12 @@
 {
+  "fields": {
+    "an_nome": {
+      "required": true
+    },
+    "vl_preco": {
+      "required": true
+    }
+  },
   "dataKey": "cn_servico",
   "columns": [
     {

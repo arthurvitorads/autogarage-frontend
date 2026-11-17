@@ -46,6 +46,7 @@ import type { IFormPageRef } from '@/interface/util'
 import type { TGenericData } from '@/interface/util'
 
 import { personTypes } from '@/interface/enum'
+import config from '@/config/PessoaPageConfig.json'
 
 const props = defineProps<IManutPessoaDialogProps>()
 
@@ -153,6 +154,8 @@ async function handleCep() {
     formData.value.an_bairro = response.an_bairro
     formData.value.an_cidade = response.an_cidade
     formData.value.cn_estado = handleEstado(response.ca_uf) || formData.value.cn_estado
+
+    showSuccess('Processo realizado com sucesso.')
   } catch (error) {
     showWarn(normalizeError(error))
   } finally {
@@ -163,43 +166,21 @@ async function handleCep() {
 async function onSubmit(values: IFormPessoa) {
   const errors: TGenericData = {}
 
-  if (!values.bo_categ_cliente && !values.bo_categ_func)
-    errors.bo_categ_cliente = 'Selecione pelo menos uma categoria.'
-
   if (values.ca_tipo === 'PF') {
-    if (!values.an_nome.trim()) errors.an_nome = 'Campo obrigatório.'
-
     if (!validateCPF(values.ca_cpf)) errors.ca_cpf = 'Informe um CPF válido.'
   } else {
-    if (!values.an_razao_social.trim()) errors.an_razao_social = 'Campo obrigatório.'
-
-    if (!values.an_nome_fantasia.trim()) errors.an_nome_fantasia = 'Campo obrigatório.'
-
     if (!validateCNPJ(values.ca_cnpj)) errors.ca_cnpj = 'Informe um CNPJ válido.'
   }
 
-  if (!values.an_email.trim()) errors.an_email = 'Campo obrigatório.'
-  else if (!validateEmail(values.an_email.trim())) errors.an_email = 'Informe um e-mail válido.'
+  if (!validateEmail(values.an_email.trim())) errors.an_email = 'Informe um e-mail válido.'
 
-  if (!values.an_telefone.trim()) errors.an_telefone = 'Campo obrigatório.'
-  else if (
+  if (
     !/^[0-9 ()+.-]+$/.test(values.an_telefone) ||
     ![10, 11].includes(onlyNumbers(values.an_telefone).length)
   )
     errors.an_telefone = 'Informe um telefone com DDD (10 ou 11 dígitos).'
 
   if (!/^\d{5}-?\d{3}$/.test(values.ca_cep.trim())) errors.ca_cep = 'Informe um CEP válido.'
-
-  if (!values.an_logradouro.trim()) errors.an_logradouro = 'Campo obrigatório.'
-
-  if (!values.an_numero.trim()) errors.an_numero = 'Campo obrigatório.'
-
-  if (!values.an_bairro.trim()) errors.an_bairro = 'Campo obrigatório.'
-
-  if (!values.an_cidade.trim()) errors.an_cidade = 'Campo obrigatório.'
-
-  if (!values.cn_estado)
-    errors.cn_estado = 'Selecione uma UF válida.'
 
   if (
     values.bo_categ_func &&
@@ -326,7 +307,9 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
-      @submit="onSubmit(formData)"
+      :modelValues="formData"
+      :fields="config.fields"
+      @submit="onSubmit"
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
@@ -356,12 +339,14 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-2"
             name="ca_tipo"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <Select
+                :aria-required="required"
                 v-model="formData.ca_tipo"
-                inputId="tipo-pessoa"
+                :inputId="`person-${field}`"
+                :name="field"
                 aria-label="Tipo de pessoa"
                 :options="personTypes"
                 :invalid
@@ -376,10 +361,11 @@ watch(
             v-if="formData.ca_tipo === 'PF'"
             class="m-[4px] col-span-12 sm:col-span-2"
             name="ca_cpf"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 v-model="formData.ca_cpf"
                 :name="field"
@@ -395,11 +381,12 @@ watch(
             v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-2"
             name="ca_cnpj"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
                 <InputText
+                  :aria-required="required"
                   :id="`person-${field}`"
                   :modelValue="formData.ca_cnpj"
                   :name="field"
@@ -423,10 +410,11 @@ watch(
             v-if="formData.ca_tipo === 'PF'"
             class="m-[4px] col-span-12 sm:col-span-8"
             name="an_nome"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_nome"
@@ -441,10 +429,11 @@ watch(
             v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="an_razao_social"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_razao_social"
@@ -459,10 +448,11 @@ watch(
             v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="an_nome_fantasia"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_nome_fantasia"
@@ -477,10 +467,11 @@ watch(
             v-if="formData.ca_tipo === 'PJ'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="an_telefone"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="15"
                 v-model="formData.an_telefone"
@@ -496,10 +487,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="an_email"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_email"
@@ -515,10 +507,11 @@ watch(
             v-if="formData.ca_tipo === 'PF'"
             class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
             name="an_telefone"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="15"
                 v-model="formData.an_telefone"
@@ -538,11 +531,12 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3"
             name="ca_cep"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
                 <InputText
+                  :aria-required="required"
                   :id="`person-${field}`"
                   v-model="formData.ca_cep"
                   @update:modelValue="formData.ca_cep = maskCep($event ?? '')"
@@ -566,10 +560,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-8 lg:col-span-7"
             name="an_logradouro"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_logradouro"
@@ -583,10 +578,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2"
             name="an_numero"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_numero"
@@ -617,10 +613,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-5 lg:col-span-4"
             name="an_bairro"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_bairro"
@@ -634,10 +631,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-4 lg:col-span-3"
             name="an_cidade"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputText
+                :aria-required="required"
                 :id="`person-${field}`"
                 maxlength="4000"
                 v-model="formData.an_cidade"
@@ -651,10 +649,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-3 lg:col-span-2"
             name="cn_estado"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <Select
+                :aria-required="required"
                 v-model="formData.cn_estado"
                 :name="field"
                 :options="estadosData"
@@ -689,10 +688,11 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-4"
             name="nm_comissao_func"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
               <InputNumber
+                :aria-required="required"
                 :inputId="`person-${field}`"
                 v-model="formData.nm_comissao_func"
                 :name="field"

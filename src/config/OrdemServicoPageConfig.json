@@ -1,4 +1,53 @@
 {
+  "fields": {
+    "cn_pessoa": {
+      "required": true
+    },
+    "cn_classificacao_os": {
+      "required": true
+    },
+    "dt_entrada": {
+      "required": true
+    },
+    "an_placa": {
+      "required": true
+    },
+    "an_marca": {
+      "required": true
+    },
+    "an_modelo": {
+      "required": true
+    }
+  },
+  "classificationFields": {
+    "an_descr": {
+      "required": true
+    },
+    "ca_cor": {
+      "required": true
+    }
+  },
+  "itemFields": {
+    "ca_tipo": {
+      "required": true
+    },
+    "qt_quantidade": {
+      "required": true
+    },
+    "vl_unitario": {
+      "required": true
+    },
+    "cn_produto": {
+      "requiredWhen": {
+        "ca_tipo": "PRODUTO"
+      }
+    },
+    "cn_servico": {
+      "requiredWhen": {
+        "ca_tipo": "SERVICO"
+      }
+    }
+  },
   "dataKey": "cn_ordem_servico",
   "columns": [
     {

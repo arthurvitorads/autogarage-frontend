@@ -1,4 +1,24 @@
 {
+  "fields": {
+    "an_nome": {
+      "required": true
+    },
+    "ca_unidade": {
+      "required": true
+    },
+    "vl_custo": {
+      "required": true
+    },
+    "vl_venda": {
+      "required": true
+    },
+    "qt_estoque": {
+      "required": true
+    },
+    "qt_estoque_min": {
+      "required": true
+    }
+  },
   "dataKey": "cn_produto",
   "columns": [
     {

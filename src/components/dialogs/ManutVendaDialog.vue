@@ -22,6 +22,8 @@ import type {
   TSaleCustomer,
 } from '@/interface/pages/VendaPage'
 import { getCatalogItemOptions } from '@/services/catalogo.service'
+import { validateRequiredFields } from '@/services/form-validation.service'
+import config from '@/config/VendaPageConfig.json'
 import { getCustomers } from '@/services/ordem-api.service'
 import type { IClienteOrdemServico } from '@/interface/pages/OrdemServicoPage'
 import { useUtilStore } from '@/stores/util.store'
@@ -146,6 +148,12 @@ watch(
 )
 
 function addItem() {
+  const errors = validateRequiredFields(config.itemFields, { ...item.value })
+  if (Object.keys(errors).length) {
+    showWarn('Selecione um item e informe a quantidade e o preço unitário.')
+    return
+  }
+
   try {
     const reference = selectedReference.value
     if (!reference) throw new Error('Selecione um item.')
@@ -166,7 +174,12 @@ function addItem() {
 
 async function save() {
   if (saving.value || loadingData.value) return
-  if (!customer.value || !cn_pessoa.value || !rows.value.length) {
+  const errors = validateRequiredFields(config.fields, { ...formData })
+  if (errors.cn_ordem_servico) {
+    showWarn('Selecione uma O.S. finalizada.')
+    return
+  }
+  if (Object.keys(errors).length || !customer.value || !rows.value.length || !cn_pessoa.value) {
     showWarn('Selecione o cliente e adicione pelo menos um item.')
     return
   }

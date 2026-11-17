@@ -14,6 +14,7 @@ import { storeToRefs } from 'pinia'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/UsuarioPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type { IFormUsuario } from '@/interface/pages/UsuarioPage'
@@ -51,10 +52,7 @@ async function onSubmit(values: IFormUsuario) {
 
   const errors: TGenericData = {}
 
-  if (!values.an_nome?.trim()) errors.an_nome = 'Campo obrigatório.'
-
-  if (!isEditing.value && !values.an_email?.trim()) errors.an_email = 'Campo obrigatório.'
-  else if (!isEditing.value && !validateEmail(values.an_email.trim()))
+  if (!isEditing.value && !validateEmail(values.an_email.trim()))
     errors.an_email = 'Informe um e-mail válido.'
 
   if (!isEditing.value && !values.ca_senha) errors.ca_senha = 'Campo obrigatório.'
@@ -129,6 +127,7 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
+      :fields="isEditing ? config.fields : { ...config.fields, ...config.createFields }"
       @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
       @input="isValidated = false"
       @change="isValidated = false"

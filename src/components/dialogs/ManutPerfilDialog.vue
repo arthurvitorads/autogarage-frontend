@@ -10,6 +10,7 @@ import StatusField from '@/components/field/StatusField.vue'
 import Button from 'primevue/button'
 
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/PerfilPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 
 import type { IFormPerfil } from '@/interface/pages/PerfilPage'
@@ -32,7 +33,6 @@ const { normalizeError, setLoading } = useUtilStore()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
-const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.profile)
 
@@ -40,15 +40,6 @@ const formData = ref<IFormPerfil>(ProfileModel.createForm())
 
 async function onSubmit(values: IFormPerfil) {
   setLoading(true)
-
-  const errors: TGenericData = {}
-
-  if (!values.an_descr?.trim()) errors.an_descr = 'Campo obrigatório.'
-
-  formErrors.value = errors
-  isValidated.value = !Object.keys(errors).length
-
-  if (!isValidated.value) return setLoading(false)
 
   try {
     if (isEditing.value) {
@@ -84,7 +75,6 @@ watch(
       : ProfileModel.createForm()
 
     formErrors.value = {}
-    isValidated.value = false
     formKey.value++
   },
   { immediate: true },
@@ -104,9 +94,8 @@ watch(
       :key="formKey"
       v-model:errors="formErrors"
       :initialValues="formData"
+      :fields="config.fields"
       @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
-      @input="isValidated = false"
-      @change="isValidated = false"
     >
       <FieldForm class="m-[4px] col-span-8" name="an_descr" v-slot="{ invalid, field }">
         <FloatLabel variant="on">
