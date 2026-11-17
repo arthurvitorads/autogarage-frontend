@@ -100,19 +100,15 @@ watch([origin, selectedOrder], () => {
 watch(origin, (value) => {
   if (value === 'DIRETA') personId.value = null
 })
-watch(
-  () => [item.value.ca_tipo, item.value.cn_referencia],
-  () => {
-    item.value.vl_unitario =
-      references.value.find((ref) => ref.cn_referencia === item.value.cn_referencia)?.vl_preco ?? 0
-  },
-)
-watch(
-  () => item.value.ca_tipo,
-  () => {
-    item.value.cn_referencia = null
-  },
-)
+function handleTipoItem() {
+  item.value.cn_referencia = null
+  item.value.vl_unitario = 0
+}
+
+function handleReferencia() {
+  item.value.vl_unitario =
+    references.value.find((ref) => ref.cn_referencia === item.value.cn_referencia)?.vl_preco ?? 0
+}
 
 async function loadData() {
   loadingData.value = true
@@ -187,7 +183,7 @@ async function save() {
         ? { cn_ordem_servico: selectedOrder.value!.cn_ordem_servico }
         : { itens: items.value.map(({ an_descr, vl_total, ...data }) => data) }),
     })
-    showSuccess('Venda registrada com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('saved', data)
     emit('update:visible', false)
   } catch (error) {
@@ -274,6 +270,7 @@ async function save() {
             <Select
               inputId="venda-item-ca_tipo"
               v-model="item.ca_tipo"
+              @change="handleTipoItem"
               :options="itemTypes"
               optionLabel="label"
               optionValue="value"
@@ -286,6 +283,7 @@ async function save() {
             <Select
               inputId="venda-item-cn_referencia"
               v-model="item.cn_referencia"
+              @change="handleReferencia"
               :options="references"
               optionLabel="an_nome"
               optionValue="cn_referencia"

@@ -163,28 +163,22 @@ async function onSubmit(values: IFormItemOrdemServico) {
 
 watch(
   [() => props.visible, () => props.item],
-  ([visible]) => {
+  async ([visible]) => {
     if (!visible) return
 
     const item = props.item
 
-    formData.value = item
-      ? {
-          ca_tipo: item.ca_tipo,
-          cn_referencia: item.ca_tipo === 'PRODUTO' ? item.cn_produto : item.cn_servico,
-          qt_quantidade: item.qt_quantidade,
-          vl_unitario: item.vl_unitario,
-        }
-      : ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO')
+    formData.value = ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO')
+    if (item) {
+      formData.value.ca_tipo = item.ca_tipo
+      if (item.ca_tipo === 'PRODUTO') formData.value.cn_referencia = item.cn_produto
+      else formData.value.cn_referencia = item.cn_servico
+      formData.value.qt_quantidade = item.qt_quantidade
+      formData.value.vl_unitario = item.vl_unitario
+    }
     formErrors.value = {}
     formKey.value++
-  },
-  { immediate: true },
-)
-watch(
-  () => props.visible,
-  async (visible) => {
-    if (!visible) return
+
     catalog.value = null
     loadingOptions.value = true
     try {

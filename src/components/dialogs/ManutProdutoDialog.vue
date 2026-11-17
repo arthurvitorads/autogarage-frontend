@@ -58,17 +58,17 @@ const categoryDialogVisible = ref(false)
 const brandDialogVisible = ref(false)
 const unitDialogVisible = ref(false)
 
-function selectCategory(category: IAdmCadastroAuxiliar) {
+function handleCategoria(category: IAdmCadastroAuxiliar) {
   formData.value.an_categoria = category.an_descr
   delete formErrors.value.an_categoria
 }
 
-function selectBrand(brand: IAdmCadastroAuxiliar) {
+function handleMarca(brand: IAdmCadastroAuxiliar) {
   formData.value.an_marca = brand.an_descr
   delete formErrors.value.an_marca
 }
 
-function selectUnit(unit: IAdmCadastroAuxiliar) {
+function handleUnidade(unit: IAdmCadastroAuxiliar) {
   formData.value.ca_unidade = unit.ca_sigla
   delete formErrors.value.ca_unidade
 }
@@ -442,7 +442,7 @@ watch(
       </div>
     </template>
   </Dialog>
-  <CategoriaProdutoDialog v-model:visible="categoryDialogVisible" @saved="selectCategory" />
-  <MarcaDialog v-model:visible="brandDialogVisible" @saved="selectBrand" />
-  <UnidadeDialog v-model:visible="unitDialogVisible" @saved="selectUnit" />
+  <CategoriaProdutoDialog v-model:visible="categoryDialogVisible" @saved="handleCategoria" />
+  <MarcaDialog v-model:visible="brandDialogVisible" @saved="handleMarca" />
+  <UnidadeDialog v-model:visible="unitDialogVisible" @saved="handleUnidade" />
 </template>

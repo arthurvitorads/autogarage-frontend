@@ -94,7 +94,7 @@ async function removeOrderItem(item: TItemOrdemServico) {
     }
 
     await removeItem(data.cn_ordem_servico, data.cn_item)
-    showSuccess('Item removido com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
   } catch (error) {
     showError(normalizeError(error))
   }

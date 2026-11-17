@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { IEndEstado } from '@/interface/tables'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
+import Dialog from 'primevue/dialog'
 import Fieldset from 'primevue/fieldset'
 import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
@@ -13,17 +13,18 @@ import Button from 'primevue/button'
 import Message from 'primevue/message'
 
 import StatusField from '@/components/field/StatusField.vue'
+import FormPage from '@/components/pages/FormPage.vue'
+import FieldForm from '@/components/field/FieldForm.vue'
 
 import type { IManutPessoaDialogProps } from '@/interface/pages/PessoaPage'
 
 import { PersonModel } from '@/models/person.model'
+import type { Pessoa } from '@/models/pessoa.model'
+
+import type { IEndEstado } from '@/interface/tables'
 import type { IFormPageRef } from '@/interface/util'
 
-import Dialog from 'primevue/dialog'
-import FormPage from '@/components/pages/FormPage.vue'
-import FieldForm from '@/components/field/FieldForm.vue'
 
-import type { Pessoa } from '@/models/pessoa.model'
 import { TipoPessoa } from '@/interface/enum'
 import { getStates } from '@/services/address.service'
 import { createPerson, personToRequest, updatePerson } from '@/services/person.service'
@@ -58,7 +59,6 @@ const { loading } = storeToRefs(useUtilStore())
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.person)
 const isEmployee = computed(() => formData.value.bo_categ_func)
@@ -70,29 +70,7 @@ const personTypes = [
 
 const loadingPostalCode = ref(false)
 const postalCodeMessage = ref('')
-const queriedPostalCode = ref('')
-let postalCodeRequestId = 0
-
 const loadingCnpj = ref(false)
-const queriedCnpj = ref('')
-const missingCnpj = ref('')
-let cnpjRequestId = 0
-
-const companyFields = [
-  'razaoSocial',
-  'nomeFantasia',
-  'email',
-  'telefone',
-  'cep',
-  'logradouro',
-  'numero',
-  'complemento',
-  'bairro',
-  'cidade',
-  'cn_estado',
-] as const
-type TCampoCnpj = (typeof companyFields)[number]
-let filledCompanyFields: Partial<Record<TCampoCnpj, string>> = {}
 
 const formData = ref<IFormPessoa>(PersonModel.createForm())
 type TPersonCategory = 'bo_categ_cliente' | 'bo_categ_func'
@@ -109,7 +87,6 @@ const selectedCategories = computed({
   },
 })
 const states = ref<IEndEstado[]>([])
-let statesRequest: Promise<void> | undefined
 const loadingStates = ref(false)
 
 function stateIdForUf(uf: string) {
@@ -131,36 +108,6 @@ async function loadStates() {
   }
 }
 
-function resetCnpjQuery(clearFields = false) {
-  cnpjRequestId++
-  loadingCnpj.value = false
-  queriedCnpj.value = ''
-  missingCnpj.value = ''
-  delete formErrors.value.cnpj
-
-  if (clearFields) {
-    for (const field of companyFields) {
-      if (
-        filledCompanyFields[field] !== undefined &&
-        formData.value[field] === filledCompanyFields[field]
-      )
-        formData.value[field] = ''
-    }
-  }
-
-  filledCompanyFields = {}
-}
-
-function onCnpjChange(value: string | null | undefined) {
-  formData.value.cnpj = maskCnpj(value ?? '')
-
-  if (unMaskDocument(formData.value.cnpj).length === 14) void queryCnpj()
-}
-
-function getCnpjText(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
 function maskCep(value: string) {
   return onlyNumbers(value)
     .slice(0, 8)
@@ -180,158 +127,96 @@ function maskPersonPhone(value: string) {
   return '(' + digits.slice(0, 2) + ') ' + localNumber
 }
 
-async function queryCnpj(forceQuery = false) {
-  if (!props.visible || formData.value.tipo !== 'PJ' || loadingCnpj.value) return
+async function handleCnpj() {
+  if (loadingCnpj.value) return
 
-  const cnpj = unMaskDocument(formData.value.cnpj).toUpperCase()
-
-  if (!cnpj) return
-
+  const form = formData.value
+  const cnpj = unMaskDocument(form.cnpj).toUpperCase()
   if (!validateCNPJ(cnpj)) {
-    showError('O CNPJ informado é inválido.')
     formErrors.value.cnpj = 'Informe um CNPJ válido.'
     return
   }
 
-  if (!forceQuery && (queriedCnpj.value === cnpj || missingCnpj.value === cnpj)) return
-
-  const currentRequest = ++cnpjRequestId
-  const previousValues = { ...formData.value }
   loadingCnpj.value = true
   delete formErrors.value.cnpj
-
   try {
-    const company = await fetchCnpj(cnpj)
-    await statesRequest
+    const empresa = await fetchCnpj(cnpj)
+    if (!props.visible || form !== formData.value || form.tipo !== 'PJ' ||
+        cnpj !== unMaskDocument(form.cnpj).toUpperCase()) return
 
-    if (currentRequest !== cnpjRequestId) return
-
-    if (!company) {
-      missingCnpj.value = cnpj
-      formErrors.value.cnpj = 'Erro ao consultar CNPJ'
-      showWarn('Não foi encontrado nenhum cadastro para este CNPJ.')
+    if (!empresa) {
+      formErrors.value.cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
+      showWarn(formErrors.value.cnpj)
       return
     }
 
-    const streetType = getCnpjText(company.descricao_tipo_de_logradouro)
-    const street = getCnpjText(company.logradouro)
-    const phone =
-      [company.ddd_telefone_1, company.ddd_telefone_2]
-        .map((value) => onlyNumbers(getCnpjText(value)))
-        .find((value) => [10, 11].includes(value.length)) ?? ''
-    const postalCode = onlyNumbers(getCnpjText(company.cep))
-    const companyData: Record<TCampoCnpj, string> = {
-      razaoSocial: getCnpjText(company.razao_social),
-      nomeFantasia: getCnpjText(company.nome_fantasia),
-      email: getCnpjText(company.email),
-      telefone: maskPersonPhone(phone),
-      cep: postalCode.length === 8 ? maskCep(postalCode) : '',
-      logradouro:
-        street && streetType && !street.toUpperCase().startsWith(streetType.toUpperCase() + ' ')
-          ? streetType + ' ' + street
-          : street,
-      numero: getCnpjText(company.numero),
-      complemento: getCnpjText(company.complemento),
-      bairro: getCnpjText(company.bairro),
-      cidade: getCnpjText(company.municipio),
-      cn_estado: stateIdForUf(getCnpjText(company.uf)),
+    form.razaoSocial = empresa.razao_social.trim()
+    if (empresa.nome_fantasia) form.nomeFantasia = empresa.nome_fantasia.trim()
+    if (empresa.email) form.email = empresa.email.trim()
+    if (empresa.ddd_telefone_1) form.telefone = maskPersonPhone(empresa.ddd_telefone_1)
+    else if (empresa.ddd_telefone_2) form.telefone = maskPersonPhone(empresa.ddd_telefone_2)
+    if (empresa.cep) form.cep = maskCep(empresa.cep)
+    if (empresa.logradouro) {
+      form.logradouro = empresa.logradouro.trim()
+      const streetType = empresa.descricao_tipo_de_logradouro?.trim()
+      if (streetType && !form.logradouro.toUpperCase().startsWith(streetType.toUpperCase() + ' '))
+        form.logradouro = streetType + ' ' + form.logradouro
     }
+    if (empresa.numero) form.numero = empresa.numero.trim()
+    if (empresa.complemento) form.complemento = empresa.complemento.trim()
+    if (empresa.bairro) form.bairro = empresa.bairro.trim()
+    if (empresa.municipio) form.cidade = empresa.municipio.trim()
+    if (empresa.uf) form.cn_estado = stateIdForUf(empresa.uf) || form.cn_estado
 
-    if (companyData.cep && formData.value.cep === previousValues.cep) {
-      postalCodeRequestId++
-      loadingPostalCode.value = false
-    }
-
-    for (const field of companyFields) {
-      // Não substituir alterações feitas enquanto a consulta estava em andamento.
-      if (companyData[field] && formData.value[field] === previousValues[field]) {
-        formData.value[field] = companyData[field]
-        filledCompanyFields[field] = companyData[field]
-        delete formErrors.value[field]
-      }
-    }
-
-    queriedCnpj.value = cnpj
-    missingCnpj.value = ''
-    showSuccess('CNPJ confirmado. Confira os dados preenchidos e complete os campos restantes.')
-
-    if (filledCompanyFields.cep && formData.value.cep === filledCompanyFields.cep)
-      await queryPostalCode(true)
+    formErrors.value = {}
+    showSuccess('Processo realizado com sucesso.')
   } catch (error) {
-    if (currentRequest !== cnpjRequestId) return
+    if (!props.visible || form !== formData.value || form.tipo !== 'PJ' ||
+        cnpj !== unMaskDocument(form.cnpj).toUpperCase()) return
 
-    const message = normalizeError(error)
-    formErrors.value.cnpj = message
-    showError(message)
+    formErrors.value.cnpj = normalizeError(error)
+    showError(formErrors.value.cnpj)
   } finally {
-    if (currentRequest === cnpjRequestId) loadingCnpj.value = false
+    loadingCnpj.value = false
   }
 }
 
-async function queryPostalCode(fillOnlyEmpty = false) {
+async function handleCep() {
   if (loadingPostalCode.value) return
 
-  const postalCode = onlyNumbers(formData.value.cep)
-
-  if (postalCode.length !== 8) {
+  const form = formData.value
+  const cep = onlyNumbers(form.cep)
+  if (cep.length !== 8) {
     formErrors.value.cep = 'Informe um CEP com 8 dígitos.'
     return
   }
 
-  const currentRequest = ++postalCodeRequestId
   loadingPostalCode.value = true
   postalCodeMessage.value = ''
-
   try {
-    const address = await fetchCep(postalCode)
-    await statesRequest
+    const address = await fetchCep(cep)
+    if (!props.visible || form !== formData.value || cep !== onlyNumbers(form.cep)) return
 
-    if (currentRequest !== postalCodeRequestId) return
-
-    if (!fillOnlyEmpty || !formData.value.logradouro) {
-      formData.value.logradouro = address.logradouro
-
-      if (fillOnlyEmpty) filledCompanyFields.logradouro = address.logradouro
-    }
-
-    if (!fillOnlyEmpty || !formData.value.bairro) {
-      formData.value.bairro = address.bairro
-
-      if (fillOnlyEmpty) filledCompanyFields.bairro = address.bairro
-    }
-
-    if (!fillOnlyEmpty || !formData.value.cidade) {
-      formData.value.cidade = address.localidade
-
-      if (fillOnlyEmpty) filledCompanyFields.cidade = address.localidade
-    }
-
-    const stateId = stateIdForUf(address.uf)
-    if (stateId && (!fillOnlyEmpty || !formData.value.cn_estado)) {
-      formData.value.cn_estado = stateId
-
-      if (fillOnlyEmpty) filledCompanyFields.cn_estado = stateId
-    }
-
-    for (const field of ['cep', 'logradouro', 'bairro', 'cidade', 'cn_estado'])
-      delete formErrors.value[field]
+    if (address.logradouro) form.logradouro = address.logradouro
+    if (address.bairro) form.bairro = address.bairro
+    if (address.localidade) form.cidade = address.localidade
+    form.cn_estado = stateIdForUf(address.uf) || form.cn_estado
+    delete formErrors.value.cep
+    delete formErrors.value.logradouro
+    delete formErrors.value.bairro
+    delete formErrors.value.cidade
+    delete formErrors.value.cn_estado
   } catch (error) {
-    if (currentRequest !== postalCodeRequestId) return
+    if (!props.visible || form !== formData.value || cep !== onlyNumbers(form.cep)) return
 
     postalCodeMessage.value = normalizeError(error) + ' Preencha o endereço manualmente.'
     showWarn(postalCodeMessage.value)
   } finally {
-    if (currentRequest === postalCodeRequestId) {
-      queriedPostalCode.value = postalCode
-      loadingPostalCode.value = false
-    }
+    loadingPostalCode.value = false
   }
 }
 
 async function onSubmit(values: IFormPessoa) {
-  if (loadingPostalCode.value || loadingCnpj.value || loadingStates.value || !states.value.length)
-    return
-
   const errors: TGenericData = {}
 
   if (!values.bo_categ_cliente && !values.bo_categ_func)
@@ -347,8 +232,6 @@ async function onSubmit(values: IFormPessoa) {
     if (!values.nomeFantasia.trim()) errors.nomeFantasia = 'Campo obrigatório.'
 
     if (!validateCNPJ(values.cnpj)) errors.cnpj = 'Informe um CNPJ válido.'
-    else if (missingCnpj.value === unMaskDocument(values.cnpj).toUpperCase())
-      errors.cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
   }
 
   if (!values.email.trim()) errors.email = 'Campo obrigatório.'
@@ -362,9 +245,6 @@ async function onSubmit(values: IFormPessoa) {
     errors.telefone = 'Informe um telefone com DDD (10 ou 11 dígitos).'
 
   if (!/^\d{5}-?\d{3}$/.test(values.cep.trim())) errors.cep = 'Informe um CEP válido.'
-  else if (queriedPostalCode.value !== onlyNumbers(values.cep))
-    errors.cep =
-      'Consulte o CEP antes de gravar. Se a consulta falhar, preencha o endereço manualmente.'
 
   if (!values.logradouro.trim()) errors.logradouro = 'Campo obrigatório.'
 
@@ -374,7 +254,7 @@ async function onSubmit(values: IFormPessoa) {
 
   if (!values.cidade.trim()) errors.cidade = 'Campo obrigatório.'
 
-  if (!states.value.some((state) => state.cn_estado === values.cn_estado))
+  if (!values.cn_estado)
     errors.cn_estado = 'Selecione uma UF válida.'
 
   if (
@@ -397,9 +277,7 @@ async function onSubmit(values: IFormPessoa) {
   if (duplicateDocument) errors[values.tipo === 'PF' ? 'cpf' : 'cnpj'] = 'Documento já cadastrado.'
 
   formErrors.value = errors
-  isValidated.value = !Object.keys(errors).length
-
-  if (!isValidated.value) return
+  if (Object.keys(errors).length) return
 
   setLoading(true)
 
@@ -446,7 +324,7 @@ async function onSubmit(values: IFormPessoa) {
     if (props.person?.cn_pessoa !== undefined)
       await updatePerson(props.person.cn_pessoa, personToRequest(person))
     else await createPerson(personToRequest(person))
-    showSuccess('Pessoa gravada com sucesso.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
     emit('saved')
   } catch (error) {
@@ -458,97 +336,38 @@ async function onSubmit(values: IFormPessoa) {
 
 watch(
   [() => props.visible, () => props.person],
-  ([visible]) => {
-    resetCnpjQuery()
-    postalCodeRequestId++
-    loadingPostalCode.value = false
-
+  ([visible, person]) => {
     if (!visible) return
 
-    const person = props.person
-
-    formData.value = person
-      ? {
-          ...PersonModel.createForm(),
-          tipo: person.tipo,
-          bo_categ_cliente: person.bo_categ_cliente,
-          bo_categ_func: person.bo_categ_func,
-          bo_sts_reg: person.bo_sts_reg,
-          nome: person.tipo === 'PF' ? person.nome : '',
-          cpf: person.tipo === 'PF' ? maskCpf(person.cpf) : '',
-          cnpj: person.tipo === 'PJ' ? maskCnpj(person.cnpj) : '',
-          razaoSocial: person.tipo === 'PJ' ? person.razaoSocial : '',
-          nomeFantasia: person.tipo === 'PJ' ? person.nomeFantasia : '',
-          email: person.email,
-          telefone: maskPersonPhone(person.telefone),
-          cargo: person.cargo ?? '',
-          nm_comissao_func: person.nm_comissao_func ?? 0,
-          ...person.endereco,
-          cep: maskCep(person.endereco.cep),
-        }
-      : PersonModel.createForm()
-    formErrors.value = {}
-    isValidated.value = false
-    postalCodeMessage.value = ''
-    queriedPostalCode.value = person ? onlyNumbers(person.endereco.cep) : ''
-    formKey.value++
-  },
-  { immediate: true },
-)
-
-watch(
-  () => props.visible,
-  (visible) => {
-    if (visible && !loadingStates.value) statesRequest = loadStates()
-  },
-  { immediate: true },
-)
-
-watch(
-  () => formData.value.cep,
-  () => {
-    postalCodeRequestId++
-    loadingPostalCode.value = false
-    queriedPostalCode.value = ''
-    postalCodeMessage.value = ''
-  },
-  { flush: 'sync' },
-)
-
-watch(
-  () => formData.value.tipo,
-  () => {
-    resetCnpjQuery()
-    postalCodeRequestId++
-    loadingPostalCode.value = false
-    formErrors.value = {}
-    isValidated.value = false
-  },
-  { flush: 'sync' },
-)
-
-watch(
-  () => unMaskDocument(formData.value.cnpj).toUpperCase(),
-  () => {
-    resetCnpjQuery(true)
-    postalCodeRequestId++
-    loadingPostalCode.value = false
-    isValidated.value = false
-  },
-  { flush: 'sync' },
-)
-
-watch(
-  () => [formData.value.bo_categ_cliente, formData.value.bo_categ_func],
-  () => {
-    delete formErrors.value.bo_categ_cliente
-    isValidated.value = false
-
-    if (!formData.value.bo_categ_func) {
-      delete formErrors.value.cargo
-      delete formErrors.value.nm_comissao_func
+    const form = PersonModel.createForm()
+    if (person) {
+      Object.assign(form, person.endereco)
+      form.cep = maskCep(form.cep)
+      form.tipo = person.tipo
+      form.bo_categ_cliente = person.bo_categ_cliente
+      form.bo_categ_func = person.bo_categ_func
+      form.bo_sts_reg = person.bo_sts_reg
+      form.email = person.email
+      form.telefone = maskPersonPhone(person.telefone)
+      form.cargo = person.cargo ?? ''
+      form.nm_comissao_func = person.nm_comissao_func ?? 0
+      if (person.tipo === 'PF') {
+        form.nome = person.nome
+        form.cpf = maskCpf(person.cpf)
+      } else {
+        form.razaoSocial = person.razaoSocial
+        form.nomeFantasia = person.nomeFantasia
+        form.cnpj = maskCnpj(person.cnpj)
+      }
     }
+
+    formData.value = form
+    formErrors.value = {}
+    postalCodeMessage.value = ''
+    formKey.value++
+    if (!states.value.length) void loadStates()
   },
+  { immediate: true },
 )
 </script>
 
@@ -568,8 +387,6 @@ watch(
       v-model:errors="formErrors"
       :initialValues="formData"
       @submit="onSubmit(formData)"
-      @input="isValidated = false"
-      @change="isValidated = false"
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
@@ -649,8 +466,7 @@ watch(
                   :invalid="invalid"
                   maxlength="18"
                   fluid
-                  @update:modelValue="onCnpjChange"
-                  @blur="queryCnpj()"
+                  @update:modelValue="formData.cnpj = maskCnpj($event ?? '')"
                 />
                 <label :for="`person-${field}`">CNPJ</label>
               </FloatLabel>
@@ -659,7 +475,7 @@ watch(
                 icon="pi pi-search"
                 aria-label="Consultar CNPJ"
                 :loading="loadingCnpj"
-                @click="queryCnpj(true)"
+                @click="handleCnpj()"
               />
             </div>
           </FieldForm>
@@ -798,7 +614,6 @@ watch(
                   maxlength="9"
                   :invalid="invalid"
                   fluid
-                  @blur="queryPostalCode()"
                 />
                 <label :for="`person-${field}`">CEP</label>
               </FloatLabel>
@@ -807,7 +622,7 @@ watch(
                 icon="pi pi-search"
                 aria-label="Consultar CEP"
                 :loading="loadingPostalCode"
-                @click="queryPostalCode()"
+                @click="handleCep()"
               />
             </div>
           </FieldForm>
@@ -970,7 +785,7 @@ watch(
         <Button
           type="button"
           label="Gravar"
-          :disabled="loadingPostalCode || loadingCnpj || loadingStates || !states.length || loading"
+          :disabled="loading"
           :loading="loading"
           @click="formRef?.submit()"
         />

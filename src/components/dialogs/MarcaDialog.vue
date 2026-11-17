@@ -42,7 +42,7 @@ const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 const formData = ref<IFormDescricao>(AuxiliaryModel.createDescriptionForm())
 
-function selectBrand(brand: IAdmCadastroAuxiliar | null) {
+function handleMarca(brand: IAdmCadastroAuxiliar | null) {
   selectedBrand.value = brand
   formData.value = brand ? { an_descr: brand.an_descr } : AuxiliaryModel.createDescriptionForm()
   formErrors.value = {}
@@ -79,7 +79,7 @@ watch(
   async (visible) => {
     if (!visible) return
 
-    selectBrand(null)
+    handleMarca(null)
     loadingGrid.value = true
     try {
       await catalogStore.loadCadastros()
@@ -102,7 +102,7 @@ watch(
     :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
-      <Button label="Nova marca" icon="pi pi-plus" @click="selectBrand(null)" />
+      <Button label="Nova marca" icon="pi pi-plus" @click="handleMarca(null)" />
     </div>
     <DataTable
       :value="records"
@@ -119,7 +119,7 @@ watch(
             severity="secondary"
             text
             aria-label="Editar marca"
-            @click="selectBrand(data)"
+            @click="handleMarca(data)"
           />
         </template>
       </Column>

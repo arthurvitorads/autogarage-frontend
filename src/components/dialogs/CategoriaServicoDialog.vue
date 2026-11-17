@@ -42,7 +42,7 @@ const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 const formData = ref<IFormDescricao>(AuxiliaryModel.createDescriptionForm())
 
-function selectCategory(category: IAdmCadastroAuxiliar | null) {
+function handleCategoria(category: IAdmCadastroAuxiliar | null) {
   selectedCategory.value = category
   formData.value = category
     ? { an_descr: category.an_descr }
@@ -81,7 +81,7 @@ watch(
   async (visible) => {
     if (!visible) return
 
-    selectCategory(null)
+    handleCategoria(null)
     loadingGrid.value = true
     try {
       await catalogStore.loadCadastros()
@@ -104,7 +104,7 @@ watch(
     :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
-      <Button label="Nova categoria" icon="pi pi-plus" @click="selectCategory(null)" />
+      <Button label="Nova categoria" icon="pi pi-plus" @click="handleCategoria(null)" />
     </div>
     <DataTable
       :value="records"
@@ -121,7 +121,7 @@ watch(
             severity="secondary"
             text
             aria-label="Editar categoria"
-            @click="selectCategory(data)"
+            @click="handleCategoria(data)"
           />
         </template>
       </Column>

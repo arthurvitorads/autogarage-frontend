@@ -40,7 +40,7 @@ const { saveServico: saveService } = catalogStore
 const { categoriasServico: serviceCategories } = storeToRefs(catalogStore)
 const categoryDialogVisible = ref(false)
 
-function selectCategory(auxiliary: IAdmCadastroAuxiliar) {
+function handleCategoria(auxiliary: IAdmCadastroAuxiliar) {
   formData.value.an_categoria = auxiliary.an_descr
   delete formErrors.value.an_categoria
 }
@@ -270,5 +270,5 @@ watch(
       </div>
     </template>
   </Dialog>
-  <CategoriaServicoDialog v-model:visible="categoryDialogVisible" @saved="selectCategory" />
+  <CategoriaServicoDialog v-model:visible="categoryDialogVisible" @saved="handleCategoria" />
 </template>

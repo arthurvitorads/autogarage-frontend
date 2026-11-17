@@ -42,7 +42,7 @@ const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 const formData = ref<IFormAuxiliar>(AuxiliaryModel.createForm())
 
-function selectUnit(unit: IAdmCadastroAuxiliar | null) {
+function handleUnidade(unit: IAdmCadastroAuxiliar | null) {
   selectedUnit.value = unit
   formData.value = unit
     ? { an_descr: unit.an_descr, ca_sigla: unit.ca_sigla }
@@ -84,7 +84,7 @@ watch(
   async (visible) => {
     if (!visible) return
 
-    selectUnit(null)
+    handleUnidade(null)
     loadingGrid.value = true
     try {
       await catalogStore.loadCadastros()
@@ -107,7 +107,7 @@ watch(
     :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
-      <Button label="Nova unidade" icon="pi pi-plus" @click="selectUnit(null)" />
+      <Button label="Nova unidade" icon="pi pi-plus" @click="handleUnidade(null)" />
     </div>
     <DataTable
       :value="records"
@@ -124,7 +124,7 @@ watch(
             severity="secondary"
             text
             aria-label="Editar unidade"
-            @click="selectUnit(data)"
+            @click="handleUnidade(data)"
           />
         </template>
       </Column>

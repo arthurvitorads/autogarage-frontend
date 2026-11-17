@@ -67,7 +67,7 @@ const formData = ref<IFormOrdemServico>(
   ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao ?? null),
 )
 
-function selectClassification(item: IClassificacaoOrdemServico) {
+function handleClassificacao(item: IClassificacaoOrdemServico) {
   formData.value.cn_classificacao = item.cn_classificacao
   delete formErrors.value.cn_classificacao
 }
@@ -442,6 +442,6 @@ watch(
   </Dialog>
   <ClassificacaoOrdemServicoDialog
     v-model:visible="classificationDialogVisible"
-    @saved="selectClassification"
+    @saved="handleClassificacao"
   />
 </template>

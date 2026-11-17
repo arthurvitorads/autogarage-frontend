@@ -52,7 +52,7 @@ async function save() {
     const { dados } = await saveProfileAccess(id, access.value)
     const user = utilStore.user
     if (user && user.cn_perfil === String(id)) utilStore.setUser({ ...user, acessos: dados })
-    showSuccess('Acessos do perfil atualizados.')
+    showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
   } catch (error) {
     showError(utilStore.normalizeError(error))
