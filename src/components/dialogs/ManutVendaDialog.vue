@@ -36,11 +36,13 @@ import {
 
 const props = defineProps<IManutVendaDialogProps>()
 const formData = reactive<IFormVenda>(SaleModel.createForm())
-const { ca_origem, cn_pessoa, cn_ordem_servico, an_obs, ca_chave_requisicao, itens } = toRefs(formData)
+const { ca_origem, cn_pessoa, cn_ordem_servico, an_obs, ca_chave_requisicao, itens } =
+  toRefs(formData)
 const emit = defineEmits<{ 'update:visible': [visible: boolean]; saved: [venda: IAdmVenda] }>()
 const catalog = ref<Awaited<ReturnType<typeof getCatalogItemOptions>>['dados'] | null>(null)
 const customers = ref<IClienteOrdemServico[]>([])
-const customerLabel = (person: IClienteOrdemServico) => person.an_nome ?? person.an_razao_social ?? ''
+const customerLabel = (person: IClienteOrdemServico) =>
+  person.an_nome ?? person.an_razao_social ?? ''
 const orders = ref<TBillableOrder[]>([])
 const { setLoading, normalizeError } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
@@ -69,16 +71,22 @@ const availableOrders = computed(() =>
 const selectedOrder = computed(
   () =>
     props.order ??
-    orders.value.find((order) => String(order.cn_ordem_servico) === String(cn_ordem_servico.value)) ??
+    orders.value.find(
+      (order) => String(order.cn_ordem_servico) === String(cn_ordem_servico.value),
+    ) ??
     null,
 )
 const references = computed(
   () =>
     (item.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
-const referenceField = computed(() => item.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico')
+const referenceField = computed(() =>
+  item.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
+)
 const selectedReference = computed(() =>
-  references.value.find((option) => option[referenceField.value] === item.value[referenceField.value]),
+  references.value.find(
+    (option) => option[referenceField.value] === item.value[referenceField.value],
+  ),
 )
 const rows = computed(() =>
   ca_origem.value === 'ORDEM_SERVICO' ? (selectedOrder.value?.itens ?? []) : itens.value,

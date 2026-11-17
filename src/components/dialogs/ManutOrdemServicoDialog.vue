@@ -60,7 +60,10 @@ const maxYear = new Date().getFullYear() + 1
 const customerOptions = computed(() =>
   customers.value.map((customer) => ({
     ...customer,
-    an_label: (customer.an_nome ?? customer.an_razao_social ?? '') + ' — ' + (customer.ca_cpf ?? customer.ca_cnpj ?? ''),
+    an_label:
+      (customer.an_nome ?? customer.an_razao_social ?? '') +
+      ' — ' +
+      (customer.ca_cpf ?? customer.ca_cnpj ?? ''),
   })),
 )
 
@@ -79,7 +82,9 @@ async function onSubmit(values: IFormOrdemServico) {
   if (!customers.value.some((customer) => String(customer.cn_pessoa) === String(values.cn_pessoa)))
     errors.cn_pessoa = 'Selecione um cliente ativo disponível.'
 
-  if (!classifications.value.some((item) => item.cn_classificacao_os === values.cn_classificacao_os))
+  if (
+    !classifications.value.some((item) => item.cn_classificacao_os === values.cn_classificacao_os)
+  )
     errors.cn_classificacao_os = 'Selecione uma classificação válida.'
 
   formErrors.value = errors

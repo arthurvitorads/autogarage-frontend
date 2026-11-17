@@ -16,7 +16,11 @@ import FieldForm from '@/components/field/FieldForm.vue'
 
 import { PersonModel } from '@/models/person.model'
 
-import { personCategories, type IManutPessoa, type IManutPessoaDialogProps } from '@/interface/pages/PessoaPage'
+import {
+  personCategories,
+  type IManutPessoa,
+  type IManutPessoaDialogProps,
+} from '@/interface/pages/PessoaPage'
 import type { IFormPessoa, TPersonCategory } from '@/interface/pages/PessoaPage'
 
 import type { IEndEstado } from '@/interface/tables'
@@ -89,8 +93,7 @@ async function loadEstados() {
   try {
     estadosData.value = await getStates()
 
-    if (!estadosData.value.length)
-      showError('Nenhuma UF foi cadastrada.')
+    if (!estadosData.value.length) showError('Nenhuma UF foi cadastrada.')
   } catch (error) {
     showError(normalizeError(error))
   }
@@ -99,8 +102,7 @@ async function loadEstados() {
 async function handleCnpj() {
   const cnpj = unMaskDocument(formData.value.ca_cnpj).toUpperCase()
 
-  if (!validateCNPJ(cnpj))
-    return formErrors.value.ca_cnpj = 'Informe um CNPJ válido.'
+  if (!validateCNPJ(cnpj)) return (formErrors.value.ca_cnpj = 'Informe um CNPJ válido.')
 
   setLoading(true)
 
@@ -191,15 +193,20 @@ async function onSubmit(values: IFormPessoa) {
   )
     errors.nm_comissao_func = 'A comissão deve estar entre 0% e 100%.'
 
-  const document = unMaskDocument(values.ca_tipo === 'PF' ? values.ca_cpf : values.ca_cnpj).toUpperCase()
+  const document = unMaskDocument(
+    values.ca_tipo === 'PF' ? values.ca_cpf : values.ca_cnpj,
+  ).toUpperCase()
   const duplicateDocument = (props.people ?? []).some(
     (person) =>
       person !== props.person &&
       (props.person?.cn_pessoa === undefined || person.cn_pessoa !== props.person.cn_pessoa) &&
-      unMaskDocument((person.ca_tipo === 'PF' ? person.ca_cpf : person.ca_cnpj) ?? '').toUpperCase() === document,
+      unMaskDocument(
+        (person.ca_tipo === 'PF' ? person.ca_cpf : person.ca_cnpj) ?? '',
+      ).toUpperCase() === document,
   )
 
-  if (duplicateDocument) errors[values.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj'] = 'Documento já cadastrado.'
+  if (duplicateDocument)
+    errors[values.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj'] = 'Documento já cadastrado.'
 
   formErrors.value = errors
   if (Object.keys(errors).length) return
@@ -223,7 +230,7 @@ async function onSubmit(values: IFormPessoa) {
       bo_categ_func: values.bo_categ_func,
       bo_sts_reg: values.bo_sts_reg,
       an_cargo: values.bo_categ_func ? values.an_cargo.trim() : '',
-      nm_comissao_func: values.bo_categ_func ? values.nm_comissao_func ?? 0 : 0,
+      nm_comissao_func: values.bo_categ_func ? (values.nm_comissao_func ?? 0) : 0,
       endereco: {
         ca_cep: onlyNumbers(values.ca_cep),
         an_logradouro: values.an_logradouro.trim(),
@@ -717,11 +724,7 @@ watch(
           severity="secondary"
           @click="emit('update:visible', false)"
         />
-        <Button
-          type="button"
-          label="Gravar"
-          @click="formRef?.submit()"
-        />
+        <Button type="button" label="Gravar" @click="formRef?.submit()" />
       </div>
     </template>
   </Dialog>

@@ -36,12 +36,15 @@ const emit = defineEmits<{
 }>()
 
 const formRef = ref<FormInstance<T>>()
-const displayedValues = computed(() => props.modelValues ?? {
-  ...props.initialValues,
-  ...Object.fromEntries(
-    Object.entries(formRef.value?.states ?? {}).map(([name, state]) => [name, state.value]),
-  ),
-})
+const displayedValues = computed(
+  () =>
+    props.modelValues ?? {
+      ...props.initialValues,
+      ...Object.fromEntries(
+        Object.entries(formRef.value?.states ?? {}).map(([name, state]) => [name, state.value]),
+      ),
+    },
+)
 
 provide(FORM_REQUIRED_KEY, (name) => isRequiredField(props.fields?.[name], displayedValues.value))
 

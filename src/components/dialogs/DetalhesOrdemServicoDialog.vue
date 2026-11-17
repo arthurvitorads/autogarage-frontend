@@ -142,8 +142,7 @@ const classification = computed(() =>
           >
           <Column field="an_descr" header="Descrição" />
           <Column header="Tempo de serviço"
-            ><template #body="{ data }">
-              <TempoServicoItem :item="data" /> </template
+            ><template #body="{ data }"> <TempoServicoItem :item="data" /> </template
           ></Column>
           <Column field="ca_unidade" header="Unidade" />
           <Column header="Quantidade"

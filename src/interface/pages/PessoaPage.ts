@@ -34,16 +34,18 @@ export interface IManutPessoa {
 }
 
 export interface IFormPessoa
-  extends Omit<
-    IManutPessoa,
-    | 'endereco'
-    | 'an_nome'
-    | 'ca_cpf'
-    | 'ca_cnpj'
-    | 'an_razao_social'
-    | 'an_nome_fantasia'
-    | 'nm_comissao_func'
-  >, IManutEndereco {
+  extends
+    Omit<
+      IManutPessoa,
+      | 'endereco'
+      | 'an_nome'
+      | 'ca_cpf'
+      | 'ca_cnpj'
+      | 'an_razao_social'
+      | 'an_nome_fantasia'
+      | 'nm_comissao_func'
+    >,
+    IManutEndereco {
   an_nome: string
   ca_cpf: string
   ca_cnpj: string

@@ -100,9 +100,15 @@ onMounted(() => {
             {{ data.ca_tipo === 'PF' ? maskCpf(data.ca_cpf ?? '') : maskCnpj(data.ca_cnpj ?? '') }}
           </template>
           <template #cell-bo_categ_cliente="{ data }">
-            {{ [data.bo_categ_cliente && 'Cliente', data.bo_categ_func && 'Funcionário'].filter(Boolean).join(', ') }}
+            {{
+              [data.bo_categ_cliente && 'Cliente', data.bo_categ_func && 'Funcionário']
+                .filter(Boolean)
+                .join(', ')
+            }}
           </template>
-          <template #cell-an_telefone="{ data }">{{ maskTelefone(data.an_telefone ?? '') }}</template>
+          <template #cell-an_telefone="{ data }">{{
+            maskTelefone(data.an_telefone ?? '')
+          }}</template>
           <template #cell-bo_sts_reg="{ data }">
             {{ data.bo_sts_reg ? 'Ativo' : 'Inativo' }}
           </template>

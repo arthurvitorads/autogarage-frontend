@@ -68,7 +68,9 @@ const options = computed(
     (formData.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ??
     [],
 )
-const referenceField = computed(() => formData.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico')
+const referenceField = computed(() =>
+  formData.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
+)
 const selectedReference = computed(() =>
   options.value.find((item) => item[referenceField.value] === formData.value[referenceField.value]),
 )
@@ -98,7 +100,8 @@ function loadPrice() {
 async function onSubmit(values: IFormItemOrdemServico) {
   const errors: TGenericData = {}
 
-  if (!selectedReference.value) errors[referenceField.value] = 'Selecione um produto ou serviço ativo.'
+  if (!selectedReference.value)
+    errors[referenceField.value] = 'Selecione um produto ou serviço ativo.'
 
   if (!isValidQuantity(values.qt_quantidade) || values.qt_quantidade === 0)
     errors.qt_quantidade = 'Informe uma quantidade maior que zero, com até três casas decimais.'
@@ -128,12 +131,7 @@ async function onSubmit(values: IFormItemOrdemServico) {
 
   try {
     const reference = values.ca_tipo === 'PRODUTO' ? values.cn_produto : values.cn_servico
-    if (
-      reference === null ||
-      values.qt_quantidade === null ||
-      values.vl_unitario === null
-    )
-      return
+    if (reference === null || values.qt_quantidade === null || values.vl_unitario === null) return
 
     const dadosBase = {
       cn_ordem_servico: props.orderCode,

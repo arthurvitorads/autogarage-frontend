@@ -205,10 +205,7 @@ function updateSale(sale: { cn_venda: string }) {
         </p>
         <div class="min-w-0">
           <p class="text-2xl font-bold tracking-wide">{{ order.an_placa }}</p>
-          <p
-            class="text-surface-600 mt-1 truncate"
-            :title="order.an_marca + ' ' + order.an_modelo"
-          >
+          <p class="text-surface-600 mt-1 truncate" :title="order.an_marca + ' ' + order.an_modelo">
             {{ order.an_marca }} {{ order.an_modelo }}
           </p>
         </div>

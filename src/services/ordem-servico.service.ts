@@ -93,7 +93,6 @@ export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
   if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(normalizarPlaca(values.an_placa)))
     errors.an_placa = 'Informe uma placa válida.'
 
-
   if (
     values.nu_ano !== null &&
     (!Number.isInteger(values.nu_ano) ||
@@ -113,8 +112,7 @@ export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
   const entrada = new Date(values.dt_entrada).getTime()
   const previsao = values.dt_previsao ? new Date(values.dt_previsao).getTime() : null
 
-  if (!Number.isFinite(entrada))
-    errors.dt_entrada = 'Informe a data de entrada.'
+  if (!Number.isFinite(entrada)) errors.dt_entrada = 'Informe a data de entrada.'
 
   if (previsao !== null && (!Number.isFinite(previsao) || previsao < entrada))
     errors.dt_previsao = 'A previsão deve ser igual ou posterior à entrada.'

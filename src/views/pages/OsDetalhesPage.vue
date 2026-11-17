@@ -224,9 +224,7 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
           <dt class="text-surface-500">Quilometragem</dt>
           <dd class="mt-1">
             {{
-              order.qt_quilometragem === null
-                ? ''
-                : formatQuantity(order.qt_quilometragem) + ' km'
+              order.qt_quilometragem === null ? '' : formatQuantity(order.qt_quilometragem) + ' km'
             }}
           </dd>
         </div>
