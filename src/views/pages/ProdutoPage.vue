@@ -9,7 +9,7 @@ import Tag from 'primevue/tag'
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutProdutoDialog from '@/components/dialogs/ManutProdutoDialog.vue'
 
-import { getProductsPage } from '@/services/catalogo.service'
+import { getProductsPage } from '@/services/product.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 
 import { useUtilStore } from '@/stores/util.store'
@@ -42,7 +42,12 @@ function formatQuantity(value: number): string {
 }
 
 usePageLoad(async () => {
-  await useCatalogStore().loadCadastros()
+  const catalogStore = useCatalogStore()
+  await Promise.all([
+    catalogStore.loadProductCategoryList(),
+    catalogStore.loadBrandList(),
+    catalogStore.loadUnitList(),
+  ])
   await grid.value?.loadGrid()
 })
 const { canWrite } = useUtilStore()

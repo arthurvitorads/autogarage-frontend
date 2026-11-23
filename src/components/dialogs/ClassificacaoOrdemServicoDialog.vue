@@ -4,7 +4,7 @@ import FloatLabel from 'primevue/floatlabel'
 import { OrderClassificationModel } from '@/models/order-classification.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IDialogProps } from '@/interface/dialog'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
@@ -49,7 +49,7 @@ const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 
-const formData = ref<IFormClassificacaoOrdemServico>(
+const formData = reactive<IFormClassificacaoOrdemServico>(
   OrderClassificationModel.createForm(classifications.value.length === 0),
 )
 
@@ -58,13 +58,14 @@ function loadClassification() {
     (item) => item.cn_classificacao_os === selectClassification.value,
   )
 
-  formData.value = selectedClassification
-    ? {
-        an_descr: selectedClassification.an_descr,
-        ca_cor: selectedClassification.ca_cor,
-        bo_padrao: selectedClassification.bo_padrao,
-      }
-    : OrderClassificationModel.createForm(classifications.value.length === 0)
+  Object.assign(formData, OrderClassificationModel.createForm(classifications.value.length === 0))
+  if (selectedClassification) {
+    Object.assign(formData, {
+      an_descr: selectedClassification.an_descr,
+      ca_cor: selectedClassification.ca_cor,
+      bo_padrao: selectedClassification.bo_padrao,
+    })
+  }
   formErrors.value = {}
   formKey.value++
 }
@@ -74,14 +75,15 @@ function newClassification() {
   loadClassification()
 }
 
-async function onSubmit(values: IFormClassificacaoOrdemServico) {
+function validateForm(values: IFormClassificacaoOrdemServico) {
   const errors: TGenericData = {}
 
   if (!/^#[a-fA-F0-9]{6}$/.test(values.ca_cor)) errors.ca_cor = 'Selecione uma cor válida.'
 
-  formErrors.value = errors
-  if (Object.keys(errors).length) return
+  return errors
+}
 
+async function onSubmit(values: IFormClassificacaoOrdemServico) {
   setLoading(true)
 
   try {
@@ -164,6 +166,7 @@ watch(
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.classificationFields"
+      :validate="validateForm"
       @submit="onSubmit"
     >
       <Fieldset legend="Dados da classificação">

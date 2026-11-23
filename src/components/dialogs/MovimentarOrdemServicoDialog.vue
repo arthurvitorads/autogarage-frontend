@@ -2,7 +2,11 @@
 import type { IMoveServiceOrderDialogProps } from '@/interface/pages/OrdemServicoPage'
 import type { IAdmOrdemServico } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
+import type { IFormPageRef, TGenericData } from '@/interface/util'
+import type { TFormFields } from '@/services/form-validation.service'
+import FieldForm from '@/components/field/FieldForm.vue'
+import FormPage from '@/components/pages/FormPage.vue'
 import Dialog from 'primevue/dialog'
 import Button from 'primevue/button'
 import Textarea from 'primevue/textarea'
@@ -13,8 +17,18 @@ import { useUtilStore } from '@/stores/util.store'
 
 const props = defineProps<IMoveServiceOrderDialogProps>()
 const emit = defineEmits<{ 'update:visible': [value: boolean]; saved: [ordem: IAdmOrdemServico] }>()
-const reason = ref('')
-const errorMessage = ref('')
+interface IMoveOrderForm {
+  an_motivo_cancelamento: string
+}
+
+function formDataDefault(): IMoveOrderForm {
+  return { an_motivo_cancelamento: '' }
+}
+
+const formData = reactive<IMoveOrderForm>(formDataDefault())
+const formErrors = ref<TGenericData>({})
+const formRef = ref<IFormPageRef | null>(null)
+const fields: TFormFields = { an_motivo_cancelamento: { required: true } }
 const loading = ref(false)
 const store = useServiceOrderStore()
 const { showSuccess, showError } = useAppToast()
@@ -30,23 +44,19 @@ const title = computed(() =>
 watch(
   () => props.visible,
   () => {
-    reason.value = ''
-    errorMessage.value = ''
+    Object.assign(formData, formDataDefault())
+    formErrors.value = {}
   },
 )
 
-async function confirmAction() {
+async function confirmAction(values: IMoveOrderForm) {
   if (!props.order || loading.value) return
-  if (props.action === 'CANCELAR' && !reason.value.trim()) {
-    errorMessage.value = 'Informe o motivo do cancelamento.'
-    return
-  }
   loading.value = true
   try {
     const order = await store.movimentar(
       props.order.cn_ordem_servico,
       props.action,
-      reason.value.trim(),
+      values.an_motivo_cancelamento.trim(),
     )
     emit('saved', order)
     emit('update:visible', false)
@@ -71,21 +81,34 @@ async function confirmAction() {
   >
     <p class="mb-4">Deseja realizar o processo?</p>
     <p class="text-surface-500 mb-4">O.S. #{{ order?.nu_numero }} — {{ order?.an_cliente }}</p>
-    <div v-if="action === 'CANCELAR'" class="m-[4px] flex flex-col gap-2">
-      <FloatLabel variant="on">
-        <Textarea
-          id="os-motivo-cancelamento"
-          v-model="reason"
-          maxlength="4000"
-          rows="4"
-          :invalid="!!errorMessage"
-          :disabled="loading"
-          fluid
-        />
-        <label for="os-motivo-cancelamento">Motivo do cancelamento *</label>
-      </FloatLabel>
-      <span v-if="errorMessage" class="text-red-600 text-sm">{{ errorMessage }}</span>
-    </div>
+    <FormPage
+      ref="formRef"
+      :modelValues="formData"
+      :fields="action === 'CANCELAR' ? fields : undefined"
+      v-model:errors="formErrors"
+      @submit="confirmAction"
+    >
+      <FieldForm
+        v-if="action === 'CANCELAR'"
+        class="m-[4px]"
+        name="an_motivo_cancelamento"
+        v-slot="{ invalid, field }"
+      >
+        <FloatLabel variant="on">
+          <Textarea
+            id="os-motivo-cancelamento"
+            v-model="formData.an_motivo_cancelamento"
+            :name="field"
+            maxlength="4000"
+            rows="4"
+            :invalid="invalid"
+            :disabled="loading"
+            fluid
+          />
+          <label for="os-motivo-cancelamento">Motivo do cancelamento *</label>
+        </FloatLabel>
+      </FieldForm>
+    </FormPage>
     <template #footer>
       <Button
         label="Não"
@@ -93,7 +116,7 @@ async function confirmAction() {
         :disabled="loading"
         @click="emit('update:visible', false)"
       />
-      <Button label="Sim, confirmar" :loading="loading" @click="confirmAction" />
+      <Button label="Sim, confirmar" :loading="loading" @click="formRef?.submit()" />
     </template>
   </Dialog>
 </template>

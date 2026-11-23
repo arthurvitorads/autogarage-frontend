@@ -3,6 +3,7 @@ import { onMounted, ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
+import { Tag } from 'primevue'
 
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutPessoaDialog from '@/components/dialogs/ManutPessoaDialog.vue'
@@ -12,7 +13,7 @@ import { IGridActionEvent } from '@/interface/util'
 import type { ICadPessoa } from '@/interface/tables'
 
 import { getPeople } from '@/services/person.service'
-import { maskCpf, maskCnpj, maskTelefone } from '@/services/util.service'
+import { maskCpf, maskCnpj, maskTelefone, formatDateTime } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -47,10 +48,6 @@ function openEdit(data: ICadPessoa) {
   selectedPessoa.value = data
 
   manutPessoaVisible.value = true
-}
-
-function formatPersonDate(value: string) {
-  return new Date(value).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
 onMounted(() => {
@@ -99,28 +96,24 @@ onMounted(() => {
           <template #cell-ca_cpf="{ data }">
             {{ data.ca_tipo === 'PF' ? maskCpf(data.ca_cpf ?? '') : maskCnpj(data.ca_cnpj ?? '') }}
           </template>
-          <template #cell-bo_categ_cliente="{ data }">
-            {{
-              [data.bo_categ_cliente && 'Cliente', data.bo_categ_func && 'Funcionário']
-                .filter(Boolean)
-                .join(', ')
-            }}
-          </template>
           <template #cell-an_telefone="{ data }">{{
             maskTelefone(data.an_telefone ?? '')
           }}</template>
           <template #cell-bo_sts_reg="{ data }">
-            {{ data.bo_sts_reg ? 'Ativo' : 'Inativo' }}
+            <Tag
+              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
+              :severity="data.bo_sts_reg ? 'success' : 'danger'"
+            />
           </template>
-          <template #cell-dt_inc="{ data }">{{ formatPersonDate(data.dt_inc) }}</template>
-          <template #cell-dt_alt="{ data }">{{ formatPersonDate(data.dt_alt) }}</template>
+          <template #cell-dt_inc="{ data }">{{ formatDateTime(data.dt_inc) }}</template>
+          <template #cell-dt_alt="{ data }">{{ formatDateTime(data.dt_alt) }}</template>
         </GridPage>
       </div>
     </div>
   </div>
   <ManutPessoaDialog
     v-model:visible="manutPessoaVisible"
-    :person="selectedPessoa"
-    @saved="grid?.loadGrid()"
+    :pessoa="selectedPessoa"
+    @onSave="grid?.loadGrid()"
   />
 </template>

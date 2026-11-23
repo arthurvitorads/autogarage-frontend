@@ -1,7 +1,6 @@
 import type { IManutEndereco, IManutPessoa } from '@/interface/pages/PessoaPage'
 import type { IManutProduto } from '@/interface/pages/ProdutoPage'
 import type { IManutServico } from '@/interface/pages/ServicoPage'
-import type { IManutAuxiliar } from '@/interface/pages/CadastroAuxiliar'
 import type {
   IManutClassificacaoOrdemServico,
   IManutOrdemServico,
@@ -9,10 +8,6 @@ import type {
   TServiceOrderStatus,
   TServiceOrderCode,
 } from '@/interface/pages/OrdemServicoPage'
-
-export interface IAdmCadastroAuxiliar extends IManutAuxiliar {
-  cn_cadastro: number
-}
 
 export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServico {
   cn_classificacao_os: TServiceOrderCode

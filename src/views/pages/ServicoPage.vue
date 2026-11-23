@@ -9,7 +9,7 @@ import Tag from 'primevue/tag'
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutServicoDialog from '@/components/dialogs/ManutServicoDialog.vue'
 
-import { getServicesPage } from '@/services/catalogo.service'
+import { getServicesPage } from '@/services/service.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 
 import { useUtilStore } from '@/stores/util.store'
@@ -38,7 +38,7 @@ function formatCurrency(value: number): string {
 }
 
 usePageLoad(async () => {
-  await useCatalogStore().loadCadastros()
+  await useCatalogStore().loadServiceCategoryList()
   await grid.value?.loadGrid()
 })
 const { canWrite } = useUtilStore()

@@ -19,6 +19,7 @@ import { TGenericData } from '@/interface/util'
 
 import FieldForm from '@/components/field/FieldForm.vue'
 import FormPage from '@/components/pages/FormPage.vue'
+import config from '@/config/LoginPageConfig.json'
 import { login } from '@/services/auth.service'
 import { useRouter } from 'vue-router'
 
@@ -33,11 +34,6 @@ const formData = reactive<IFormLogin>(LoginModel.createForm())
 const formErrors = ref<TGenericData>({})
 
 async function onSubmit(values: IFormLogin) {
-  if (!values.an_email) formErrors.value.an_email = 'Informe o e-mail.'
-  if (!values.ca_senha) formErrors.value.ca_senha = 'Informe a senha.'
-
-  if (Object.keys(formErrors.value).length) return
-
   utilStore.setLoading(true)
   try {
     await login(values)
@@ -60,7 +56,7 @@ async function onSubmit(values: IFormLogin) {
       <Panel>
         <template #header>
           <div class="flex flex-col">
-            <span class="font-bold text-xl">Bem vindo de volta!</span>
+            <span class="font-bold text-xl">Bem vindo!</span>
             <span class="text-xs">Acesse o sistema utilizando seu e-mail e senha.</span>
           </div>
         </template>
@@ -69,14 +65,17 @@ async function onSubmit(values: IFormLogin) {
           class="flex flex-col w-100"
           v-model:errors="formErrors"
           :initialValues="formData"
+          :modelValues="formData"
+          :fields="config.fields"
           @submit="onSubmit"
         >
           <FieldForm name="an_email" label="E-mail" v-slot="{ invalid, field }">
-            <InputText :name="field" placeholder="Digite seu e-mail" :invalid="invalid" />
+            <InputText v-model="formData.an_email" :name="field" placeholder="Digite seu e-mail" :invalid="invalid" />
           </FieldForm>
 
           <FieldForm name="ca_senha" label="Senha" v-slot="{ invalid, field }">
             <Password
+              v-model="formData.ca_senha"
               :name="field"
               placeholder="Digite sua senha"
               :feedback="false"
@@ -86,7 +85,7 @@ async function onSubmit(values: IFormLogin) {
             />
           </FieldForm>
 
-          <Button type="submit" label="Entrar" icon="pi pi-arrow-right" />
+          <Button type="submit" label="Entrar" />
         </FormPage>
       </Panel>
 

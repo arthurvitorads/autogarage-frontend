@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type { IAdmCadastroAuxiliar } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
-import { AuxiliaryModel } from '@/models/auxiliary.model'
 import type { IDialogProps } from '@/interface/dialog'
 import type { IFormPageRef, TGenericData } from '@/interface/util'
-import type { IFormAuxiliar } from '@/interface/pages/CadastroAuxiliar'
-import { computed, ref, watch } from 'vue'
+import type { ICadUnidade, IFormUnidade } from '@/interface/pages/Unidade'
+import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
@@ -15,7 +13,7 @@ import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 
 import FormPage from '@/components/pages/FormPage.vue'
-import config from '@/config/CadastroAuxiliarConfig.json'
+import config from '@/config/UnidadeDialogConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 import { useUtilStore } from '@/stores/util.store'
@@ -24,15 +22,12 @@ import { useAppToast } from '@/services/toast.service'
 const props = defineProps<IDialogProps>()
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [unit: IAdmCadastroAuxiliar]
+  saved: [unit: ICadUnidade]
 }>()
 
 const catalogStore = useCatalogStore()
-const { cadastrosAuxiliares } = storeToRefs(catalogStore)
-const records = computed(() =>
-  cadastrosAuxiliares.value.filter((record) => record.ca_tipo === 'UNIDADE'),
-)
-const selectedUnit = ref<IAdmCadastroAuxiliar | null>(null)
+const { units: records } = storeToRefs(catalogStore)
+const selectedUnit = ref<ICadUnidade | null>(null)
 const loadingGrid = ref(false)
 const utilStore = useUtilStore()
 const { loading } = storeToRefs(utilStore)
@@ -41,31 +36,33 @@ const { showSuccess, showError } = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const formData = ref<IFormAuxiliar>(AuxiliaryModel.createForm())
+function formDataDefault(): IFormUnidade {
+  return {
+    an_descr: '',
+    ca_sigla: '',
+  }
+}
 
-function handleUnidade(unit: IAdmCadastroAuxiliar | null) {
+const formData = reactive<IFormUnidade>(formDataDefault())
+
+function handleUnidade(unit: ICadUnidade | null) {
   selectedUnit.value = unit
-  formData.value = unit
-    ? { an_descr: unit.an_descr, ca_sigla: unit.ca_sigla }
-    : AuxiliaryModel.createForm()
+  Object.assign(
+    formData,
+    unit ? { an_descr: unit.an_descr, ca_sigla: unit.ca_sigla } : formDataDefault(),
+  )
   formErrors.value = {}
   formKey.value++
 }
 
-async function onSubmit(values: IFormAuxiliar) {
-  const errors: TGenericData = {}
+async function onSubmit(values: IFormUnidade) {
   const description = values.an_descr.trim()
   const abbreviation = values.ca_sigla.trim().toUpperCase()
-  if (!/^[A-Z0-9]{1,10}$/.test(abbreviation))
-    errors.ca_sigla = 'Informe uma sigla com até 10 letras ou números.'
-  formErrors.value = errors
-  if (Object.keys(errors).length) return
 
   setLoading(true)
   try {
-    const saved = await catalogStore.saveCadastroAuxiliar({
-      cn_cadastro: selectedUnit.value?.cn_cadastro,
-      ca_tipo: 'UNIDADE',
+    const saved = await catalogStore.saveUnit({
+      cn_unidade: selectedUnit.value?.cn_unidade,
       an_descr: description,
       ca_sigla: abbreviation,
     })
@@ -87,7 +84,7 @@ watch(
     handleUnidade(null)
     loadingGrid.value = true
     try {
-      await catalogStore.loadCadastros()
+      await catalogStore.loadUnitList()
     } catch (error) {
       showError(normalizeError(error))
     } finally {
@@ -144,7 +141,7 @@ watch(
       v-model:errors="formErrors"
       :initialValues="formData"
       :modelValues="formData"
-      :fields="config.unitFields"
+      :fields="config.fields"
       @submit="onSubmit"
     >
       <Fieldset legend="Dados da unidade">

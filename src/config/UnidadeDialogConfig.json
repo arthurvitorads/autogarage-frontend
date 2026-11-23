@@ -2,14 +2,12 @@
   "fields": {
     "an_descr": {
       "required": true
-    }
-  },
-  "unitFields": {
-    "an_descr": {
-      "required": true
     },
     "ca_sigla": {
-      "required": true
+      "required": true,
+      "validators": [
+        "sigla"
+      ]
     }
   }
 }

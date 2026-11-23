@@ -6,7 +6,13 @@
   },
   "createFields": {
     "an_email": {
-      "required": true
+      "required": true,
+      "validators": ["email"]
+    },
+    "ca_senha": {
+      "trim": false,
+      "required": true,
+      "validators": ["senha"]
     }
   },
   "dataKey": "cn_usuario",

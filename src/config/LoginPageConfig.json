@@ -1,0 +1,14 @@
+{
+  "fields": {
+    "an_email": {
+      "required": true,
+      "validators": [
+        "email"
+      ]
+    },
+    "ca_senha": {
+      "trim": false,
+      "required": true
+    }
+  }
+}

@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import type { IManutProdutoDialogProps } from '@/interface/pages/ProdutoPage'
-import type { IAdmCadastroAuxiliar } from '@/interface/tables'
+import type { ICadCategoriaProduto } from '@/interface/pages/CategoriaProduto'
+import type { ICadMarca } from '@/interface/pages/Marca'
+import type { ICadUnidade } from '@/interface/pages/Unidade'
 import FloatLabel from 'primevue/floatlabel'
 import { ProductModel } from '@/models/product.model'
 import type { IFormPageRef } from '@/interface/util'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
@@ -28,6 +30,7 @@ import type { TGenericData } from '@/interface/util'
 
 import { isQuantidadeValida as isValidQuantity } from '@/services/estoque.service'
 import { normalizeString } from '@/services/util.service'
+import { saveProduct } from '@/services/product.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
@@ -41,7 +44,6 @@ const emit = defineEmits<{
 
 const { showSuccess, showError } = useAppToast()
 const catalogStore = useCatalogStore()
-const { saveProduto: saveProduct } = catalogStore
 const {
   categoriasProduto: productCategories,
   marcasProduto: productBrands,
@@ -53,30 +55,29 @@ const { loading } = storeToRefs(useUtilStore())
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const isValidated = ref(false)
 const isEditing = computed(() => !!props.product)
 const categoryDialogVisible = ref(false)
 const brandDialogVisible = ref(false)
 const unitDialogVisible = ref(false)
 
-function handleCategoria(category: IAdmCadastroAuxiliar) {
-  formData.value.an_categoria = category.an_descr
+function handleCategoria(category: ICadCategoriaProduto) {
+  formData.an_categoria = category.an_descr
   delete formErrors.value.an_categoria
 }
 
-function handleMarca(brand: IAdmCadastroAuxiliar) {
-  formData.value.an_marca = brand.an_descr
+function handleMarca(brand: ICadMarca) {
+  formData.an_marca = brand.an_descr
   delete formErrors.value.an_marca
 }
 
-function handleUnidade(unit: IAdmCadastroAuxiliar) {
-  formData.value.ca_unidade = unit.ca_sigla
+function handleUnidade(unit: ICadUnidade) {
+  formData.ca_unidade = unit.ca_sigla
   delete formErrors.value.ca_unidade
 }
 
-const formData = ref<IFormProduto>(ProductModel.createForm())
+const formData = reactive<IFormProduto>(ProductModel.createForm())
 
-async function onSubmit(values: IFormProduto) {
+function validateForm(values: IFormProduto) {
   const errors: TGenericData = {}
 
   if (values.an_categoria && !productCategories.value.includes(values.an_categoria))
@@ -117,11 +118,10 @@ async function onSubmit(values: IFormProduto) {
   )
     errors.an_referencia = 'Referência já cadastrada.'
 
-  formErrors.value = errors
-  isValidated.value = !Object.keys(errors).length
+  return errors
+}
 
-  if (!isValidated.value) return
-
+async function onSubmit(values: IFormProduto) {
   setLoading(true)
 
   try {
@@ -158,23 +158,23 @@ watch(
 
     const product = props.product
 
-    formData.value = product
-      ? {
-          an_nome: product.an_nome,
-          an_referencia: product.an_referencia,
-          an_categoria: product.an_categoria,
-          an_marca: product.an_marca,
-          ca_unidade: product.ca_unidade,
-          vl_custo: product.vl_custo,
-          vl_venda: product.vl_venda,
-          qt_estoque: product.qt_estoque,
-          qt_estoque_min: product.qt_estoque_min,
-          an_obs: product.an_obs,
-          bo_sts_reg: product.bo_sts_reg,
-        }
-      : ProductModel.createForm()
+    Object.assign(formData, ProductModel.createForm())
+    if (product) {
+      Object.assign(formData, {
+        an_nome: product.an_nome,
+        an_referencia: product.an_referencia,
+        an_categoria: product.an_categoria,
+        an_marca: product.an_marca,
+        ca_unidade: product.ca_unidade,
+        vl_custo: product.vl_custo,
+        vl_venda: product.vl_venda,
+        qt_estoque: product.qt_estoque,
+        qt_estoque_min: product.qt_estoque_min,
+        an_obs: product.an_obs,
+        bo_sts_reg: product.bo_sts_reg,
+      })
+    }
     formErrors.value = {}
-    isValidated.value = false
     formKey.value++
   },
   { immediate: true },
@@ -198,9 +198,8 @@ watch(
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.fields"
+      :validate="validateForm"
       @submit="onSubmit"
-      @input="isValidated = false"
-      @change="isValidated = false"
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">

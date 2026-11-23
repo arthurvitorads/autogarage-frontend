@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { IManutServicoDialogProps } from '@/interface/pages/ServicoPage'
-import type { IAdmCadastroAuxiliar } from '@/interface/tables'
+import type { ICadCategoriaServico } from '@/interface/pages/CategoriaServico'
 import FloatLabel from 'primevue/floatlabel'
 import { ServiceModel } from '@/models/service.model'
 import type { IFormPageRef } from '@/interface/util'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
@@ -24,6 +24,7 @@ import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.
 import type { IFormServico, IManutServico } from '@/interface/pages/ServicoPage'
 import type { TGenericData } from '@/interface/util'
 
+import { saveService } from '@/services/service.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
@@ -37,12 +38,11 @@ const emit = defineEmits<{
 
 const { showSuccess, showError } = useAppToast()
 const catalogStore = useCatalogStore()
-const { saveServico: saveService } = catalogStore
 const { categoriasServico: serviceCategories } = storeToRefs(catalogStore)
 const categoryDialogVisible = ref(false)
 
-function handleCategoria(auxiliary: IAdmCadastroAuxiliar) {
-  formData.value.an_categoria = auxiliary.an_descr
+function handleCategoria(category: ICadCategoriaServico) {
+  formData.an_categoria = category.an_descr
   delete formErrors.value.an_categoria
 }
 
@@ -52,12 +52,11 @@ const { loading } = storeToRefs(useUtilStore())
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const isValidated = ref(false)
 const isEditing = computed(() => !!props.service)
 
-const formData = ref<IFormServico>(ServiceModel.createForm())
+const formData = reactive<IFormServico>(ServiceModel.createForm())
 
-async function onSubmit(values: IFormServico) {
+function validateForm(values: IFormServico) {
   const errors: TGenericData = {}
 
   if (values.an_categoria && !serviceCategories.value.includes(values.an_categoria))
@@ -80,11 +79,10 @@ async function onSubmit(values: IFormServico) {
   )
     errors.nu_tempo_estimado = 'Informe o tempo em minutos inteiros, maior que zero.'
 
-  formErrors.value = errors
-  isValidated.value = !Object.keys(errors).length
+  return errors
+}
 
-  if (!isValidated.value) return
-
+async function onSubmit(values: IFormServico) {
   setLoading(true)
 
   try {
@@ -116,18 +114,18 @@ watch(
 
     const service = props.service
 
-    formData.value = service
-      ? {
-          an_nome: service.an_nome,
-          an_categoria: service.an_categoria,
-          vl_preco: service.vl_preco,
-          nu_tempo_estimado: service.nu_tempo_estimado ?? null,
-          an_obs: service.an_obs,
-          bo_sts_reg: service.bo_sts_reg,
-        }
-      : ServiceModel.createForm()
+    Object.assign(formData, ServiceModel.createForm())
+    if (service) {
+      Object.assign(formData, {
+        an_nome: service.an_nome,
+        an_categoria: service.an_categoria,
+        vl_preco: service.vl_preco,
+        nu_tempo_estimado: service.nu_tempo_estimado ?? null,
+        an_obs: service.an_obs,
+        bo_sts_reg: service.bo_sts_reg,
+      })
+    }
     formErrors.value = {}
-    isValidated.value = false
     formKey.value++
   },
   { immediate: true },
@@ -151,9 +149,8 @@ watch(
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.fields"
+      :validate="validateForm"
       @submit="onSubmit"
-      @input="isValidated = false"
-      @change="isValidated = false"
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">

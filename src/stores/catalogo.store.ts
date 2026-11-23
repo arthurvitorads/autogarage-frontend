@@ -1,102 +1,145 @@
-import type { IAdmCadastroAuxiliar, IAdmProduto, IAdmServico } from '@/interface/tables'
 import { computed, ref, watch } from 'vue'
 import { defineStore } from 'pinia'
-import type { IManutProduto } from '@/interface/pages/ProdutoPage'
-import type { IManutServico } from '@/interface/pages/ServicoPage'
-import type { IManutAuxiliar } from '@/interface/pages/CadastroAuxiliar'
-import * as catalogService from '@/services/catalogo.service'
+import type {
+  ICadCategoriaProduto,
+  IManutCategoriaProduto,
+} from '@/interface/pages/CategoriaProduto'
+import {
+  getProductCategoryList,
+  saveProductCategory as requestSaveProductCategory,
+} from '@/services/product-category.service'
+import type {
+  ICadCategoriaServico,
+  IManutCategoriaServico,
+} from '@/interface/pages/CategoriaServico'
+import {
+  getServiceCategoryList,
+  saveServiceCategory as requestSaveServiceCategory,
+} from '@/services/service-category.service'
+import type { ICadMarca, IManutMarca } from '@/interface/pages/Marca'
+import { getBrandList, saveBrand as requestSaveBrand } from '@/services/brand.service'
+import type { ICadUnidade, IManutUnidade } from '@/interface/pages/Unidade'
+import { getUnitList, saveUnit as requestSaveUnit } from '@/services/unit.service'
 import { useUtilStore } from '@/stores/util.store'
 
 export const useCatalogoStore = defineStore('catalogo', () => {
-  const produtos = ref<IAdmProduto[]>([])
-  const servicos = ref<IAdmServico[]>([])
-  const cadastrosAuxiliares = ref<IAdmCadastroAuxiliar[]>([])
+  const productCategoryList = ref<ICadCategoriaProduto[]>([])
+  const serviceCategoryList = ref<ICadCategoriaServico[]>([])
+  const brands = ref<ICadMarca[]>([])
+  const units = ref<ICadUnidade[]>([])
   const utilStore = useUtilStore()
   let sessionVersion = 0
-  const categoriasProduto = computed(() =>
-    cadastrosAuxiliares.value
-      .filter((item) => item.ca_tipo === 'CATEGORIA_PRODUTO')
-      .map((item) => item.an_descr),
-  )
-  const categoriasServico = computed(() =>
-    cadastrosAuxiliares.value
-      .filter((item) => item.ca_tipo === 'CATEGORIA_SERVICO')
-      .map((item) => item.an_descr),
-  )
-  const marcasProduto = computed(() =>
-    cadastrosAuxiliares.value
-      .filter((item) => item.ca_tipo === 'MARCA')
-      .map((item) => item.an_descr),
-  )
+
+  const categoriasProduto = computed(() => productCategoryList.value.map((item) => item.an_descr))
+  const categoriasServico = computed(() => serviceCategoryList.value.map((item) => item.an_descr))
+  const marcasProduto = computed(() => brands.value.map((item) => item.an_descr))
   const unidadesProduto = computed(() =>
-    cadastrosAuxiliares.value
-      .filter((item) => item.ca_tipo === 'UNIDADE')
-      .map((item) => ({ label: item.an_descr + ' (' + item.ca_sigla + ')', value: item.ca_sigla })),
+    units.value.map((item) => ({
+      label: item.an_descr + ' (' + item.ca_sigla + ')',
+      value: item.ca_sigla,
+    })),
   )
 
-  async function loadCadastros() {
+  async function loadProductCategoryList() {
     const version = sessionVersion
-    const result = await catalogService.getAuxiliaries()
-    if (version === sessionVersion) cadastrosAuxiliares.value = result.dados
+    const { dados } = await getProductCategoryList()
+    if (version === sessionVersion) productCategoryList.value = dados
   }
 
-  async function load() {
+  async function saveProductCategory(values: IManutCategoriaProduto) {
     const version = sessionVersion
-    const [products, services, auxiliariesResponse] = await Promise.all([
-      catalogService.getProducts(),
-      catalogService.getServices(),
-      catalogService.getAuxiliaries(),
-    ])
-    if (version !== sessionVersion) return
-    produtos.value = products
-    servicos.value = services
-    cadastrosAuxiliares.value = auxiliariesResponse.dados
-  }
-  async function saveProduto(values: IManutProduto): Promise<IAdmProduto> {
-    const { dados } = await catalogService.saveProduct(values)
-    const index = produtos.value.findIndex((item) => item.cn_produto === dados.cn_produto)
-    if (index < 0) produtos.value.push(dados)
-    else produtos.value[index] = dados
+    const { dados } = await requestSaveProductCategory(values)
+    if (version === sessionVersion) {
+      const index = productCategoryList.value.findIndex(
+        (record) => record.cn_categoria_produto === dados.cn_categoria_produto,
+      )
+      if (index === -1) productCategoryList.value.push(dados)
+      else productCategoryList.value[index] = dados
+    }
     return dados
   }
-  async function saveServico(values: IManutServico): Promise<IAdmServico> {
-    const { dados } = await catalogService.saveService(values)
-    const index = servicos.value.findIndex((item) => item.cn_servico === dados.cn_servico)
-    if (index < 0) servicos.value.push(dados)
-    else servicos.value[index] = dados
+
+  async function loadServiceCategoryList() {
+    const version = sessionVersion
+    const { dados } = await getServiceCategoryList()
+    if (version === sessionVersion) serviceCategoryList.value = dados
+  }
+
+  async function saveServiceCategory(values: IManutCategoriaServico) {
+    const version = sessionVersion
+    const { dados } = await requestSaveServiceCategory(values)
+    if (version === sessionVersion) {
+      const index = serviceCategoryList.value.findIndex(
+        (record) => record.cn_categoria_servico === dados.cn_categoria_servico,
+      )
+      if (index === -1) serviceCategoryList.value.push(dados)
+      else serviceCategoryList.value[index] = dados
+    }
     return dados
   }
-  async function saveCadastroAuxiliar(values: IManutAuxiliar): Promise<IAdmCadastroAuxiliar> {
-    const { dados } = await catalogService.saveAuxiliary(values)
-    const index = cadastrosAuxiliares.value.findIndex(
-      (item) => item.cn_cadastro === dados.cn_cadastro,
-    )
-    if (index < 0) cadastrosAuxiliares.value.push(dados)
-    else cadastrosAuxiliares.value[index] = dados
+
+  async function loadBrandList() {
+    const version = sessionVersion
+    const { dados } = await getBrandList()
+    if (version === sessionVersion) brands.value = dados
+  }
+
+  async function saveBrand(values: IManutMarca) {
+    const version = sessionVersion
+    const { dados } = await requestSaveBrand(values)
+    if (version === sessionVersion) {
+      const index = brands.value.findIndex((record) => record.cn_marca === dados.cn_marca)
+      if (index === -1) brands.value.push(dados)
+      else brands.value[index] = dados
+    }
     return dados
   }
+
+  async function loadUnitList() {
+    const version = sessionVersion
+    const { dados } = await getUnitList()
+    if (version === sessionVersion) units.value = dados
+  }
+
+  async function saveUnit(values: IManutUnidade) {
+    const version = sessionVersion
+    const { dados } = await requestSaveUnit(values)
+    if (version === sessionVersion) {
+      const index = units.value.findIndex((record) => record.cn_unidade === dados.cn_unidade)
+      if (index === -1) units.value.push(dados)
+      else units.value[index] = dados
+    }
+    return dados
+  }
+
   watch(
     () => utilStore.user?.cn_usuario,
     () => {
       sessionVersion++
-      produtos.value = []
-      servicos.value = []
-      cadastrosAuxiliares.value = []
+      productCategoryList.value = []
+      serviceCategoryList.value = []
+      brands.value = []
+      units.value = []
     },
     { flush: 'sync' },
   )
+
   return {
-    produtos,
-    servicos,
-    cadastrosAuxiliares,
     categoriasProduto,
     categoriasServico,
     marcasProduto,
     unidadesProduto,
-    load,
-    loadCadastros,
-    saveProduto,
-    saveServico,
-    saveCadastroAuxiliar,
+    productCategoryList,
+    loadProductCategoryList,
+    saveProductCategory,
+    serviceCategoryList,
+    loadServiceCategoryList,
+    saveServiceCategory,
+    brands,
+    loadBrandList,
+    saveBrand,
+    units,
+    loadUnitList,
+    saveUnit,
   }
 })

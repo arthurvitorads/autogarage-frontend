@@ -5,7 +5,7 @@ import FloatLabel from 'primevue/floatlabel'
 import { ServiceOrderModel } from '@/models/service-order.model'
 import type { IFormPageRef } from '@/interface/util'
 import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
@@ -67,16 +67,16 @@ const customerOptions = computed(() =>
   })),
 )
 
-const formData = ref<IFormOrdemServico>(
+const formData = reactive<IFormOrdemServico>(
   ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null),
 )
 
 function handleClassificacao(item: IClassificacaoOrdemServico) {
-  formData.value.cn_classificacao_os = item.cn_classificacao_os
+  formData.cn_classificacao_os = item.cn_classificacao_os
   delete formErrors.value.cn_classificacao_os
 }
 
-async function onSubmit(values: IFormOrdemServico) {
+function validateForm(values: IFormOrdemServico) {
   const errors = validateOrderData(values)
 
   if (!customers.value.some((customer) => String(customer.cn_pessoa) === String(values.cn_pessoa)))
@@ -87,9 +87,10 @@ async function onSubmit(values: IFormOrdemServico) {
   )
     errors.cn_classificacao_os = 'Selecione uma classificação válida.'
 
-  formErrors.value = errors
-  if (Object.keys(errors).length) return
+  return errors
+}
 
+async function onSubmit(values: IFormOrdemServico) {
   if (!(await confirmAction())) return
 
   setLoading(true)
@@ -131,23 +132,27 @@ watch(
 
     const order = props.order
 
-    formData.value = order
-      ? {
-          cn_pessoa: order.cn_pessoa,
-          cn_classificacao_os: order.cn_classificacao_os,
-          dt_entrada: localDateTime(order.dt_entrada),
-          dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
-          an_responsavel: order.an_responsavel,
-          an_placa: order.an_placa,
-          an_marca: order.an_marca,
-          an_modelo: order.an_modelo,
-          nu_ano: order.nu_ano,
-          an_cor: order.an_cor,
-          qt_quilometragem: order.qt_quilometragem,
-          an_solicitacao: order.an_solicitacao,
-          an_obs: order.an_obs,
-        }
-      : ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null)
+    Object.assign(
+      formData,
+      ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null),
+    )
+    if (order) {
+      Object.assign(formData, {
+        cn_pessoa: order.cn_pessoa,
+        cn_classificacao_os: order.cn_classificacao_os,
+        dt_entrada: localDateTime(order.dt_entrada),
+        dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
+        an_responsavel: order.an_responsavel,
+        an_placa: order.an_placa,
+        an_marca: order.an_marca,
+        an_modelo: order.an_modelo,
+        nu_ano: order.nu_ano,
+        an_cor: order.an_cor,
+        qt_quilometragem: order.qt_quilometragem,
+        an_solicitacao: order.an_solicitacao,
+        an_obs: order.an_obs,
+      })
+    }
     formErrors.value = {}
     formKey.value++
   },
@@ -172,6 +177,7 @@ watch(
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.fields"
+      :validate="validateForm"
       @submit="onSubmit"
     >
       <Fieldset legend="Dados gerais">

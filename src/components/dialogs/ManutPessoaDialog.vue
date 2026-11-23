@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import Dialog from 'primevue/dialog'
 import Fieldset from 'primevue/fieldset'
 import FloatLabel from 'primevue/floatlabel'
 import InputText from 'primevue/inputtext'
-import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
 import SelectButton from 'primevue/selectbutton'
 import Button from 'primevue/button'
@@ -21,6 +20,7 @@ import {
   type IManutPessoa,
   type IManutPessoaDialogProps,
 } from '@/interface/pages/PessoaPage'
+
 import type { IFormPessoa, TPersonCategory } from '@/interface/pages/PessoaPage'
 
 import type { IEndEstado } from '@/interface/tables'
@@ -29,15 +29,13 @@ import { createPerson, updatePerson } from '@/services/person.service'
 import { getStates } from '@/services/address.service'
 import { fetchCep } from '@/services/cep.service'
 import { fetchCnpj } from '@/services/documento.service'
+import { validateFormField } from '@/services/form-validation.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
 import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
 
 import {
-  validateCPF,
-  validateCNPJ,
-  validateEmail,
   onlyNumbers,
   unMaskDocument,
   maskCpf,
@@ -56,7 +54,7 @@ const props = defineProps<IManutPessoaDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: []
+  onSave: []
 }>()
 
 const { showError, showWarn, showSuccess } = useAppToast()
@@ -64,7 +62,32 @@ const { normalizeError, setLoading } = useUtilStore()
 
 const confirmAction = useConfirmation()
 
-const formData = ref<IFormPessoa>(PersonModel.createForm())
+function formDataDefault(): IFormPessoa {
+  return {
+    ca_tipo: 'PF',
+    bo_categ_cliente: true,
+    bo_categ_func: false,
+    bo_sts_reg: true,
+    an_nome: '',
+    ca_cpf: '',
+    ca_cnpj: '',
+    an_razao_social: '',
+    an_nome_fantasia: '',
+    an_email: '',
+    an_telefone: '',
+    an_cargo: '',
+    nm_comissao_func: 0,
+    ca_cep: '',
+    an_logradouro: '',
+    an_numero: '',
+    an_complemento: '',
+    an_bairro: '',
+    an_cidade: '',
+    cn_estado: '',
+  }
+}
+
+const formData = reactive<IFormPessoa>(formDataDefault())
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -73,18 +96,27 @@ const formRef = ref<IFormPageRef | null>(null)
 const loadingButton = ref(false)
 const estadosData = ref<IEndEstado[]>([])
 
-const isEditing = computed(() => !!props.person)
+const isEditing = computed(() => !!props.pessoa)
 
 const selectedCategories = computed({
   get: () =>
-    personCategories.filter(({ value }) => formData.value[value]).map(({ value }) => value),
+    personCategories.filter(({ value }) => formData[value]).map(({ value }) => value),
   set: (values: TPersonCategory[]) => {
-    for (const { value } of personCategories) formData.value[value] = values.includes(value)
+    for (const { value } of personCategories) formData[value] = values.includes(value)
   },
 })
 
 function handleEstado(uf: string) {
   return estadosData.value.find((e) => e.ca_uf === uf.trim().toUpperCase())?.cn_estado ?? ''
+}
+
+function handleComissaoInput(event: Event) {
+  const input = event.target as HTMLInputElement
+  const digits = onlyNumbers(input.value).slice(0, 3)
+  const value = digits === '' ? null : Math.min(Number(digits), 100)
+
+  input.value = value?.toString() ?? ''
+  formData.nm_comissao_func = value
 }
 
 async function loadEstados() {
@@ -100,9 +132,14 @@ async function loadEstados() {
 }
 
 async function handleCnpj() {
-  const cnpj = unMaskDocument(formData.value.ca_cnpj).toUpperCase()
+  const error = validateFormField('ca_cnpj', config.fields.ca_cnpj, formData)
 
-  if (!validateCNPJ(cnpj)) return (formErrors.value.ca_cnpj = 'Informe um CNPJ válido.')
+  if (error) {
+    formErrors.value.ca_cnpj = error
+    return
+  }
+
+  const cnpj = unMaskDocument(formData.ca_cnpj).toUpperCase()
 
   setLoading(true)
 
@@ -115,17 +152,17 @@ async function handleCnpj() {
       return
     }
 
-    formData.value.an_razao_social = response.an_razao_social
-    formData.value.an_nome_fantasia = response.an_nome_fantasia
-    formData.value.an_email = response.an_email
-    formData.value.an_telefone = response.an_telefone ?? ''
-    formData.value.ca_cep = maskCep(response.ca_cep)
-    formData.value.an_logradouro = response.an_logradouro
-    formData.value.an_numero = response.an_numero
-    formData.value.an_complemento = response.an_complemento
-    formData.value.an_bairro = response.an_bairro
-    formData.value.an_cidade = response.an_cidade
-    formData.value.cn_estado = handleEstado(response.ca_uf)
+    formData.an_razao_social = response.an_razao_social
+    formData.an_nome_fantasia = response.an_nome_fantasia
+    formData.an_email = response.an_email
+    formData.an_telefone = response.an_telefone ?? ''
+    formData.ca_cep = maskCep(response.ca_cep)
+    formData.an_logradouro = response.an_logradouro
+    formData.an_numero = response.an_numero
+    formData.an_complemento = response.an_complemento
+    formData.an_bairro = response.an_bairro
+    formData.an_cidade = response.an_cidade
+    formData.cn_estado = handleEstado(response.ca_uf)
 
     formErrors.value = {}
 
@@ -138,12 +175,14 @@ async function handleCnpj() {
 }
 
 async function handleCep() {
-  const cep = formData.value.ca_cep.replace(/\D/g, '')
+  const error = validateFormField('ca_cep', config.fields.ca_cep, formData)
 
-  if (cep.length !== 8) {
-    formErrors.value.ca_cep = 'Informe um CEP com 8 dígitos.'
+  if (error) {
+    formErrors.value.ca_cep = error
     return
   }
+
+  const cep = onlyNumbers(formData.ca_cep)
 
   setLoading(true)
 
@@ -152,10 +191,10 @@ async function handleCep() {
 
     formErrors.value = {}
 
-    formData.value.an_logradouro = response.an_logradouro
-    formData.value.an_bairro = response.an_bairro
-    formData.value.an_cidade = response.an_cidade
-    formData.value.cn_estado = handleEstado(response.ca_uf) || formData.value.cn_estado
+    formData.an_logradouro = response.an_logradouro
+    formData.an_bairro = response.an_bairro
+    formData.an_cidade = response.an_cidade
+    formData.cn_estado = handleEstado(response.ca_uf) || formData.cn_estado
 
     showSuccess('Processo realizado com sucesso.')
   } catch (error) {
@@ -166,62 +205,18 @@ async function handleCep() {
 }
 
 async function onSubmit(values: IFormPessoa) {
-  const errors: TGenericData = {}
-
-  if (values.ca_tipo === 'PF') {
-    if (!validateCPF(values.ca_cpf)) errors.ca_cpf = 'Informe um CPF válido.'
-  } else {
-    if (!validateCNPJ(values.ca_cnpj)) errors.ca_cnpj = 'Informe um CNPJ válido.'
-  }
-
-  if (!validateEmail(values.an_email.trim())) errors.an_email = 'Informe um e-mail válido.'
-
-  if (
-    !/^[0-9 ()+.-]+$/.test(values.an_telefone) ||
-    ![10, 11].includes(onlyNumbers(values.an_telefone).length)
-  )
-    errors.an_telefone = 'Informe um telefone com DDD (10 ou 11 dígitos).'
-
-  if (!/^\d{5}-?\d{3}$/.test(values.ca_cep.trim())) errors.ca_cep = 'Informe um CEP válido.'
-
-  if (
-    values.bo_categ_func &&
-    (values.nm_comissao_func === null ||
-      !Number.isFinite(values.nm_comissao_func) ||
-      values.nm_comissao_func < 0 ||
-      values.nm_comissao_func > 100)
-  )
-    errors.nm_comissao_func = 'A comissão deve estar entre 0% e 100%.'
-
-  const document = unMaskDocument(
-    values.ca_tipo === 'PF' ? values.ca_cpf : values.ca_cnpj,
-  ).toUpperCase()
-  const duplicateDocument = (props.people ?? []).some(
-    (person) =>
-      person !== props.person &&
-      (props.person?.cn_pessoa === undefined || person.cn_pessoa !== props.person.cn_pessoa) &&
-      unMaskDocument(
-        (person.ca_tipo === 'PF' ? person.ca_cpf : person.ca_cnpj) ?? '',
-      ).toUpperCase() === document,
-  )
-
-  if (duplicateDocument)
-    errors[values.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj'] = 'Documento já cadastrado.'
-
-  formErrors.value = errors
-  if (Object.keys(errors).length) return
-
   if (!(await confirmAction())) return
 
   setLoading(true)
 
   try {
     const fisica = values.ca_tipo === 'PF'
-    const person: IManutPessoa = {
+
+    const pessoaData: IManutPessoa = {
       ca_tipo: values.ca_tipo,
       an_nome: fisica ? values.an_nome.trim() : null,
-      ca_cpf: fisica ? document : null,
-      ca_cnpj: fisica ? null : document,
+      ca_cpf: fisica ? unMaskDocument(values.ca_cpf) : null,
+      ca_cnpj: fisica ? null : unMaskDocument(values.ca_cnpj),
       an_razao_social: fisica ? null : values.an_razao_social.trim(),
       an_nome_fantasia: fisica ? null : values.an_nome_fantasia.trim(),
       an_email: values.an_email.trim().toLowerCase(),
@@ -242,11 +237,13 @@ async function onSubmit(values: IFormPessoa) {
       },
     }
 
-    if (props.person) await updatePerson(props.person.cn_pessoa, person)
-    else await createPerson(person)
+    if (props.pessoa) await updatePerson(props.pessoa.cn_pessoa, pessoaData)
+    else await createPerson(pessoaData)
+
     showSuccess('Processo realizado com sucesso.')
+
     emit('update:visible', false)
-    emit('saved')
+    emit('onSave')
   } catch (error) {
     showError(normalizeError(error))
   } finally {
@@ -255,42 +252,43 @@ async function onSubmit(values: IFormPessoa) {
 }
 
 watch(
-  [() => props.visible, () => props.person],
+  [() => props.visible, () => props.pessoa],
   ([visible, person]) => {
+
     if (!visible) return
 
-    const form = PersonModel.createForm()
+    Object.assign(formData, formDataDefault())
 
     if (person) {
       const endereco = person.endereco
+
       if (endereco) {
-        form.ca_cep = maskCep(endereco.ca_cep ?? '')
-        form.an_logradouro = endereco.an_logradouro ?? ''
-        form.an_numero = endereco.an_numero ?? ''
-        form.an_complemento = endereco.an_complemento ?? ''
-        form.an_bairro = endereco.an_bairro ?? ''
-        form.an_cidade = endereco.an_cidade ?? ''
-        form.cn_estado = endereco.cn_estado ?? ''
+        formData.ca_cep = maskCep(endereco.ca_cep ?? '')
+        formData.an_logradouro = endereco.an_logradouro ?? ''
+        formData.an_numero = endereco.an_numero ?? ''
+        formData.an_complemento = endereco.an_complemento ?? ''
+        formData.an_bairro = endereco.an_bairro ?? ''
+        formData.an_cidade = endereco.an_cidade ?? ''
+        formData.cn_estado = endereco.cn_estado ?? ''
       }
-      form.ca_tipo = person.ca_tipo
-      form.bo_categ_cliente = person.bo_categ_cliente
-      form.bo_categ_func = person.bo_categ_func
-      form.bo_sts_reg = person.bo_sts_reg
-      form.an_email = person.an_email ?? ''
-      form.an_telefone = maskPersonPhone(person.an_telefone ?? '')
-      form.an_cargo = person.an_cargo ?? ''
-      form.nm_comissao_func = person.nm_comissao_func ?? 0
+      formData.ca_tipo = person.ca_tipo
+      formData.bo_categ_cliente = person.bo_categ_cliente
+      formData.bo_categ_func = person.bo_categ_func
+      formData.bo_sts_reg = person.bo_sts_reg
+      formData.an_email = person.an_email ?? ''
+      formData.an_telefone = maskPersonPhone(person.an_telefone ?? '')
+      formData.an_cargo = person.an_cargo ?? ''
+      formData.nm_comissao_func = person.nm_comissao_func ?? 0
       if (person.ca_tipo === 'PF') {
-        form.an_nome = person.an_nome ?? ''
-        form.ca_cpf = maskCpf(person.ca_cpf ?? '')
+        formData.an_nome = person.an_nome ?? ''
+        formData.ca_cpf = maskCpf(person.ca_cpf ?? '')
       } else {
-        form.an_razao_social = person.an_razao_social ?? ''
-        form.an_nome_fantasia = person.an_nome_fantasia ?? ''
-        form.ca_cnpj = maskCnpj(person.ca_cnpj ?? '')
+        formData.an_razao_social = person.an_razao_social ?? ''
+        formData.an_nome_fantasia = person.an_nome_fantasia ?? ''
+        formData.ca_cnpj = maskCnpj(person.ca_cnpj ?? '')
       }
     }
 
-    formData.value = form
     formErrors.value = {}
     formKey.value++
     loadEstados()
@@ -698,16 +696,15 @@ watch(
             v-slot="{ invalid, field, required }"
           >
             <FloatLabel variant="on">
-              <InputNumber
+              <InputText
                 :aria-required="required"
-                :inputId="`person-${field}`"
-                v-model="formData.nm_comissao_func"
+                :id="`person-${field}`"
+                :modelValue="formData.nm_comissao_func?.toLocaleString('pt-BR') ?? ''"
                 :name="field"
-                :min="0"
-                :max="100"
-                :maxFractionDigits="2"
-                locale="pt-BR"
+                inputmode="numeric"
+                maxlength="3"
                 :invalid="invalid"
+                @input="handleComissaoInput"
                 fluid
               />
               <label :for="`person-${field}`">Comissão (%)</label>

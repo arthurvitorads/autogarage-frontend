@@ -22,7 +22,7 @@ import type {
   TSaleCustomer,
 } from '@/interface/pages/VendaPage'
 import { getCatalogItemOptions } from '@/services/catalogo.service'
-import { validateRequiredFields } from '@/services/form-validation.service'
+import { validateFormFields } from '@/services/form-validation.service'
 import config from '@/config/VendaPageConfig.json'
 import { getCustomers } from '@/services/ordem-api.service'
 import type { IClienteOrdemServico } from '@/interface/pages/OrdemServicoPage'
@@ -53,7 +53,7 @@ const customer = ref<TSaleCustomer | null>(null)
 const saving = ref(false)
 const loadingData = ref(false)
 const loadError = ref('')
-const item = ref<IFormItemVenda>(SaleModel.createItem())
+const item = reactive<IFormItemVenda>(SaleModel.createItem())
 const originOptions = [
   { label: 'Venda avulsa', value: 'DIRETA' },
   { label: 'Por ordem de serviço', value: 'ORDEM_SERVICO' },
@@ -78,14 +78,14 @@ const selectedOrder = computed(
 )
 const references = computed(
   () =>
-    (item.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
+    (item.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
 const referenceField = computed(() =>
-  item.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
+  item.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
 )
 const selectedReference = computed(() =>
   references.value.find(
-    (option) => option[referenceField.value] === item.value[referenceField.value],
+    (option) => option[referenceField.value] === item[referenceField.value],
   ),
 )
 const rows = computed(() =>
@@ -116,13 +116,13 @@ watch(ca_origem, (value) => {
   if (value === 'DIRETA') cn_pessoa.value = null
 })
 function handleTipoItem() {
-  item.value.cn_produto = null
-  item.value.cn_servico = null
-  item.value.vl_unitario = 0
+  item.cn_produto = null
+  item.cn_servico = null
+  item.vl_unitario = 0
 }
 
 function handleReferencia() {
-  item.value.vl_unitario = selectedReference.value?.vl_preco ?? 0
+  item.vl_unitario = selectedReference.value?.vl_preco ?? 0
 }
 
 async function loadData() {
@@ -150,13 +150,13 @@ watch(
   async (visible) => {
     if (!visible) return
     Object.assign(formData, SaleModel.createForm(props.order))
-    item.value = SaleModel.createItem()
+    Object.assign(item, SaleModel.createItem())
     await loadData()
   },
 )
 
 function addItem() {
-  const errors = validateRequiredFields(config.itemFields, { ...item.value })
+  const errors = validateFormFields(config.itemFields, { ...item })
   if (Object.keys(errors).length) {
     showWarn('Selecione um item e informe a quantidade e o preço unitário.')
     return
@@ -165,13 +165,13 @@ function addItem() {
   try {
     const reference = selectedReference.value
     if (!reference) throw new Error('Selecione um item.')
-    const lineTotal = calculateItemTotal(item.value.qt_quantidade!, item.value.vl_unitario!)
+    const lineTotal = calculateItemTotal(item.qt_quantidade!, item.vl_unitario!)
     itens.value.push({
-      ca_tipo: item.value.ca_tipo,
-      cn_produto: item.value.cn_produto,
-      cn_servico: item.value.cn_servico,
-      qt_quantidade: item.value.qt_quantidade!,
-      vl_unitario: item.value.vl_unitario!,
+      ca_tipo: item.ca_tipo,
+      cn_produto: item.cn_produto,
+      cn_servico: item.cn_servico,
+      qt_quantidade: item.qt_quantidade!,
+      vl_unitario: item.vl_unitario!,
       an_descr: reference.an_nome,
       vl_total: lineTotal,
     })
@@ -182,7 +182,7 @@ function addItem() {
 
 async function save() {
   if (saving.value || loadingData.value) return
-  const errors = validateRequiredFields(config.fields, { ...formData })
+  const errors = validateFormFields(config.fields, { ...formData })
   if (errors.cn_ordem_servico) {
     showWarn('Selecione uma O.S. finalizada.')
     return

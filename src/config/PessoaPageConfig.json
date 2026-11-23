@@ -31,11 +31,6 @@
       "width": 160
     },
     {
-      "field": "bo_categ_cliente",
-      "header": "Categorias",
-      "width": 180
-    },
-    {
       "field": "an_telefone",
       "header": "Telefone",
       "width": 160
@@ -43,7 +38,7 @@
     {
       "field": "an_email",
       "header": "E-mail",
-      "width": 280
+      "width": 250
     },
     {
       "field": "bo_sts_reg",
@@ -53,14 +48,12 @@
     {
       "field": "dt_inc",
       "header": "Dt. inclusão",
-      "width": 140,
-      "align": "center"
+      "width": 140
     },
     {
       "field": "dt_alt",
       "header": "Dt. alteração",
-      "width": 140,
-      "align": "center"
+      "width": 140
     }
   ],
   "fields": {
@@ -74,6 +67,10 @@
     },
     "ca_cpf": {
       "requiredWhen": {
+        "ca_tipo": "PF"
+      },
+      "validators": ["cpf"],
+      "validateWhen": {
         "ca_tipo": "PF"
       }
     },
@@ -90,16 +87,23 @@
     "ca_cnpj": {
       "requiredWhen": {
         "ca_tipo": "PJ"
+      },
+      "validators": ["cnpj"],
+      "validateWhen": {
+        "ca_tipo": "PJ"
       }
     },
     "an_email": {
-      "required": true
+      "required": true,
+      "validators": ["email"]
     },
     "an_telefone": {
-      "required": true
+      "required": true,
+      "validators": ["telefone"]
     },
     "ca_cep": {
-      "required": true
+      "required": true,
+      "validators": ["cep"]
     },
     "an_logradouro": {
       "required": true

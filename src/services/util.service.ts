@@ -210,6 +210,15 @@ export function onlyNumbers(valor: string): string {
   return valor.replace(/\D/g, '')
 }
 
+export function validateCep(value: string): boolean {
+  return /^\d{5}-?\d{3}$/.test(value.trim())
+}
+
+export function validateTel(value: string): boolean {
+  const phone = value.trim()
+  return /^[0-9 ()+.-]+$/.test(phone) && [10, 11].includes(onlyNumbers(phone).length)
+}
+
 export function maskTelefone(value: string) {
   const telefone = value.replace(/\D/g, '')
   if (telefone.length === 11) return telefone.replace(/^(\d{2})(\d{5})(\d{4})$/, '($1) $2-$3')

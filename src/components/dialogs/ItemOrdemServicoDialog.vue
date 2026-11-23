@@ -5,7 +5,7 @@ import FloatLabel from 'primevue/floatlabel'
 import { ServiceOrderItemModel } from '@/models/service-order-item.model'
 import type { IFormPageRef } from '@/interface/util'
 import { useConfirmacao as useConfirmation } from '@/composables/useConfirmacao'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
@@ -60,44 +60,42 @@ const itemTypes = [
   { label: 'Serviço', value: 'SERVICO' },
 ]
 
-const formData = ref<IFormItemOrdemServico>(
+const formData = reactive<IFormItemOrdemServico>(
   ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO'),
 )
 const options = computed(
-  () =>
-    (formData.value.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ??
-    [],
+  () => (formData.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
 const referenceField = computed(() =>
-  formData.value.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
+  formData.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
 )
 const selectedReference = computed(() =>
-  options.value.find((item) => item[referenceField.value] === formData.value[referenceField.value]),
+  options.value.find((item) => item[referenceField.value] === formData[referenceField.value]),
 )
 const totalItem = computed(() => {
-  if (formData.value.qt_quantidade === null || formData.value.vl_unitario === null) return null
+  if (formData.qt_quantidade === null || formData.vl_unitario === null) return null
 
   try {
-    return calculateItemTotal(formData.value.qt_quantidade, formData.value.vl_unitario)
+    return calculateItemTotal(formData.qt_quantidade, formData.vl_unitario)
   } catch {
     return null
   }
 })
 
 function changeType() {
-  formData.value.cn_produto = null
-  formData.value.cn_servico = null
-  formData.value.vl_unitario = 0
+  formData.cn_produto = null
+  formData.cn_servico = null
+  formData.vl_unitario = 0
   formErrors.value = {}
 }
 
 function loadPrice() {
-  formData.value.vl_unitario = selectedReference.value?.vl_preco ?? 0
+  formData.vl_unitario = selectedReference.value?.vl_preco ?? 0
   delete formErrors.value[referenceField.value]
   delete formErrors.value.vl_unitario
 }
 
-async function onSubmit(values: IFormItemOrdemServico) {
+function validateForm(values: IFormItemOrdemServico) {
   const errors: TGenericData = {}
 
   if (!selectedReference.value)
@@ -122,9 +120,10 @@ async function onSubmit(values: IFormItemOrdemServico) {
     }
   }
 
-  formErrors.value = errors
-  if (Object.keys(errors).length) return
+  return errors
+}
 
+async function onSubmit(values: IFormItemOrdemServico) {
   if (!(await confirmAction())) return
 
   setLoading(true)
@@ -170,13 +169,13 @@ watch(
 
     const item = props.item
 
-    formData.value = ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO')
+    Object.assign(formData, ServiceOrderItemModel.createForm(props.itemType ?? 'PRODUTO'))
     if (item) {
-      formData.value.ca_tipo = item.ca_tipo
-      formData.value.cn_produto = item.ca_tipo === 'PRODUTO' ? item.cn_produto : null
-      formData.value.cn_servico = item.ca_tipo === 'SERVICO' ? item.cn_servico : null
-      formData.value.qt_quantidade = item.qt_quantidade
-      formData.value.vl_unitario = item.vl_unitario
+      formData.ca_tipo = item.ca_tipo
+      formData.cn_produto = item.ca_tipo === 'PRODUTO' ? item.cn_produto : null
+      formData.cn_servico = item.ca_tipo === 'SERVICO' ? item.cn_servico : null
+      formData.qt_quantidade = item.qt_quantidade
+      formData.vl_unitario = item.vl_unitario
     }
     formErrors.value = {}
     formKey.value++
@@ -212,6 +211,7 @@ watch(
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.itemFields"
+      :validate="validateForm"
       @submit="onSubmit"
     >
       <Fieldset legend="Dados do item">

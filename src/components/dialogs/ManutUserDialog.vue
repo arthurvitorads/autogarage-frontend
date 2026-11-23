@@ -3,7 +3,7 @@ import FloatLabel from 'primevue/floatlabel'
 import { UserModel } from '@/models/user.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IManutUsuarioDialogProps } from '@/interface/pages/UsuarioPage'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
@@ -20,7 +20,6 @@ import FieldForm from '@/components/field/FieldForm.vue'
 import type { IFormUsuario } from '@/interface/pages/UsuarioPage'
 import type { TGenericData } from '@/interface/util'
 
-import { validateEmail } from '@/services/util.service'
 import { createUser, updateUser } from '@/services/user.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
@@ -41,28 +40,13 @@ const { loading } = storeToRefs(useUtilStore())
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const isValidated = ref(false)
 
 const isEditing = computed(() => !!props.user)
 
-const formData = ref<IFormUsuario>(UserModel.createForm())
+const formData = reactive<IFormUsuario>(UserModel.createForm())
 
 async function onSubmit(values: IFormUsuario) {
   setLoading(true)
-
-  const errors: TGenericData = {}
-
-  if (!isEditing.value && !validateEmail(values.an_email.trim()))
-    errors.an_email = 'Informe um e-mail válido.'
-
-  if (!isEditing.value && !values.ca_senha) errors.ca_senha = 'Campo obrigatório.'
-  else if (!isEditing.value && (values.ca_senha.length < 6 || values.ca_senha.length > 128))
-    errors.ca_senha = 'A senha deve conter entre 6 e 128 caracteres.'
-
-  formErrors.value = errors
-  isValidated.value = !Object.keys(errors).length
-
-  if (!isValidated.value) return setLoading(false)
 
   try {
     if (isEditing.value) {
@@ -73,10 +57,10 @@ async function onSubmit(values: IFormUsuario) {
       await updateUser(id, {
         an_nome: values.an_nome,
         bo_sts_reg: values.bo_sts_reg,
-        cn_perfil: formData.value.cn_perfil,
+        cn_perfil: values.cn_perfil,
       })
     } else {
-      await createUser({ ...values, cn_perfil: formData.value.cn_perfil })
+      await createUser(values)
     }
     showSuccess('Processo realizado com sucesso.')
     emit('update:visible', false)
@@ -95,17 +79,17 @@ watch(
 
     const user = props.user
 
-    formData.value = user
-      ? {
-          an_nome: user.an_nome ?? '',
-          an_email: user.an_email ?? '',
-          ca_senha: '',
-          cn_perfil: user.cn_perfil ?? null,
-          bo_sts_reg: user.bo_sts_reg ?? true,
-        }
-      : UserModel.createForm()
+    Object.assign(formData, UserModel.createForm())
+    if (user) {
+      Object.assign(formData, {
+        an_nome: user.an_nome ?? '',
+        an_email: user.an_email ?? '',
+        ca_senha: '',
+        cn_perfil: user.cn_perfil ?? null,
+        bo_sts_reg: user.bo_sts_reg ?? true,
+      })
+    }
     formErrors.value = {}
-    isValidated.value = false
     formKey.value++
   },
   { immediate: true },
@@ -127,10 +111,9 @@ watch(
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
       :initialValues="formData"
+      :modelValues="formData"
       :fields="isEditing ? config.fields : { ...config.fields, ...config.createFields }"
-      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
-      @input="isValidated = false"
-      @change="isValidated = false"
+      @submit="onSubmit"
     >
       <Fieldset legend="Usuário">
         <div class="grid grid-cols-12 gap-x-4">
@@ -142,6 +125,7 @@ watch(
             <FloatLabel variant="on">
               <InputText
                 id="ManutUserDialog-an_nome"
+                v-model="formData.an_nome"
                 maxlength="4000"
                 :name="field"
                 :invalid="invalid"
@@ -161,6 +145,7 @@ watch(
             <FloatLabel variant="on">
               <InputText
                 id="ManutUserDialog-an_email"
+                v-model="formData.an_email"
                 maxlength="4000"
                 :name="field"
                 type="email"
@@ -193,6 +178,7 @@ watch(
             <FloatLabel variant="on">
               <Password
                 inputId="ManutUserDialog-ca_senha"
+                v-model="formData.ca_senha"
                 :inputProps="{ maxlength: 128 }"
                 :name="field"
                 :feedback="false"

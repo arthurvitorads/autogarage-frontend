@@ -124,7 +124,7 @@ defineExpose({ loadGrid, loading, rows, total })
       <slot name="groupheader" :data="data" />
     </template>
 
-    <Column v-if="actions?.length" :header="actionHeader ?? 'Ações'">
+    <Column v-if="actions?.length" :header="actionHeader ?? 'Ações'" style="width: 20px">
       <template #body="{ data }">
         <Button
           v-for="item in actions?.filter((item) => isActionVisible?.(item.action, data) ?? true)"

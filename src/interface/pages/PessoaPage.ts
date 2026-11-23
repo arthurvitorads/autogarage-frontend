@@ -55,8 +55,7 @@ export interface IFormPessoa
 }
 
 export interface IManutPessoaDialogProps extends IDialogProps {
-  person?: ICadPessoa | null
-  people?: ICadPessoa[]
+  pessoa?: ICadPessoa | null
 }
 
 // Generic types

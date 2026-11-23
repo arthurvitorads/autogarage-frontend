@@ -2,7 +2,7 @@
 import type { IManutPerfilDialogProps } from '@/interface/pages/PerfilPage'
 import FloatLabel from 'primevue/floatlabel'
 import { ProfileModel } from '@/models/profile.model'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 
 import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
@@ -36,7 +36,7 @@ const formKey = ref(0)
 
 const isEditing = computed(() => !!props.profile)
 
-const formData = ref<IFormPerfil>(ProfileModel.createForm())
+const formData = reactive<IFormPerfil>(ProfileModel.createForm())
 
 async function onSubmit(values: IFormPerfil) {
   setLoading(true)
@@ -67,12 +67,13 @@ watch(
   ([visible]) => {
     if (!visible) return
 
-    formData.value = props.profile
-      ? {
-          an_descr: props.profile.an_descr ?? '',
-          bo_sts_reg: props.profile.bo_sts_reg ?? true,
-        }
-      : ProfileModel.createForm()
+    Object.assign(formData, ProfileModel.createForm())
+    if (props.profile) {
+      Object.assign(formData, {
+        an_descr: props.profile.an_descr ?? '',
+        bo_sts_reg: props.profile.bo_sts_reg ?? true,
+      })
+    }
 
     formErrors.value = {}
     formKey.value++
@@ -94,13 +95,15 @@ watch(
       :key="formKey"
       v-model:errors="formErrors"
       :initialValues="formData"
+      :modelValues="formData"
       :fields="config.fields"
-      @submit="onSubmit({ ...$event, bo_sts_reg: formData.bo_sts_reg })"
+      @submit="onSubmit"
     >
       <FieldForm class="m-[4px] col-span-8" name="an_descr" v-slot="{ invalid, field }">
         <FloatLabel variant="on">
           <InputText
             id="ManutPerfilDialog-an_descr"
+            v-model="formData.an_descr"
             maxlength="4000"
             :name="field"
             :invalid="invalid"

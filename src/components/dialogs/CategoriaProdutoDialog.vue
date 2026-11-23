@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import type { IAdmCadastroAuxiliar } from '@/interface/tables'
 import FloatLabel from 'primevue/floatlabel'
-import { AuxiliaryModel } from '@/models/auxiliary.model'
 import type { IDialogProps } from '@/interface/dialog'
 import type { IFormPageRef, TGenericData } from '@/interface/util'
-import type { IFormDescricao } from '@/interface/pages/CadastroAuxiliar'
-import { computed, ref, watch } from 'vue'
+import type {
+  ICadCategoriaProduto,
+  IFormCategoriaProduto,
+} from '@/interface/pages/CategoriaProduto'
+import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
@@ -15,7 +16,7 @@ import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 
 import FormPage from '@/components/pages/FormPage.vue'
-import config from '@/config/CadastroAuxiliarConfig.json'
+import config from '@/config/CategoriaProdutoDialogConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import { useCatalogoStore as useCatalogStore } from '@/stores/catalogo.store'
 import { useUtilStore } from '@/stores/util.store'
@@ -24,15 +25,12 @@ import { useAppToast } from '@/services/toast.service'
 const props = defineProps<IDialogProps>()
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  saved: [category: IAdmCadastroAuxiliar]
+  saved: [category: ICadCategoriaProduto]
 }>()
 
 const catalogStore = useCatalogStore()
-const { cadastrosAuxiliares } = storeToRefs(catalogStore)
-const records = computed(() =>
-  cadastrosAuxiliares.value.filter((record) => record.ca_tipo === 'CATEGORIA_PRODUTO'),
-)
-const selectedCategory = ref<IAdmCadastroAuxiliar | null>(null)
+const { productCategoryList: records } = storeToRefs(catalogStore)
+const selectedCategory = ref<ICadCategoriaProduto | null>(null)
 const loadingGrid = ref(false)
 const utilStore = useUtilStore()
 const { loading } = storeToRefs(utilStore)
@@ -41,27 +39,29 @@ const { showSuccess, showError } = useAppToast()
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
-const formData = ref<IFormDescricao>(AuxiliaryModel.createDescriptionForm())
+function formDataDefault(): IFormCategoriaProduto {
+  return {
+    an_descr: '',
+  }
+}
 
-function handleCategoria(category: IAdmCadastroAuxiliar | null) {
+const formData = reactive<IFormCategoriaProduto>(formDataDefault())
+
+function handleCategoria(category: ICadCategoriaProduto | null) {
   selectedCategory.value = category
-  formData.value = category
-    ? { an_descr: category.an_descr }
-    : AuxiliaryModel.createDescriptionForm()
+  Object.assign(formData, category ? { an_descr: category.an_descr } : formDataDefault())
   formErrors.value = {}
   formKey.value++
 }
 
-async function onSubmit(values: IFormDescricao) {
+async function onSubmit(values: IFormCategoriaProduto) {
   const description = values.an_descr.trim()
 
   setLoading(true)
   try {
-    const saved = await catalogStore.saveCadastroAuxiliar({
-      cn_cadastro: selectedCategory.value?.cn_cadastro,
-      ca_tipo: 'CATEGORIA_PRODUTO',
+    const saved = await catalogStore.saveProductCategory({
+      cn_categoria_produto: selectedCategory.value?.cn_categoria_produto,
       an_descr: description,
-      ca_sigla: '',
     })
     emit('saved', saved)
     showSuccess('Processo realizado com sucesso.')
@@ -81,7 +81,7 @@ watch(
     handleCategoria(null)
     loadingGrid.value = true
     try {
-      await catalogStore.loadCadastros()
+      await catalogStore.loadProductCategoryList()
     } catch (error) {
       showError(normalizeError(error))
     } finally {

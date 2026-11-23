@@ -7,7 +7,7 @@ import type { TGenericData } from '@/interface/util'
 import { FORM_ERRORS_KEY, FORM_REQUIRED_KEY } from '@/constants/FormContext'
 import {
   isRequiredField,
-  validateRequiredFields,
+  validateFormFields,
   type TFormFields,
 } from '@/services/form-validation.service'
 
@@ -17,6 +17,7 @@ const props = withDefaults(
     modelValues?: T
     errors?: TGenericData
     fields?: TFormFields
+    validate?: (values: T) => TGenericData
     toastErros?: boolean
   }>(),
   {
@@ -57,9 +58,12 @@ function cleanError(event: Event) {
 }
 
 function onSubmit({ values }: FormSubmitEvent) {
-  const currentValues = props.modelValues ?? (values as T)
-  if (props.fields) {
-    const errors = validateRequiredFields(props.fields, currentValues)
+  const currentValues = props.modelValues ? { ...props.modelValues } : (values as T)
+  if (props.fields || props.validate) {
+    const errors = {
+      ...props.validate?.(currentValues),
+      ...validateFormFields(props.fields ?? {}, currentValues),
+    }
     emit('update:errors', errors)
     if (Object.keys(errors).length > 0) return
   }
