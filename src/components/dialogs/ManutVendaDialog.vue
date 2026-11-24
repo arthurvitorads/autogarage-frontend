@@ -77,16 +77,11 @@ const selectedOrder = computed(
     null,
 )
 const references = computed(
-  () =>
-    (item.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
+  () => (item.ca_tipo === 'PRODUTO' ? catalog.value?.produtos : catalog.value?.servicos) ?? [],
 )
-const referenceField = computed(() =>
-  item.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico',
-)
+const referenceField = computed(() => (item.ca_tipo === 'PRODUTO' ? 'cn_produto' : 'cn_servico'))
 const selectedReference = computed(() =>
-  references.value.find(
-    (option) => option[referenceField.value] === item[referenceField.value],
-  ),
+  references.value.find((option) => option[referenceField.value] === item[referenceField.value]),
 )
 const rows = computed(() =>
   ca_origem.value === 'ORDEM_SERVICO' ? (selectedOrder.value?.itens ?? []) : itens.value,
@@ -366,16 +361,17 @@ async function save() {
           <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
             ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
-          <Column v-if="ca_origem === 'DIRETA'" header="Ações"
-            ><template #body="{ index }"
-              ><Button
+          <Column v-if="ca_origem === 'DIRETA'" header="Ações">
+            <template #body="{ index }">
+              <Button
                 icon="pi pi-trash"
-                text
                 severity="danger"
+                text
                 aria-label="Remover item"
-                @click="itens.splice(index, 1)" /></template
-          ></Column>
-          <template #empty>Nenhum item adicionado.</template>
+                @click="itens.splice(index, 1)"
+              />
+            </template>
+          </Column>
         </DataTable>
         <p class="text-right font-bold mt-3">Total: {{ formatOrderCurrency(total) }}</p>
       </Fieldset>

@@ -6,8 +6,5 @@ export function getUnitList() {
 }
 
 export function saveUnit(values: IManutUnidade) {
-  return apiRequest<ICadUnidade>(
-    '/unidades/manut',
-    values,
-  )
+  return apiRequest<ICadUnidade>('/unidades/manut', values)
 }

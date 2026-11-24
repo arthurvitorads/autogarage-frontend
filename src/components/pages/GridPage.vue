@@ -1,13 +1,17 @@
 <script setup lang="ts" generic="TRow extends object">
-import { computed, ref, shallowRef } from 'vue'
+import { computed, ref, shallowRef, useId } from 'vue'
 import DataTable, { type DataTablePageEvent } from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
+import Menu from 'primevue/menu'
+import type { MenuItem } from 'primevue/menuitem'
 
 import { useAppToast } from '@/services/toast.service'
 import { formatDateTime } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
+
+defineOptions({ inheritAttrs: false })
 
 const { normalizeError } = useUtilStore()
 const { showError } = useAppToast()
@@ -23,7 +27,6 @@ const props = defineProps<{
   }>
   items?: TRow[]
   tableMinWidth?: string
-  emptyMessage?: string
   isActionVisible?: (action: string, row: TRow) => boolean
   isActionDisabled?: (action: string, row: TRow) => boolean
   dataKey: string
@@ -47,6 +50,9 @@ const page = ref(1)
 const limit = ref(props.pageSize ?? 20)
 const total = ref(0)
 const loading = ref(false)
+const actionMenu = ref<InstanceType<typeof Menu>>()
+const actionMenuId = useId()
+const menuItems = shallowRef<MenuItem[]>([])
 const first = computed(() => (page.value - 1) * limit.value)
 let search = ''
 let requestId = 0
@@ -86,6 +92,21 @@ function columnStyle(column: (typeof props.columns)[number]) {
   return { width, minWidth: column.minWidth ?? width }
 }
 
+function visibleActions(row: TRow) {
+  return (props.actions ?? []).filter(({ action }) => props.isActionVisible?.(action, row) ?? true)
+}
+
+function openActions(event: MouseEvent, row: TRow) {
+  menuItems.value = visibleActions(row).map((item) => ({
+    label: item.label,
+    icon: item.icon,
+    disabled: loading.value || (props.isActionDisabled?.(item.action, row) ?? false),
+    class: item.severity === 'danger' ? 'text-red-600' : undefined,
+    command: () => emit('action', { action: item.action, data: row }),
+  }))
+  actionMenu.value?.toggle(event)
+}
+
 function changePage(event: DataTablePageEvent) {
   page.value = event.page + 1
   limit.value = event.rows
@@ -97,6 +118,7 @@ defineExpose({ loadGrid, loading, rows, total })
 
 <template>
   <DataTable
+    v-bind="$attrs"
     :value="items ?? rows"
     :loading="loading"
     :aria-busy="loading"
@@ -115,29 +137,27 @@ defineExpose({ loadGrid, loading, rows, total })
     currentPageReportTemplate="Total: {totalRecords}"
     @page="changePage"
   >
-    <template #empty>
-      <div v-if="!loading" class="text-center p-2">
-        {{ emptyMessage ?? 'Nenhum registro encontrado.' }}
-      </div>
-    </template>
-
     <template v-if="$slots.groupheader" #groupheader="{ data }">
       <slot name="groupheader" :data="data" />
     </template>
 
-    <Column v-if="actions?.length" :header="actionHeader ?? 'Ações'" style="width: 20px">
+    <Column
+      v-if="actions?.length"
+      :header="actionHeader ?? 'Ações'"
+      style="width: 5rem; min-width: 5rem"
+    >
       <template #body="{ data }">
         <Button
-          v-for="item in actions?.filter((item) => isActionVisible?.(item.action, data) ?? true)"
-          :key="item.action"
-          :icon="item.icon"
-          :aria-label="item.label"
-          :title="item.label"
-          :severity="item.severity === 'danger' ? 'danger' : 'secondary'"
-          :disabled="loading || isActionDisabled?.(item.action, data)"
+          v-if="visibleActions(data).length"
+          type="button"
+          icon="pi pi-ellipsis-v"
+          aria-label="Ações"
+          aria-haspopup="menu"
+          :aria-controls="actionMenuId"
+          :disabled="loading"
+          severity="secondary"
           text
-          rounded
-          @click="emit('action', { action: item.action, data })"
+          @click="openActions($event, data)"
         />
       </template>
     </Column>
@@ -161,4 +181,5 @@ defineExpose({ loadGrid, loading, rows, total })
       </template>
     </Column>
   </DataTable>
+  <Menu v-if="actions?.length" :id="actionMenuId" ref="actionMenu" :model="menuItems" popup />
 </template>

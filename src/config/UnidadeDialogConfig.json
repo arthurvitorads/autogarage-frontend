@@ -5,9 +5,7 @@
     },
     "ca_sigla": {
       "required": true,
-      "validators": [
-        "sigla"
-      ]
+      "validators": ["sigla"]
     }
   }
 }

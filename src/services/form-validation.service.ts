@@ -26,19 +26,25 @@ interface IFormValidator {
 }
 
 const validators = new Map<string, IFormValidator>([
-  ['senha', {
-    check: (value: string) => value.length >= 6 && value.length <= 128,
-    message: 'A senha deve conter entre 6 e 128 caracteres.',
-  }],
-  ['sigla', {
-    check: (value: string) => /^[A-Z0-9]{1,10}$/i.test(value),
-    message: 'Informe uma sigla com até 10 letras ou números.',
-  }],
+  [
+    'senha',
+    {
+      check: (value: string) => value.length >= 6 && value.length <= 128,
+      message: 'A senha deve conter entre 6 e 128 caracteres.',
+    },
+  ],
+  [
+    'sigla',
+    {
+      check: (value: string) => /^[A-Z0-9]{1,10}$/i.test(value),
+      message: 'Informe uma sigla com até 10 letras ou números.',
+    },
+  ],
   ['cpf', { check: validateCPF, message: 'Informe um CPF válido.' }],
   ['cnpj', { check: validateCNPJ, message: 'Informe um CNPJ válido.' }],
   ['email', { check: validateEmail, message: 'Informe um e-mail válido.' }],
   ['cep', { check: validateCep, message: 'Informe um CEP válido.' }],
-  ['telefone',{ check: validateTel, message: 'Informe um telefone com DDD (10 ou 11 dígitos).'}],
+  ['telefone', { check: validateTel, message: 'Informe um telefone com DDD (10 ou 11 dígitos).' }],
 ])
 
 function matchesConditions(conditions: TFieldConditions, values: Record<string, unknown>) {

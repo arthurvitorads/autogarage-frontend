@@ -70,7 +70,12 @@ async function onSubmit(values: IFormLogin) {
           @submit="onSubmit"
         >
           <FieldForm name="an_email" label="E-mail" v-slot="{ invalid, field }">
-            <InputText v-model="formData.an_email" :name="field" placeholder="Digite seu e-mail" :invalid="invalid" />
+            <InputText
+              v-model="formData.an_email"
+              :name="field"
+              placeholder="Digite seu e-mail"
+              :invalid="invalid"
+            />
           </FieldForm>
 
           <FieldForm name="ca_senha" label="Senha" v-slot="{ invalid, field }">

@@ -157,7 +157,8 @@ watch(
       </div>
       <div class="rounded-md border border-surface-200 p-5">
         <div class="grid grid-cols-3 gap-x-2">
-          <FieldForm compact
+          <FieldForm
+            compact
             class="m-[4px] col-span-2 min-w-0"
             name="an_descr"
             v-slot="{ invalid, field }"
@@ -174,11 +175,7 @@ watch(
               <label for="ClassificacaoOrdemServicoDialog-an_descr">Nome</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm compact
-            class="m-[4px] min-w-0"
-            name="ca_cor"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm compact class="m-[4px] min-w-0" name="ca_cor" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
               <InputText
                 id="ClassificacaoOrdemServicoDialog-ca_cor"
@@ -194,7 +191,8 @@ watch(
               <label for="ClassificacaoOrdemServicoDialog-ca_cor">Cor</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm compact
+          <FieldForm
+            compact
             class="m-[4px] col-span-full"
             name="bo_padrao"
             label="Padrão para novas ordens"
@@ -217,15 +215,17 @@ watch(
       scrollHeight="14rem"
       class="mt-4"
     >
-      <Column v-if="canWrite('CADASTROS')" header="Ações"
-        ><template #body="{ data }"
-          ><Button
+      <Column v-if="canWrite('CADASTROS')" header="Ações">
+        <template #body="{ data }">
+          <Button
             icon="pi pi-pencil"
             severity="secondary"
             text
             aria-label="Editar classificação"
-            @click="handleClassification(data.cn_classificacao_os)" /></template
-      ></Column>
+            @click="handleClassification(data.cn_classificacao_os)"
+          />
+        </template>
+      </Column>
       <Column field="an_descr" header="Descrição" />
       <Column header="Cor"
         ><template #body="{ data }"
@@ -237,7 +237,6 @@ watch(
       <Column header="Padrão"
         ><template #body="{ data }">{{ data.bo_padrao ? 'Sim' : 'Não' }}</template></Column
       >
-      <template #empty>Nenhuma classificação disponível.</template>
     </DataTable>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">

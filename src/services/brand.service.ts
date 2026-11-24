@@ -6,8 +6,5 @@ export function getBrandList() {
 }
 
 export function saveBrand(values: IManutMarca) {
-  return apiRequest<ICadMarca>(
-    '/marcas/manut',
-    values,
-  )
+  return apiRequest<ICadMarca>('/marcas/manut', values)
 }

@@ -160,7 +160,6 @@ watch(
         </template>
       </Column>
       <Column field="an_descr" header="Descrição" />
-      <template #empty>Nenhuma categoria de serviço disponível.</template>
     </DataTable>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">

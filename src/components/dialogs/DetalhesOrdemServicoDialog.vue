@@ -159,7 +159,6 @@ const classification = computed(() =>
           <Column header="Total" :bodyStyle="{ textAlign: 'end' }"
             ><template #body="{ data }">{{ formatOrderCurrency(data.vl_total) }}</template></Column
           >
-          <template #empty>Nenhum item cadastrado.</template>
         </DataTable>
         <p class="text-right font-bold mt-4">
           Total: {{ formatOrderCurrency(calculateOrderTotal(order.itens)) }}

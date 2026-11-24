@@ -127,7 +127,8 @@ watch(
       </div>
       <div class="rounded-md border border-surface-200 p-5">
         <div class="grid grid-cols-3 gap-x-2">
-          <FieldForm compact
+          <FieldForm
+            compact
             class="m-[4px] col-span-2 min-w-0"
             name="an_descr"
             v-slot="{ invalid, field }"
@@ -144,11 +145,7 @@ watch(
               <label for="UnidadeDialog-an_descr">Descrição</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm compact
-            class="m-[4px] min-w-0"
-            name="ca_sigla"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm compact class="m-[4px] min-w-0" name="ca_sigla" v-slot="{ invalid, field }">
             <FloatLabel variant="on">
               <InputText
                 id="UnidadeDialog-ca_sigla"
@@ -185,7 +182,6 @@ watch(
       </Column>
       <Column field="an_descr" header="Descrição" />
       <Column field="ca_sigla" header="Sigla" />
-      <template #empty>Nenhuma unidade disponível.</template>
     </DataTable>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">

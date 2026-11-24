@@ -100,8 +100,7 @@ const estadosData = ref<IEndEstado[]>([])
 const isEditing = computed(() => !!props.pessoa)
 
 const selectedCategories = computed({
-  get: () =>
-    personCategories.filter(({ value }) => formData[value]).map(({ value }) => value),
+  get: () => personCategories.filter(({ value }) => formData[value]).map(({ value }) => value),
   set: (values: TPersonCategory[]) => {
     for (const { value } of personCategories) formData[value] = values.includes(value)
   },
@@ -256,7 +255,6 @@ async function onSubmit(values: IFormPessoa) {
 watch(
   [() => props.visible, () => props.pessoa],
   ([visible, person]) => {
-
     if (!visible) return
 
     Object.assign(formData, formDataDefault())

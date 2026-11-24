@@ -3,10 +3,7 @@ import type { IManutProduto } from '@/interface/pages/ProdutoPage'
 import { apiPage, apiRequest } from '@/services/api.service'
 
 export function saveProduct(values: IManutProduto) {
-  return apiRequest<IAdmProduto>(
-    '/produtos/manut',
-    values,
-  )
+  return apiRequest<IAdmProduto>('/produtos/manut', values)
 }
 
 export function getProductsPage(

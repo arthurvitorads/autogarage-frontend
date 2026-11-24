@@ -1,6 +1,6 @@
 {
   "dataKey": "cn_pessoa",
-  "actionHeader": "Editar",
+  "actionHeader": "Ações",
   "actions": [
     {
       "action": "edit",

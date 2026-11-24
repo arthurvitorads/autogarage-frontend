@@ -125,12 +125,7 @@ function updateSale(sale: { cn_venda: string }) {
         <p class="text-surface-500 mt-1">{{ total }} ordem(ns)</p>
       </div>
       <div class="flex flex-wrap gap-2">
-        <Button
-          v-if="canWrite('ORDEM_SERVICO')"
-          label="Novo"
-          icon="pi pi-plus"
-          @click="newOrder"
-        />
+        <Button v-if="canWrite('ORDEM_SERVICO')" label="Novo" icon="pi pi-plus" @click="newOrder" />
       </div>
     </div>
     <div class="flex flex-wrap items-end gap-3">

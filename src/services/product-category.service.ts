@@ -1,4 +1,7 @@
-import type { ICadCategoriaProduto, IManutCategoriaProduto } from '@/interface/pages/CategoriaProduto'
+import type {
+  ICadCategoriaProduto,
+  IManutCategoriaProduto,
+} from '@/interface/pages/CategoriaProduto'
 import { apiRequest } from '@/services/api.service'
 
 export function getProductCategoryList() {
@@ -6,8 +9,5 @@ export function getProductCategoryList() {
 }
 
 export function saveProductCategory(values: IManutCategoriaProduto) {
-  return apiRequest<ICadCategoriaProduto>(
-    '/categoriasProduto/manut',
-    values,
-  )
+  return apiRequest<ICadCategoriaProduto>('/categoriasProduto/manut', values)
 }

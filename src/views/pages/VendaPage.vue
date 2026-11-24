@@ -85,12 +85,7 @@ function onGridAction({ action, data }: { action: string; data: IAdmVenda }) {
             @click="grid?.loadGrid(filter.trim())"
           />
         </div>
-        <Button
-          v-if="canWrite('FATURAMENTO')"
-          label="Novo"
-          icon="pi pi-plus"
-          @click="newSale"
-        />
+        <Button v-if="canWrite('FATURAMENTO')" label="Novo" icon="pi pi-plus" @click="newSale" />
       </div>
       <div class="flex-1 min-h-0 min-w-0 mx-2">
         <GridPage

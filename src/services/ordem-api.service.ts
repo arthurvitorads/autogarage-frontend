@@ -35,35 +35,28 @@ export function getOrderEmployees() {
 }
 
 export function lookupOrderPlate(plate: string) {
-  return apiRequest<Pick<IServiceOrderVehicle, 'an_marca' | 'an_modelo' | 'nu_ano' | 'an_cor'> | null>(
-    '/ordensServico/consultar-placa',
-    { an_placa: plate },
-  )
+  return apiRequest<Pick<
+    IServiceOrderVehicle,
+    'an_marca' | 'an_modelo' | 'nu_ano' | 'an_cor'
+  > | null>('/ordensServico/consultar-placa', { an_placa: plate })
 }
 
 export function getOrderEvidences(id: TServiceOrderCode) {
-  return apiRequest<IServiceOrderEvidence[]>('/ordensServico/evidencias/view', { cn_ordem_servico: id })
+  return apiRequest<IServiceOrderEvidence[]>('/ordensServico/evidencias/view', {
+    cn_ordem_servico: id,
+  })
 }
 
 export function saveOrder(values: IManutOrdemServico) {
-  return apiRequest<IAdmOrdemServico>(
-    '/ordensServico/manut',
-    values,
-  )
+  return apiRequest<IAdmOrdemServico>('/ordensServico/manut', values)
 }
 
 export function saveClassification(values: IManutClassificacaoOrdemServico) {
-  return apiRequest<IClassificacaoOrdemServico>(
-    '/classificacoesOrdens/manut',
-    values,
-  )
+  return apiRequest<IClassificacaoOrdemServico>('/classificacoesOrdens/manut', values)
 }
 
 export function saveItem(values: TManutItemOrdemServico) {
-  return apiRequest<TItemOrdemServico>(
-    '/ordensServico/itens/manut',
-    values,
-  )
+  return apiRequest<TItemOrdemServico>('/ordensServico/itens/manut', values)
 }
 
 export function removeItem(orderId: TServiceOrderCode, itemId: TServiceOrderCode) {

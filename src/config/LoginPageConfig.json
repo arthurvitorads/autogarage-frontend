@@ -2,9 +2,7 @@
   "fields": {
     "an_email": {
       "required": true,
-      "validators": [
-        "email"
-      ]
+      "validators": ["email"]
     },
     "ca_senha": {
       "trim": false,

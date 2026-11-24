@@ -3,10 +3,7 @@ import type { IManutServico } from '@/interface/pages/ServicoPage'
 import { apiPage, apiRequest } from '@/services/api.service'
 
 export function saveService(values: IManutServico) {
-  return apiRequest<IAdmServico>(
-    '/servicos/manut',
-    values,
-  )
+  return apiRequest<IAdmServico>('/servicos/manut', values)
 }
 
 export function getServicesPage(
