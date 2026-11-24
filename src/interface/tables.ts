@@ -14,6 +14,9 @@ export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServ
 }
 
 export interface IAdmOrdemServico extends IManutOrdemServico {
+  an_responsavel: string
+  dt_inc: string
+  dt_alt: string
   cn_venda: string | null
   ca_status: TServiceOrderStatus
   an_motivo_cancelamento: string

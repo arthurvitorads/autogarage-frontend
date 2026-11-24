@@ -10,7 +10,6 @@ import GridPage from '@/components/pages/GridPage.vue'
 import ManutUserDialog from '@/components/dialogs/ManutUserDialog.vue'
 
 import { getUsers } from '@/services/user.service'
-import { formatDateTime } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -85,12 +84,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmUsuario }) {
               :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
               :severity="data.bo_sts_reg ? 'success' : 'danger'"
             />
-          </template>
-          <template #cell-dt_inc="{ data }">
-            <span>{{ formatDateTime(data.dt_inc) }}</span>
-          </template>
-          <template #cell-dt_alt="{ data }">
-            <span>{{ formatDateTime(data.dt_alt) }}</span>
           </template>
         </GridPage>
       </div>

@@ -20,8 +20,8 @@
     {
       "field": "cn_usuario",
       "header": "Código",
-      "align": "end",
-      "width": 120
+      "align": "right",
+      "width": 72
     },
     {
       "field": "an_nome",
@@ -46,12 +46,12 @@
     {
       "field": "dt_inc",
       "header": "Dt. inclusão",
-      "width": 200
+      "width": 160
     },
     {
       "field": "dt_alt",
       "header": "Dt. alteração",
-      "width": 200
+      "width": 160
     }
   ],
   "actionHeader": "Ações",

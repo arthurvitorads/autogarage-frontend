@@ -4,10 +4,9 @@ import FloatLabel from 'primevue/floatlabel'
 import { OrderClassificationModel } from '@/models/order-classification.model'
 import type { IFormPageRef } from '@/interface/util'
 import type { IDialogProps } from '@/interface/dialog'
-import { computed, reactive, ref, watch } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
-import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -26,7 +25,6 @@ import type {
 } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
 
-import { corTextoStatus as statusTextColor } from '@/services/ordem-servico.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
@@ -44,7 +42,7 @@ const { normalizeError, setLoading, canWrite } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
 const { showSuccess, showError } = useAppToast()
 const selectClassification = ref<TServiceOrderCode | null>(null)
-const isEditing = computed(() => selectClassification.value !== null)
+const loadingGrid = ref(false)
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
@@ -70,8 +68,8 @@ function loadClassification() {
   formKey.value++
 }
 
-function newClassification() {
-  selectClassification.value = null
+function handleClassification(code: TServiceOrderCode | null) {
+  selectClassification.value = code
   loadClassification()
 }
 
@@ -106,17 +104,20 @@ async function onSubmit(values: IFormClassificacaoOrdemServico) {
   }
 }
 
-watch(selectClassification, loadClassification)
 watch(
   () => props.visible,
   async (visible) => {
-    if (visible) {
-      try {
-        await orderStore.loadParametros()
-        newClassification()
-      } catch (error) {
-        showError(normalizeError(error))
-      }
+    if (!visible) return
+
+    handleClassification(null)
+    loadingGrid.value = true
+    try {
+      await orderStore.loadParametros()
+      if (props.visible) handleClassification(null)
+    } catch (error) {
+      showError(normalizeError(error))
+    } finally {
+      loadingGrid.value = false
     }
   },
   { immediate: true },
@@ -127,36 +128,10 @@ watch(
   <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Classificações da O.S.' : 'Classificações da O.S.'"
+    header="Classificações da O.S."
     modal
     :style="{ width: '48rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
-    <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
-      <Button label="Novo" icon="pi pi-plus" @click="newClassification" />
-    </div>
-    <DataTable :value="classifications" size="small" scrollable scrollHeight="14rem" class="mb-4">
-      <Column v-if="canWrite('CADASTROS')" header="Ações"
-        ><template #body="{ data }"
-          ><Button
-            icon="pi pi-pencil"
-            severity="secondary"
-            text
-            aria-label="Editar classificação"
-            @click="selectClassification = data.cn_classificacao_os" /></template
-      ></Column>
-      <Column field="an_descr" header="Descrição" />
-      <Column header="Cor"
-        ><template #body="{ data }"
-          ><span
-            class="inline-block w-5 h-5 rounded"
-            :style="{ background: data.ca_cor }"
-          ></span></template
-      ></Column>
-      <Column header="Padrão"
-        ><template #body="{ data }">{{ data.bo_padrao ? 'Sim' : 'Não' }}</template></Column
-      >
-      <template #empty>Nenhuma classificação disponível.</template>
-    </DataTable>
     <FormPage
       v-if="canWrite('CADASTROS')"
       ref="formRef"
@@ -169,10 +144,21 @@ watch(
       :validate="validateForm"
       @submit="onSubmit"
     >
-      <Fieldset legend="Dados da classificação">
-        <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-9"
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <h3 class="font-semibold">Dados da classificação</h3>
+        <Button
+          type="button"
+          icon="pi pi-plus"
+          aria-label="Limpar formulário"
+          title="Limpar formulário"
+          :disabled="loading || loadingGrid"
+          @click="handleClassification(null)"
+        />
+      </div>
+      <div class="rounded-md border border-surface-200 p-5">
+        <div class="grid grid-cols-3 gap-x-2">
+          <FieldForm compact
+            class="m-[4px] col-span-2 min-w-0"
             name="an_descr"
             v-slot="{ invalid, field }"
           >
@@ -185,11 +171,11 @@ watch(
                 :invalid="invalid"
                 fluid
               />
-              <label for="ClassificacaoOrdemServicoDialog-an_descr">Nome *</label>
+              <label for="ClassificacaoOrdemServicoDialog-an_descr">Nome</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-3"
+          <FieldForm compact
+            class="m-[4px] min-w-0"
             name="ca_cor"
             v-slot="{ invalid, field }"
           >
@@ -205,11 +191,11 @@ watch(
                 class="h-10"
                 aria-label="Cor da classificação"
               />
-              <label for="ClassificacaoOrdemServicoDialog-ca_cor">Cor *</label>
+              <label for="ClassificacaoOrdemServicoDialog-ca_cor">Cor</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12"
+          <FieldForm compact
+            class="m-[4px] col-span-full"
             name="bo_padrao"
             label="Padrão para novas ordens"
             v-slot="{ field }"
@@ -220,28 +206,52 @@ watch(
               aria-label="Usar como classificação padrão em novas ordens"
             />
           </FieldForm>
-          <div class="col-span-12 mt-2">
-            <span
-              class="inline-flex rounded-full px-3 py-1 font-semibold"
-              :style="{ backgroundColor: formData.ca_cor, color: statusTextColor(formData.ca_cor) }"
-              >{{ formData.an_descr || 'Prévia da classificação' }}</span
-            >
-          </div>
         </div>
-      </Fieldset>
+      </div>
     </FormPage>
+    <DataTable
+      :value="classifications"
+      :loading="loadingGrid"
+      size="small"
+      scrollable
+      scrollHeight="14rem"
+      class="mt-4"
+    >
+      <Column v-if="canWrite('CADASTROS')" header="Ações"
+        ><template #body="{ data }"
+          ><Button
+            icon="pi pi-pencil"
+            severity="secondary"
+            text
+            aria-label="Editar classificação"
+            @click="handleClassification(data.cn_classificacao_os)" /></template
+      ></Column>
+      <Column field="an_descr" header="Descrição" />
+      <Column header="Cor"
+        ><template #body="{ data }"
+          ><span
+            class="inline-block w-5 h-5 rounded"
+            :style="{ background: data.ca_cor }"
+          ></span></template
+      ></Column>
+      <Column header="Padrão"
+        ><template #body="{ data }">{{ data.bo_padrao ? 'Sim' : 'Não' }}</template></Column
+      >
+      <template #empty>Nenhuma classificação disponível.</template>
+    </DataTable>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
         <Button
           type="button"
           label="Cancelar"
           severity="secondary"
+          :disabled="loading"
           @click="emit('update:visible', false)"
         />
         <Button
           type="button"
           label="Gravar"
-          :disabled="loading"
+          :disabled="loading || loadingGrid"
           :loading="loading"
           @click="formRef?.submit()"
         />

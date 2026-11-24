@@ -24,8 +24,8 @@
     {
       "field": "cn_produto",
       "header": "Código",
-      "align": "end",
-      "width": 120
+      "align": "right",
+      "width": 72
     },
     {
       "field": "an_nome",
@@ -78,6 +78,16 @@
       "field": "bo_sts_reg",
       "header": "Status",
       "width": 120
+    },
+    {
+      "field": "dt_inc",
+      "header": "Dt. inclusão",
+      "width": 160
+    },
+    {
+      "field": "dt_alt",
+      "header": "Dt. alteração",
+      "width": 160
     }
   ],
   "actionHeader": "Ações",

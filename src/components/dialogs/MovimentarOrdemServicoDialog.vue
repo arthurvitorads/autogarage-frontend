@@ -105,7 +105,7 @@ async function confirmAction(values: IMoveOrderForm) {
             :disabled="loading"
             fluid
           />
-          <label for="os-motivo-cancelamento">Motivo do cancelamento *</label>
+          <label for="os-motivo-cancelamento">Motivo do cancelamento</label>
         </FloatLabel>
       </FieldForm>
     </FormPage>

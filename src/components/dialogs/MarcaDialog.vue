@@ -9,7 +9,6 @@ import Dialog from 'primevue/dialog'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import Button from 'primevue/button'
-import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
 
 import FormPage from '@/components/pages/FormPage.vue'
@@ -76,6 +75,7 @@ watch(
     if (!visible) return
 
     handleMarca(null)
+
     loadingGrid.value = true
     try {
       await catalogStore.loadBrandList()
@@ -97,16 +97,53 @@ watch(
     modal
     :style="{ width: '42rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
-    <div v-if="canWrite('CADASTROS')" class="flex justify-end mb-3">
-      <Button label="Nova marca" icon="pi pi-plus" @click="handleMarca(null)" />
-    </div>
+    <FormPage
+      v-if="canWrite('CADASTROS')"
+      ref="formRef"
+      :key="formKey"
+      novalidate
+      v-model:errors="formErrors"
+      :initialValues="formData"
+      :modelValues="formData"
+      :fields="config.fields"
+      @submit="onSubmit"
+    >
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <h3 class="font-semibold">Dados da marca</h3>
+        <Button
+          type="button"
+          icon="pi pi-plus"
+          aria-label="Limpar formulário"
+          title="Limpar formulário"
+          :disabled="loading || loadingGrid"
+          @click="handleMarca(null)"
+        />
+      </div>
+      <div class="rounded-md border border-surface-200 p-5">
+        <div class="grid grid-cols-1 gap-x-2">
+          <FieldForm compact class="m-[4px] min-w-0" name="an_descr" v-slot="{ invalid, field }">
+            <FloatLabel variant="on">
+              <InputText
+                id="MarcaDialog-an_descr"
+                maxlength="4000"
+                v-model="formData.an_descr"
+                :name="field"
+                :invalid="invalid"
+                fluid
+              />
+              <label for="MarcaDialog-an_descr">Descrição</label>
+            </FloatLabel>
+          </FieldForm>
+        </div>
+      </div>
+    </FormPage>
     <DataTable
       :value="records"
       :loading="loadingGrid"
       size="small"
       scrollable
       scrollHeight="14rem"
-      class="mb-4"
+      class="mt-4"
     >
       <Column v-if="canWrite('CADASTROS')" header="Ações">
         <template #body="{ data }">
@@ -122,45 +159,13 @@ watch(
       <Column field="an_descr" header="Descrição" />
       <template #empty>Nenhuma marca disponível.</template>
     </DataTable>
-    <p v-if="canWrite('CADASTROS')" class="font-semibold mb-3">
-      {{ selectedBrand ? 'Editar marca' : 'Nova marca' }}
-    </p>
-    <FormPage
-      v-if="canWrite('CADASTROS')"
-      ref="formRef"
-      :key="formKey"
-      novalidate
-      class="flex flex-col gap-4"
-      v-model:errors="formErrors"
-      :initialValues="formData"
-      :modelValues="formData"
-      :fields="config.fields"
-      @submit="onSubmit"
-    >
-      <Fieldset legend="Dados da marca">
-        <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm class="m-[4px] col-span-12" name="an_descr" v-slot="{ invalid, field }">
-            <FloatLabel variant="on">
-              <InputText
-                id="MarcaDialog-an_descr"
-                maxlength="4000"
-                v-model="formData.an_descr"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
-              <label for="MarcaDialog-an_descr">Descrição *</label>
-            </FloatLabel>
-          </FieldForm>
-        </div>
-      </Fieldset>
-    </FormPage>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
         <Button
           type="button"
           label="Cancelar"
           severity="secondary"
+          :disabled="loading"
           @click="emit('update:visible', false)"
         />
         <Button

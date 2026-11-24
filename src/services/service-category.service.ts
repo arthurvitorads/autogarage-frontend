@@ -2,12 +2,12 @@ import type { ICadCategoriaServico, IManutCategoriaServico } from '@/interface/p
 import { apiRequest } from '@/services/api.service'
 
 export function getServiceCategoryList() {
-  return apiRequest<ICadCategoriaServico[]>('/categoriasServico/listar')
+  return apiRequest<ICadCategoriaServico[]>('/categoriasServico/view')
 }
 
 export function saveServiceCategory(values: IManutCategoriaServico) {
   return apiRequest<ICadCategoriaServico>(
-    values.cn_categoria_servico === undefined ? '/categoriasServico' : '/categoriasServico/atualizar',
+    '/categoriasServico/manut',
     values,
   )
 }

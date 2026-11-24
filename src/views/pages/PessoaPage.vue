@@ -13,7 +13,7 @@ import { IGridActionEvent } from '@/interface/util'
 import type { ICadPessoa } from '@/interface/tables'
 
 import { getPeople } from '@/services/person.service'
-import { maskCpf, maskCnpj, maskTelefone, formatDateTime } from '@/services/util.service'
+import { maskCpf, maskCnpj, maskTelefone } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -105,8 +105,6 @@ onMounted(() => {
               :severity="data.bo_sts_reg ? 'success' : 'danger'"
             />
           </template>
-          <template #cell-dt_inc="{ data }">{{ formatDateTime(data.dt_inc) }}</template>
-          <template #cell-dt_alt="{ data }">{{ formatDateTime(data.dt_alt) }}</template>
         </GridPage>
       </div>
     </div>

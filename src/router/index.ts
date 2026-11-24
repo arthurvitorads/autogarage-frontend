@@ -16,7 +16,6 @@ import OrdemServicoPainelPage from '@/views/pages/OsPainelPage.vue'
 import OrdemServicoDetalhePage from '@/views/pages/OsDetalhesPage.vue'
 
 import { auth } from '@/services/firebase.service'
-import { isFirstLogin } from '@/services/auth.service'
 import { getInitialMe } from '@/services/user.service'
 
 import { useUtilStore } from '@/stores/util.store'
@@ -159,7 +158,7 @@ router.beforeEach(async (to) => {
     }
 
     try {
-      if (!isFirstLogin() || !utilStore.user) await getInitialMe()
+      if (!utilStore.user) await getInitialMe()
       if (to.meta.module && !utilStore.canRead(to.meta.module)) return { name: 'home' }
       return true
     } catch (error) {

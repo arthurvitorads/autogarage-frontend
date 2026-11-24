@@ -9,18 +9,18 @@ export function getProfileAccess(id: string | number) {
 }
 
 export function saveProfileAccess(id: string | number, access: TModuleAccess) {
-  return apiRequest<TModuleAccess>('/perfil/acessos/atualizar', {
+  return apiRequest<TModuleAccess>('/perfil/acessos/manut', {
     cn_perfil: id,
     acessos: access,
   })
 }
 
 export function getProfiles(page = 1, limit = 20, search = '') {
-  return apiPage<IAdmPerfil>('/perfil/listar', page, limit, search)
+  return apiPage<IAdmPerfil>('/perfil/view', page, limit, search)
 }
 
 export function updateProfile(id: string | number, values: IFormPerfil) {
-  return apiRequest<IAdmPerfil>('/perfil/atualizar', {
+  return apiRequest<IAdmPerfil>('/perfil/manut', {
     cn_perfil: String(id),
     an_descr: values.an_descr.trim(),
     bo_sts_reg: values.bo_sts_reg,
@@ -28,7 +28,7 @@ export function updateProfile(id: string | number, values: IFormPerfil) {
 }
 
 export function createProfile(values: IFormPerfil) {
-  return apiRequest<IAdmPerfil>('/perfil', {
+  return apiRequest<IAdmPerfil>('/perfil/manut', {
     an_descr: values.an_descr.trim(),
     bo_sts_reg: values.bo_sts_reg,
   })

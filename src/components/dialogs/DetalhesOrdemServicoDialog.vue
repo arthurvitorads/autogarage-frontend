@@ -8,6 +8,7 @@ import TempoServicoItem from '@/components/field/TempoServicoItem.vue'
 import { storeToRefs } from 'pinia'
 import Dialog from 'primevue/dialog'
 import Fieldset from 'primevue/fieldset'
+import OrdemInformacoes from '@/components/pages/OrdemInformacoes.vue'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
@@ -164,11 +165,13 @@ const classification = computed(() =>
           Total: {{ formatOrderCurrency(calculateOrderTotal(order.itens)) }}
         </p>
       </Fieldset>
-      <Fieldset legend="Observações">
-        <p class="text-surface-500">Solicitação do cliente</p>
-        <p class="whitespace-pre-wrap break-words mb-3">{{ order.an_solicitacao }}</p>
-        <p class="text-surface-500">Observações internas</p>
-        <p class="whitespace-pre-wrap break-words">{{ order.an_obs }}</p>
+      <Fieldset legend="Informações">
+        <OrdemInformacoes :orderId="order.cn_ordem_servico" :visible="visible">
+          <p class="text-surface-500">Solicitação do cliente</p>
+          <p class="whitespace-pre-wrap break-words mb-3">{{ order.an_solicitacao }}</p>
+          <p class="text-surface-500">Observações internas</p>
+          <p class="whitespace-pre-wrap break-words">{{ order.an_obs }}</p>
+        </OrdemInformacoes>
       </Fieldset>
     </div>
     <template #footer>

@@ -168,7 +168,7 @@ watch(
                 :invalid="invalid"
                 fluid
               />
-              <label for="ManutServicoDialog-an_nome">Nome *</label>
+              <label for="ManutServicoDialog-an_nome">Nome</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-2" name="bo_sts_reg">
@@ -219,7 +219,7 @@ watch(
                 :max="999999999.99"
                 :min="0"
               />
-              <label for="ManutServicoDialog-vl_preco">Preço do serviço *</label>
+              <label for="ManutServicoDialog-vl_preco">Preço do serviço</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm

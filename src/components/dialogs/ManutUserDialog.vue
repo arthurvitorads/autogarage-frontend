@@ -165,7 +165,7 @@ watch(
             <DomainField
               v-model="formData.cn_perfil"
               :name="field"
-              endpoint="/paramPerfil"
+              endpoint="/perfil/domain"
               :invalid="invalid"
             />
           </FieldForm>

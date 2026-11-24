@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 import { signInWithEmailAndPassword, signOut } from 'firebase/auth'
 
 import { auth } from '@/services/firebase.service'
@@ -8,21 +6,6 @@ import { useUtilStore } from '@/stores/util.store'
 import { IFormLogin, IMeUser } from '@/interface/pages/LoginPage'
 
 import { getInitialMe } from './user.service'
-
-const firstLogin = ref(false)
-
-export function handleFirstLogin() {
-  firstLogin.value = true
-}
-
-export function isFirstLogin(): boolean {
-  if (firstLogin.value) {
-    firstLogin.value = false
-    return true
-  }
-
-  return false
-}
 
 function normalizeError(error: unknown): string {
   const code = (error as { code?: string })?.code
@@ -49,9 +32,7 @@ export async function login(value: IFormLogin): Promise<IMeUser> {
   try {
     await signInWithEmailAndPassword(auth, value.an_email.trim(), value.ca_senha)
 
-    const user = await getInitialMe()
-    handleFirstLogin()
-    return user
+    return await getInitialMe(true)
   } catch (erro) {
     utilStore.cleanUser()
 

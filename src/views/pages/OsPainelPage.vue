@@ -17,7 +17,6 @@ import Button from 'primevue/button'
 import Paginator from 'primevue/paginator'
 
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
-import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 
 import type { TServiceOrderCode } from '@/interface/pages/OrdemServicoPage'
 
@@ -34,7 +33,7 @@ import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-ser
 import { useUtilStore } from '@/stores/util.store'
 
 const router = useRouter()
-const { canRead, canWrite } = useUtilStore()
+const { canWrite } = useUtilStore()
 const { inicio: start, fim: end, status } = router.options.history.state
 const dates = ref<(Date | null)[]>(currentMonthDates())
 if (typeof start === 'string' && typeof end === 'string') {
@@ -75,7 +74,6 @@ const {
 )
 
 const manutOrderVisible = ref(false)
-const classificationDialogVisible = ref(false)
 const selectOrder = ref<IAdmOrdemServico | null>(null)
 const movementOrder = ref<IAdmOrdemServico | null>(null)
 const orderMovementVisible = ref(false)
@@ -128,15 +126,8 @@ function updateSale(sale: { cn_venda: string }) {
       </div>
       <div class="flex flex-wrap gap-2">
         <Button
-          v-if="canRead('CADASTROS')"
-          label="Classificações"
-          icon="pi pi-cog"
-          severity="secondary"
-          @click="classificationDialogVisible = true"
-        />
-        <Button
           v-if="canWrite('ORDEM_SERVICO')"
-          label="Nova O.S."
+          label="Novo"
           icon="pi pi-plus"
           @click="newOrder"
         />
@@ -188,7 +179,7 @@ function updateSale(sale: { cn_venda: string }) {
         :style="{ borderLeftColor: getOrderStatus(order.ca_status).cor ?? '#64748b' }"
       >
         <div class="flex flex-wrap items-start justify-between gap-2">
-          <span class="font-semibold text-surface-500"
+          <span class="text-sm font-semibold text-surface-500"
             >O.S. #{{ String(order.nu_numero).padStart(6, '0') }}</span
           >
           <span
@@ -221,6 +212,14 @@ function updateSale(sale: { cn_venda: string }) {
           <div>
             <p class="text-surface-500 mb-1">Previsão</p>
             <p>{{ formatDateTime(order.dt_previsao) }}</p>
+          </div>
+          <div>
+            <p class="text-surface-500 mb-1">Dt. inclusão</p>
+            <p>{{ formatDateTime(order.dt_inc) }}</p>
+          </div>
+          <div>
+            <p class="text-surface-500 mb-1">Dt. alteração</p>
+            <p>{{ formatDateTime(order.dt_alt) }}</p>
           </div>
         </div>
         <div
@@ -265,7 +264,6 @@ function updateSale(sale: { cn_venda: string }) {
     />
   </div>
   <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="selectOrder" @saved="load" />
-  <ClassificacaoOrdemServicoDialog v-model:visible="classificationDialogVisible" />
   <MovimentarOrdemServicoDialog
     v-model:visible="orderMovementVisible"
     :order="movementOrder"

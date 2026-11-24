@@ -245,7 +245,7 @@ watch(
                 @change="loadPrice"
               />
               <label :for="'ItemOrdemServicoDialog-' + referenceField">{{
-                formData.ca_tipo === 'PRODUTO' ? 'Produto *' : 'Serviço *'
+                formData.ca_tipo === 'PRODUTO' ? 'Produto' : 'Serviço'
               }}</label>
             </FloatLabel>
           </FieldForm>
@@ -278,7 +278,7 @@ watch(
                 locale="pt-BR"
                 fluid
               />
-              <label for="ItemOrdemServicoDialog-qt_quantidade">Quantidade *</label>
+              <label for="ItemOrdemServicoDialog-qt_quantidade">Quantidade</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm
@@ -299,7 +299,7 @@ watch(
                 locale="pt-BR"
                 fluid
               />
-              <label for="ItemOrdemServicoDialog-vl_unitario">Preço unitário *</label>
+              <label for="ItemOrdemServicoDialog-vl_unitario">Preço unitário</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="vl_total">

@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 
 import Fieldset from 'primevue/fieldset'
+import OrdemInformacoes from '@/components/pages/OrdemInformacoes.vue'
 import Button from 'primevue/button'
 import Tag from 'primevue/tag'
 
@@ -196,6 +197,14 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
           <dt class="text-surface-500">Responsável</dt>
           <dd class="mt-1">{{ order.an_responsavel }}</dd>
         </div>
+        <div>
+          <dt class="text-surface-500">Dt. inclusão</dt>
+          <dd class="mt-1">{{ formatDateTime(order.dt_inc) }}</dd>
+        </div>
+        <div>
+          <dt class="text-surface-500">Dt. alteração</dt>
+          <dd class="mt-1">{{ formatDateTime(order.dt_alt) }}</dd>
+        </div>
       </dl>
     </Fieldset>
     <Fieldset legend="Dados do veículo">
@@ -286,17 +295,19 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
         </div>
       </div>
     </Fieldset>
-    <Fieldset legend="Observações">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <p class="text-surface-500 mb-2">Solicitação do cliente</p>
-          <p class="whitespace-pre-wrap break-words">{{ order.an_solicitacao }}</p>
+    <Fieldset legend="Informações">
+      <OrdemInformacoes :orderId="order.cn_ordem_servico">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <p class="text-surface-500 mb-2">Solicitação do cliente</p>
+            <p class="whitespace-pre-wrap break-words">{{ order.an_solicitacao }}</p>
+          </div>
+          <div>
+            <p class="text-surface-500 mb-2">Observações internas</p>
+            <p class="whitespace-pre-wrap break-words">{{ order.an_obs }}</p>
+          </div>
         </div>
-        <div>
-          <p class="text-surface-500 mb-2">Observações internas</p>
-          <p class="whitespace-pre-wrap break-words">{{ order.an_obs }}</p>
-        </div>
-      </div>
+      </OrdemInformacoes>
     </Fieldset>
     <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="order" />
     <ItemOrdemServicoDialog

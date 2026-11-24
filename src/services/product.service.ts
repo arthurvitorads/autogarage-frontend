@@ -4,7 +4,7 @@ import { apiPage, apiRequest } from '@/services/api.service'
 
 export function saveProduct(values: IManutProduto) {
   return apiRequest<IAdmProduto>(
-    values.cn_produto === undefined ? '/produtos' : '/produtos/atualizar',
+    '/produtos/manut',
     values,
   )
 }
@@ -15,5 +15,5 @@ export function getProductsPage(
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmProduto>('/produtos/listar', page, limit, search, filters)
+  return apiPage<IAdmProduto>('/produtos/view', page, limit, search, filters)
 }

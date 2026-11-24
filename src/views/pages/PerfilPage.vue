@@ -10,7 +10,6 @@ import GridPage from '@/components/pages/GridPage.vue'
 import ManutPerfilDialog from '@/components/dialogs/ManutPerfilDialog.vue'
 import PerfilAcessosDialog from '@/components/dialogs/PerfilAcessosDialog.vue'
 
-import { formatDateTime } from '@/services/util.service'
 import { getProfiles } from '@/services/perfil.service'
 
 import { useUtilStore } from '@/stores/util.store'
@@ -99,12 +98,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmPerfil }) {
               :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
               :severity="data.bo_sts_reg ? 'success' : 'danger'"
             />
-          </template>
-          <template #cell-dt_inc="{ data }">
-            <span>{{ formatDateTime(data.dt_inc) }}</span>
-          </template>
-          <template #cell-dt_alt="{ data }">
-            <span>{{ formatDateTime(data.dt_alt) }}</span>
           </template>
         </GridPage>
       </div>

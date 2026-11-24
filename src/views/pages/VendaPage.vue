@@ -87,7 +87,7 @@ function onGridAction({ action, data }: { action: string; data: IAdmVenda }) {
         </div>
         <Button
           v-if="canWrite('FATURAMENTO')"
-          label="Nova venda"
+          label="Novo"
           icon="pi pi-plus"
           @click="newSale"
         />

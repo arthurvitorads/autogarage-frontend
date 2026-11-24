@@ -12,8 +12,8 @@
     {
       "field": "cn_pessoa",
       "header": "Código",
-      "align": "end",
-      "width": 50
+      "align": "right",
+      "width": 72
     },
     {
       "field": "an_nome",
@@ -48,12 +48,12 @@
     {
       "field": "dt_inc",
       "header": "Dt. inclusão",
-      "width": 140
+      "width": 160
     },
     {
       "field": "dt_alt",
       "header": "Dt. alteração",
-      "width": 140
+      "width": 160
     }
   ],
   "fields": {

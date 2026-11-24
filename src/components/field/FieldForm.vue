@@ -6,6 +6,7 @@ import { FORM_ERRORS_KEY, FORM_REQUIRED_KEY } from '@/constants/FormContext'
 const props = defineProps<{
   name: string
   label?: string
+  compact?: boolean
 }>()
 
 const errors = inject(FORM_ERRORS_KEY)
@@ -21,7 +22,7 @@ const required = computed(() => isRequired?.(props.name) ?? false)
 
     <slot :invalid="invalid" :field="name" :required="required" />
 
-    <div class="min-h-5">
+    <div v-if="error || !compact" :class="{ 'min-h-5': !compact }">
       <Message v-if="error" severity="error" size="small" variant="simple">
         {{ error }}
       </Message>

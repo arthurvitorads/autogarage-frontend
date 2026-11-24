@@ -3,7 +3,7 @@ import { apiList, apiPage, apiRequest } from '@/services/api.service'
 import type { IManutVenda, TBillableOrder, TSaleCustomer } from '@/interface/pages/VendaPage'
 
 export function getBillableOrders() {
-  return apiList<TBillableOrder>('/faturamento/ordens/listar')
+  return apiList<TBillableOrder>('/faturamento/ordens/param')
 }
 
 export function getSaleCustomer(id: string | number, orderId?: string | number) {
@@ -14,7 +14,7 @@ export function getSaleCustomer(id: string | number, orderId?: string | number) 
 }
 
 export function getSalesPage(page: number, limit: number, search: string) {
-  return apiPage<IAdmVenda>('/faturamento/vendas/listar', page, limit, search)
+  return apiPage<IAdmVenda>('/faturamento/vendas/view', page, limit, search)
 }
 
 export function getSale(id: string) {
@@ -22,5 +22,5 @@ export function getSale(id: string) {
 }
 
 export function createSale(values: IManutVenda) {
-  return apiRequest<IAdmVenda>('/faturamento/vendas', values)
+  return apiRequest<IAdmVenda>('/faturamento/vendas/manut', values)
 }

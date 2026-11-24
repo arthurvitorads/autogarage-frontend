@@ -6,7 +6,7 @@ import type { IMeUser } from '@/interface/pages/LoginPage'
 import type { IFormUsuario, IUpdateUser } from '@/interface/pages/UsuarioPage'
 
 export function updateUser(id: string | number, values: IUpdateUser) {
-  return apiRequest<IAdmUsuario>('/usuarios/atualizar', {
+  return apiRequest<IAdmUsuario>('/usuarios/manut', {
     cn_usuario: String(id),
     an_nome: values.an_nome.trim(),
     cn_perfil: values.cn_perfil ?? null,
@@ -15,7 +15,7 @@ export function updateUser(id: string | number, values: IUpdateUser) {
 }
 
 export function createUser(values: IFormUsuario) {
-  return apiRequest<IAdmUsuario>('/usuarios', {
+  return apiRequest<IAdmUsuario>('/usuarios/manut', {
     an_nome: values.an_nome.trim(),
     an_email: values.an_email.trim().toLowerCase(),
     ca_senha: values.ca_senha,
@@ -24,8 +24,8 @@ export function createUser(values: IFormUsuario) {
   })
 }
 
-export async function getInitialMe(): Promise<IMeUser> {
-  const { dados: user } = await apiRequest<IMeUser>('/auth/me')
+export async function getInitialMe(afterLogin = false): Promise<IMeUser> {
+  const { dados: user } = await apiRequest<IMeUser>(afterLogin ? '/auth/login' : '/auth/me')
   if (!user?.cn_usuario) throw new Error('Sessão inválida.')
 
   const utilStore = useUtilStore()
@@ -34,5 +34,5 @@ export async function getInitialMe(): Promise<IMeUser> {
 }
 
 export function getUsers(page = 1, limit = 20, search = '') {
-  return apiPage<IAdmUsuario>('/usuarios/listar', page, limit, search)
+  return apiPage<IAdmUsuario>('/usuarios/view', page, limit, search)
 }

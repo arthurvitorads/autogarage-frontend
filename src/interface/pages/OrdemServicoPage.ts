@@ -41,7 +41,7 @@ export interface IFormOrdemServico extends IServiceOrderVehicle {
   cn_classificacao_os: TServiceOrderCode | null
   dt_entrada: string
   dt_previsao: string
-  an_responsavel: string
+  cn_responsavel: TServiceOrderCode | null
   an_solicitacao: string
   an_obs: string
 }
@@ -53,9 +53,25 @@ export interface IManutOrdemServico extends IServiceOrderVehicle {
   cn_classificacao_os: TServiceOrderCode
   dt_entrada: string
   dt_previsao: string | null
-  an_responsavel: string
+  cn_responsavel?: TServiceOrderCode | null
   an_solicitacao: string
   an_obs: string
+  evidencias?: IServiceOrderEvidenceInput[]
+}
+
+export interface IServiceOrderEvidenceInput {
+  an_nome: string
+  ca_mime: string
+  bl_imagem: string
+}
+
+export interface IServiceOrderEvidence extends IServiceOrderEvidenceInput {
+  cn_evidencia: string
+}
+
+export interface IServiceOrderEmployee {
+  cn_pessoa: string
+  an_nome: string
 }
 
 export type TServiceOrderItemType = 'PRODUTO' | 'SERVICO'

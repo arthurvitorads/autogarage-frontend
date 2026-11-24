@@ -46,8 +46,8 @@
     {
       "field": "nu_numero",
       "header": "Número",
-      "align": "end",
-      "width": 120
+      "align": "right",
+      "width": 72
     },
     {
       "field": "an_cliente",
@@ -74,6 +74,16 @@
       "header": "Total",
       "align": "end",
       "width": 120
+    },
+    {
+      "field": "dt_inc",
+      "header": "Dt. inclusão",
+      "width": 160
+    },
+    {
+      "field": "dt_alt",
+      "header": "Dt. alteração",
+      "width": 160
     }
   ],
   "actionHeader": "Ações",

@@ -2,12 +2,12 @@ import type { ICadCategoriaProduto, IManutCategoriaProduto } from '@/interface/p
 import { apiRequest } from '@/services/api.service'
 
 export function getProductCategoryList() {
-  return apiRequest<ICadCategoriaProduto[]>('/categoriasProduto/listar')
+  return apiRequest<ICadCategoriaProduto[]>('/categoriasProduto/view')
 }
 
 export function saveProductCategory(values: IManutCategoriaProduto) {
   return apiRequest<ICadCategoriaProduto>(
-    values.cn_categoria_produto === undefined ? '/categoriasProduto' : '/categoriasProduto/atualizar',
+    '/categoriasProduto/manut',
     values,
   )
 }

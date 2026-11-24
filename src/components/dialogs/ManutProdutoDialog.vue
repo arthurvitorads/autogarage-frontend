@@ -217,7 +217,7 @@ watch(
                 :invalid="invalid"
                 fluid
               />
-              <label for="ManutProdutoDialog-an_nome">Nome *</label>
+              <label for="ManutProdutoDialog-an_nome">Nome</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-2 flex items-start" name="bo_sts_reg">
@@ -311,7 +311,7 @@ watch(
                   optionValue="value"
                   fluid
                 />
-                <label for="ManutProdutoDialog-ca_unidade">Unidade *</label>
+                <label for="ManutProdutoDialog-ca_unidade">Unidade</label>
               </FloatLabel>
               <Button
                 type="button"

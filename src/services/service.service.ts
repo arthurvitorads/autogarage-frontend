@@ -4,7 +4,7 @@ import { apiPage, apiRequest } from '@/services/api.service'
 
 export function saveService(values: IManutServico) {
   return apiRequest<IAdmServico>(
-    values.cn_servico === undefined ? '/servicos' : '/servicos/atualizar',
+    '/servicos/manut',
     values,
   )
 }
@@ -15,5 +15,5 @@ export function getServicesPage(
   search: string,
   filters: Record<string, string> = {},
 ) {
-  return apiPage<IAdmServico>('/servicos/listar', page, limit, search, filters)
+  return apiPage<IAdmServico>('/servicos/view', page, limit, search, filters)
 }

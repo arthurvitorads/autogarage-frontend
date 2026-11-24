@@ -49,12 +49,13 @@ import type { TGenericData } from '@/interface/util'
 
 import { personTypes } from '@/interface/enum'
 import config from '@/config/PessoaPageConfig.json'
+import type { ICadPessoa } from '@/interface/tables'
 
 const props = defineProps<IManutPessoaDialogProps>()
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  onSave: []
+  onSave: [pessoa: ICadPessoa]
 }>()
 
 const { showError, showWarn, showSuccess } = useAppToast()
@@ -237,13 +238,14 @@ async function onSubmit(values: IFormPessoa) {
       },
     }
 
-    if (props.pessoa) await updatePerson(props.pessoa.cn_pessoa, pessoaData)
-    else await createPerson(pessoaData)
+    const { dados } = props.pessoa
+      ? await updatePerson(props.pessoa.cn_pessoa, pessoaData)
+      : await createPerson(pessoaData)
 
     showSuccess('Processo realizado com sucesso.')
 
     emit('update:visible', false)
-    emit('onSave')
+    emit('onSave', dados)
   } catch (error) {
     showError(normalizeError(error))
   } finally {

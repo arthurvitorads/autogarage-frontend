@@ -10,6 +10,6 @@ export interface ICatalogItemOption {
 
 export function getCatalogItemOptions() {
   return apiRequest<{ produtos: ICatalogItemOption[]; servicos: ICatalogItemOption[] }>(
-    '/paramCatalogo',
+    '/catalogo/param',
   )
 }

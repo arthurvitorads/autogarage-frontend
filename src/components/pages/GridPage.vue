@@ -5,6 +5,7 @@ import Column from 'primevue/column'
 import Button from 'primevue/button'
 
 import { useAppToast } from '@/services/toast.service'
+import { formatDateTime } from '@/services/util.service'
 
 import { useUtilStore } from '@/stores/util.store'
 
@@ -151,7 +152,11 @@ defineExpose({ loadGrid, loading, rows, total })
     >
       <template #body="{ data }">
         <slot :name="`cell-${column.field}`" :data="data">
-          {{ data[column.field] }}
+          {{
+            column.field === 'dt_inc' || column.field === 'dt_alt'
+              ? formatDateTime(data[column.field] ?? null)
+              : data[column.field]
+          }}
         </slot>
       </template>
     </Column>
