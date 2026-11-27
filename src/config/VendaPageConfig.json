@@ -9,7 +9,7 @@
     "ca_chave_requisicao": {
       "required": true
     },
-    "cn_ordem_servico": {
+    "cn_ordem": {
       "requiredWhen": {
         "ca_origem": "ORDEM_SERVICO"
       }

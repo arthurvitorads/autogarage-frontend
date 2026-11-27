@@ -15,6 +15,7 @@ export interface IClassificacaoOrdemServico extends IManutClassificacaoOrdemServ
 
 export interface IAdmOrdemServico extends IManutOrdemServico {
   an_responsavel: string
+  responsaveis: import('@/interface/pages/OrdemServicoPage').IServiceOrderEmployee[]
   dt_inc: string
   dt_alt: string
   cn_venda: string | null
@@ -23,7 +24,7 @@ export interface IAdmOrdemServico extends IManutOrdemServico {
   dt_inicio: string | null
   dt_finalizacao: string | null
   dt_cancelamento: string | null
-  cn_ordem_servico: TServiceOrderCode
+  cn_ordem: TServiceOrderCode
   nu_numero: number
   an_cliente: string
   itens: TItemOrdemServico[]
@@ -90,7 +91,7 @@ export interface IAdmVenda {
   cn_venda: string
   nu_numero: number
   cn_pessoa: string
-  cn_ordem_servico: string | null
+  cn_ordem: string | null
   ca_origem: 'ORDEM_SERVICO' | 'DIRETA'
   an_cliente: string
   ca_documento: string

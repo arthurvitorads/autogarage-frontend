@@ -244,11 +244,7 @@ watch(
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
           <div class="col-span-12 grid gap-x-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
-            <FieldForm
-              class="m-[4px] min-w-0"
-              name="an_referencia"
-              v-slot="{ invalid, field }"
-            >
+            <FieldForm class="m-[4px] min-w-0" name="an_referencia" v-slot="{ invalid, field }">
               <FloatLabel variant="on">
                 <InputText
                   id="ManutProdutoDialog-an_referencia"
@@ -261,11 +257,7 @@ watch(
                 <label for="ManutProdutoDialog-an_referencia">Referência</label>
               </FloatLabel>
             </FieldForm>
-            <FieldForm
-              class="m-[4px] min-w-0"
-              name="an_nome"
-              v-slot="{ invalid, field }"
-            >
+            <FieldForm class="m-[4px] min-w-0" name="an_nome" v-slot="{ invalid, field }">
               <FloatLabel variant="on">
                 <InputText
                   id="ManutProdutoDialog-an_nome"

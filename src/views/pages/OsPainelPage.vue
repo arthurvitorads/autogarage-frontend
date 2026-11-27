@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import type { IAdmOrdemServico } from '@/interface/tables'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
-import { getOrdersPage } from '@/services/ordem-api.service'
+import { getOrdersPage, getVehicleCatalog } from '@/services/ordem-api.service'
 import { usePageLoad } from '@/composables/usePageLoad'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
-import Select from 'primevue/select'
+import MultiSelect from 'primevue/multiselect'
 import FiltroData from '@/components/field/FiltroData.vue'
 import { currentMonthDates, dateInterval } from '@/services/date-range.service'
 import MovimentarOrdemServicoDialog from '@/components/dialogs/MovimentarOrdemServicoDialog.vue'
@@ -18,7 +18,7 @@ import Paginator from 'primevue/paginator'
 
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 
-import type { TServiceOrderCode } from '@/interface/pages/OrdemServicoPage'
+import type { IMarcaVeiculo, TServiceOrderCode } from '@/interface/pages/OrdemServicoPage'
 
 import {
   calcularTotalOrdem as calculateOrderTotal,
@@ -27,13 +27,16 @@ import {
   statusOrdens as orderStatuses,
   getStatusOrdem as getOrderStatus,
   ordemEncerrada as isOrderClosed,
+  mascararPlaca,
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
+import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
 const router = useRouter()
-const { canWrite } = useUtilStore()
+const { canWrite, normalizeError, setLoading } = useUtilStore()
+const { showError } = useAppToast()
 const { inicio: start, fim: end, status } = router.options.history.state
 const dates = ref<(Date | null)[]>(currentMonthDates())
 if (typeof start === 'string' && typeof end === 'string') {
@@ -42,22 +45,65 @@ if (typeof start === 'string' && typeof end === 'string') {
   if (Number.isFinite(inicio.getTime()) && Number.isFinite(fim.getTime()) && inicio <= fim)
     dates.value = [inicio, fim]
 }
-const statusFilter = ref(typeof status === 'string' ? status : '')
-const classificationFilter = ref<string | number | null>(null)
+const filtrosAbertos = ref(false)
+const criarFiltros = () => ({
+  status: [] as string[],
+  classificacao: [] as TServiceOrderCode[],
+  marca: [] as string[],
+  modelo: [] as string[],
+})
+const filtros = ref({
+  ...criarFiltros(),
+  status: typeof status === 'string' && status ? [status] : [],
+})
+const filtrosPesquisa = ref({ ...filtros.value })
+const catalogoVeiculos = ref<IMarcaVeiculo[]>([])
+const marcasVeiculo = computed(() => catalogoVeiculos.value.map((marca) => marca.an_marca))
+const modelosVeiculo = computed(() => {
+  const marcas = filtros.value.marca.length
+    ? catalogoVeiculos.value.filter((marca) => filtros.value.marca.includes(marca.an_marca))
+    : catalogoVeiculos.value
+  return [...new Set(marcas.flatMap((marca) => marca.modelos))].sort((a, b) => a.localeCompare(b))
+})
+
+function filtrarMarca(marcas: string[] | null) {
+  filtros.value.marca = marcas ?? []
+  filtros.value.modelo = filtros.value.modelo.filter((modelo) =>
+    modelosVeiculo.value.includes(modelo),
+  )
+}
+
+function limparFiltros() {
+  filtros.value = criarFiltros()
+}
+
+async function carregarCatalogoVeiculos() {
+  try {
+    const { dados } = await getVehicleCatalog()
+    catalogoVeiculos.value = dados
+  } catch (error) {
+    showError(normalizeError(error))
+  }
+}
+
+async function aoGravarOrdem() {
+  await Promise.all([load(), carregarCatalogoVeiculos()])
+}
+
 function orderFilters() {
   return {
     ...dateInterval(dates.value),
-    ...(statusFilter.value ? { status: statusFilter.value } : {}),
-    ...(classificationFilter.value ? { classificacao: String(classificationFilter.value) } : {}),
+    ...(filtrosPesquisa.value.status.length ? { status: filtrosPesquisa.value.status } : {}),
+    ...(filtrosPesquisa.value.classificacao.length
+      ? { classificacao: filtrosPesquisa.value.classificacao.map(String) }
+      : {}),
+    ...(filtrosPesquisa.value.marca.length ? { an_marca: filtrosPesquisa.value.marca } : {}),
+    ...(filtrosPesquisa.value.modelo.length ? { an_modelo: filtrosPesquisa.value.modelo } : {}),
   }
 }
-watch(
-  [dates, statusFilter, classificationFilter],
-  () => {
-    if (dateInterval(dates.value)) search()
-  },
-  { deep: true },
-)
+watch(dates, () => {
+  if (dateInterval(dates.value)) search()
+})
 const { classificacoes: classifications } = storeToRefs(useServiceOrderStore())
 const {
   records: orders,
@@ -72,6 +118,17 @@ const {
 } = useSearch<IAdmOrdemServico>((page, limit, search) =>
   getOrdersPage(page, limit, search, orderFilters()),
 )
+
+async function pesquisar() {
+  if (loadingGrid.value) return
+  filtrosPesquisa.value = { ...filtros.value }
+  setLoading(true)
+  try {
+    await search()
+  } finally {
+    setLoading(false)
+  }
+}
 
 const manutOrderVisible = ref(false)
 const selectOrder = ref<IAdmOrdemServico | null>(null)
@@ -101,7 +158,7 @@ function openOrder(order: IAdmOrdemServico) {
     orderDetailsVisible.value = true
     return
   }
-  router.push({ name: 'ordem-servico-detalhe', params: { id: order.cn_ordem_servico } })
+  router.push({ name: 'ordem-servico-detalhe', params: { id: order.cn_ordem } })
 }
 
 function getClassification(code: TServiceOrderCode) {
@@ -110,7 +167,7 @@ function getClassification(code: TServiceOrderCode) {
 
 usePageLoad(async () => {
   await useServiceOrderStore().loadParametros()
-  await load()
+  await Promise.all([load(), carregarCatalogoVeiculos()])
 })
 function updateSale(sale: { cn_venda: string }) {
   if (detailOrder.value) detailOrder.value.cn_venda = sale.cn_venda
@@ -128,48 +185,120 @@ function updateSale(sale: { cn_venda: string }) {
         <Button v-if="canWrite('ORDEM_SERVICO')" label="Novo" icon="pi pi-plus" @click="newOrder" />
       </div>
     </div>
-    <div class="flex flex-wrap items-end gap-3">
+    <div class="flex w-full flex-wrap items-end gap-2 lg:w-1/2">
+      <InputText
+        v-model="filter"
+        placeholder="Pesquisar por número, cliente ou veículo..."
+        aria-label="Pesquisar ordens no painel"
+        class="min-w-48 flex-1"
+        @keyup.enter="pesquisar"
+      />
       <FiltroData v-model="dates" :disabled="loadingGrid" />
-      <Select
-        v-model="statusFilter"
-        :options="orderStatuses"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Todos os status"
-        showClear
-        :disabled="loadingGrid"
-        aria-label="Filtrar status"
-      />
-      <Select
-        v-model="classificationFilter"
-        :options="classifications"
-        optionLabel="an_descr"
-        optionValue="cn_classificacao_os"
-        placeholder="Todas as classificações"
-        showClear
-        :disabled="loadingGrid"
-        aria-label="Filtrar classificação"
-      />
-      <div class="flex gap-2 flex-1 min-w-64">
-        <InputText
-          v-model="filter"
-          placeholder="Pesquisar por número, cliente ou veículo..."
-          aria-label="Pesquisar ordens no painel"
-          class="flex-1 min-w-0"
-          @keyup.enter="search"
+      <Button
+        label="Filtros"
+        severity="secondary"
+        outlined
+        icon="pi pi-sliders-h"
+        :aria-expanded="filtrosAbertos"
+        aria-controls="os-filtros"
+        @click="filtrosAbertos = !filtrosAbertos"
+      >
+        <span class="pi pi-sliders-h" aria-hidden="true" />
+        <span>Filtros</span>
+        <span
+          :class="filtrosAbertos ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+          aria-hidden="true"
         />
+      </Button>
+      <Button
+        icon="pi pi-search"
+        aria-label="Pesquisar"
+        :disabled="loadingGrid"
+        @click="pesquisar"
+      />
+    </div>
+    <div
+      v-show="filtrosAbertos"
+      id="os-filtros"
+      class="w-full rounded-lg border border-surface-200 p-3 lg:w-1/2"
+    >
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <div class="flex min-w-0 flex-col gap-1">
+          <label for="os-filtro-status" class="text-sm font-medium">Status</label>
+          <MultiSelect
+            inputId="os-filtro-status"
+            :disabled="loadingGrid"
+            v-model="filtros.status"
+            :options="orderStatuses"
+            optionLabel="label"
+            optionValue="value"
+            :maxSelectedLabels="2"
+            selectedItemsLabel="{0} selecionados"
+            filter
+            showClear
+            fluid
+          />
+        </div>
+        <div class="flex min-w-0 flex-col gap-1">
+          <label for="os-filtro-classificacao" class="text-sm font-medium">Classificação</label>
+          <MultiSelect
+            inputId="os-filtro-classificacao"
+            :disabled="loadingGrid"
+            v-model="filtros.classificacao"
+            :options="classifications"
+            optionLabel="an_descr"
+            optionValue="cn_classificacao_os"
+            :maxSelectedLabels="2"
+            selectedItemsLabel="{0} selecionados"
+            filter
+            showClear
+            fluid
+          />
+        </div>
+        <div class="flex min-w-0 flex-col gap-1">
+          <label for="os-filtro-marca" class="text-sm font-medium">Marca</label>
+          <MultiSelect
+            inputId="os-filtro-marca"
+            :disabled="loadingGrid"
+            :modelValue="filtros.marca"
+            @update:modelValue="filtrarMarca"
+            :options="marcasVeiculo"
+            :maxSelectedLabels="2"
+            selectedItemsLabel="{0} selecionados"
+            filter
+            showClear
+            fluid
+          />
+        </div>
+        <div class="flex min-w-0 flex-col gap-1">
+          <label for="os-filtro-modelo" class="text-sm font-medium">Modelo</label>
+          <MultiSelect
+            inputId="os-filtro-modelo"
+            :disabled="loadingGrid"
+            v-model="filtros.modelo"
+            :options="modelosVeiculo"
+            :maxSelectedLabels="2"
+            selectedItemsLabel="{0} selecionados"
+            filter
+            showClear
+            fluid
+          />
+        </div>
+      </div>
+      <div class="mt-3 flex flex-wrap justify-end gap-2">
         <Button
-          icon="pi pi-search"
-          aria-label="Pesquisar"
+          label="Limpar filtros"
+          severity="secondary"
+          outlined
           :disabled="loadingGrid"
-          @click="search"
+          @click="limparFiltros"
         />
       </div>
     </div>
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
       <article
         v-for="order in orders"
-        :key="order.cn_ordem_servico"
+        :key="order.cn_ordem"
         class="flex flex-col gap-4 rounded-xl border border-surface-200 border-l-4 bg-white p-5 text-left cursor-pointer transition-shadow hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500"
         :style="{ borderLeftColor: getOrderStatus(order.ca_status).cor ?? '#64748b' }"
       >
@@ -190,7 +319,7 @@ function updateSale(sale: { cn_venda: string }) {
           {{ getClassification(order.cn_classificacao_os)?.an_descr || 'Sem classificação' }}
         </p>
         <div class="min-w-0">
-          <p class="text-2xl font-bold tracking-wide">{{ order.an_placa }}</p>
+          <p class="text-2xl font-bold tracking-wide">{{ mascararPlaca(order.an_placa) }}</p>
           <p class="text-surface-600 mt-1 truncate" :title="order.an_marca + ' ' + order.an_modelo">
             {{ order.an_marca }} {{ order.an_modelo }}
           </p>
@@ -207,14 +336,6 @@ function updateSale(sale: { cn_venda: string }) {
           <div>
             <p class="text-surface-500 mb-1">Previsão</p>
             <p>{{ formatDateTime(order.dt_previsao) }}</p>
-          </div>
-          <div>
-            <p class="text-surface-500 mb-1">Dt. inclusão</p>
-            <p>{{ formatDateTime(order.dt_inc) }}</p>
-          </div>
-          <div>
-            <p class="text-surface-500 mb-1">Dt. alteração</p>
-            <p>{{ formatDateTime(order.dt_alt) }}</p>
           </div>
         </div>
         <div
@@ -258,7 +379,11 @@ function updateSale(sale: { cn_venda: string }) {
       @page="changePage"
     />
   </div>
-  <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="selectOrder" @saved="load" />
+  <ManutOrdemServicoDialog
+    v-model:visible="manutOrderVisible"
+    :order="selectOrder"
+    @saved="aoGravarOrdem"
+  />
   <MovimentarOrdemServicoDialog
     v-model:visible="orderMovementVisible"
     :order="movementOrder"

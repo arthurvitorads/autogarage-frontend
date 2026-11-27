@@ -133,7 +133,7 @@ async function onSubmit(values: IFormItemOrdemServico) {
     if (reference === null || values.qt_quantidade === null || values.vl_unitario === null) return
 
     const dadosBase = {
-      cn_ordem_servico: props.orderCode,
+      cn_ordem: props.orderCode,
       ...(props.item ? { cn_item: props.item.cn_item } : {}),
       qt_quantidade: values.qt_quantidade,
       vl_unitario: values.vl_unitario,

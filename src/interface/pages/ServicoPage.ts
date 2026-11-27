@@ -8,10 +8,7 @@ export interface IFormServico {
   bo_sts_reg: boolean
 }
 
-export interface IManutServico extends Omit<
-  IFormServico,
-  'vl_preco' | 'an_categoria'
-> {
+export interface IManutServico extends Omit<IFormServico, 'vl_preco' | 'an_categoria'> {
   cn_servico?: number
   an_categoria: string
   vl_preco: number

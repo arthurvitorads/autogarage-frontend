@@ -9,7 +9,7 @@ export function getBillableOrders() {
 export function getSaleCustomer(id: string | number, orderId?: string | number) {
   return apiRequest<TSaleCustomer>('/faturamento/cliente', {
     cn_pessoa: id,
-    cn_ordem_servico: orderId,
+    cn_ordem: orderId,
   })
 }
 

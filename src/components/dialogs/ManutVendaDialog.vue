@@ -36,8 +36,7 @@ import {
 
 const props = defineProps<IManutVendaDialogProps>()
 const formData = reactive<IFormVenda>(SaleModel.createForm())
-const { ca_origem, cn_pessoa, cn_ordem_servico, an_obs, ca_chave_requisicao, itens } =
-  toRefs(formData)
+const { ca_origem, cn_pessoa, cn_ordem, an_obs, ca_chave_requisicao, itens } = toRefs(formData)
 const emit = defineEmits<{ 'update:visible': [visible: boolean]; saved: [venda: IAdmVenda] }>()
 const catalog = ref<Awaited<ReturnType<typeof getCatalogItemOptions>>['dados'] | null>(null)
 const customers = ref<IClienteOrdemServico[]>([])
@@ -71,9 +70,7 @@ const availableOrders = computed(() =>
 const selectedOrder = computed(
   () =>
     props.order ??
-    orders.value.find(
-      (order) => String(order.cn_ordem_servico) === String(cn_ordem_servico.value),
-    ) ??
+    orders.value.find((order) => String(order.cn_ordem) === String(cn_ordem.value)) ??
     null,
 )
 const references = computed(
@@ -90,7 +87,7 @@ const total = computed(
   () => rows.value.reduce((soma, linha) => soma + Math.round(linha.vl_total * 100), 0) / 100,
 )
 let customerRequestId = 0
-watch([cn_pessoa, cn_ordem_servico], async ([code, order]) => {
+watch([cn_pessoa, cn_ordem], async ([code, order]) => {
   const requestId = ++customerRequestId
   customer.value = null
   if (!code) return
@@ -178,7 +175,7 @@ function addItem() {
 async function save() {
   if (saving.value || loadingData.value) return
   const errors = validateFormFields(config.fields, { ...formData })
-  if (errors.cn_ordem_servico) {
+  if (errors.cn_ordem) {
     showWarn('Selecione uma O.S. finalizada.')
     return
   }
@@ -201,7 +198,7 @@ async function save() {
       ca_chave_requisicao: ca_chave_requisicao.value,
       an_obs: an_obs.value,
       ...(ca_origem.value === 'ORDEM_SERVICO'
-        ? { cn_ordem_servico: selectedOrder.value!.cn_ordem_servico }
+        ? { cn_ordem: selectedOrder.value!.cn_ordem }
         : { itens: itens.value.map(({ an_descr, vl_total, ...data }) => data) }),
     })
     showSuccess('Processo realizado com sucesso.')
@@ -247,17 +244,17 @@ async function save() {
         </FloatLabel>
         <FloatLabel variant="on" class="m-[4px]" v-if="ca_origem === 'ORDEM_SERVICO' && !order">
           <Select
-            inputId="venda-cn_ordem_servico"
-            v-model="cn_ordem_servico"
-            name="cn_ordem_servico"
+            inputId="venda-cn_ordem"
+            v-model="cn_ordem"
+            name="cn_ordem"
             :options="availableOrders"
             optionLabel="an_label"
-            optionValue="cn_ordem_servico"
+            optionValue="cn_ordem"
             filter
             aria-label="Ordem de serviço"
             fluid
           />
-          <label for="venda-cn_ordem_servico">Ordem de serviço</label>
+          <label for="venda-cn_ordem">Ordem de serviço</label>
         </FloatLabel>
         <FloatLabel variant="on" class="m-[4px]" v-if="ca_origem === 'DIRETA'">
           <Select

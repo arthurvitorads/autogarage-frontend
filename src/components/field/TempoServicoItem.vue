@@ -56,8 +56,8 @@ async function movimentar(acao: 'INICIAR' | 'PAUSAR' | 'FINALIZAR') {
   if (saving.value) return
   saving.value = true
   try {
-    const { cn_ordem_servico, cn_item } = props.item
-    const { dados } = await updateItemTime(cn_ordem_servico, cn_item, acao)
+    const { cn_ordem, cn_item } = props.item
+    const { dados } = await updateItemTime(cn_ordem, cn_item, acao)
     emit('saved', dados)
   } catch (error) {
     showError(normalizeError(error))

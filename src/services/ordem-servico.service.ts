@@ -68,6 +68,21 @@ export function normalizarPlaca(value: string): string {
   return value.toUpperCase().replace(/[\s-]/g, '')
 }
 
+export function placaValida(value: string): boolean {
+  return /^[A-Z]{3}-?\d[A-Z0-9]\d{2}$/.test(value.trim().toUpperCase())
+}
+
+export function mascararPlaca(value: string): string {
+  let placa = ''
+  for (const caractere of value.toUpperCase()) {
+    const posicao = placa.length
+    if (posicao === 7) break
+    const permitido = posicao < 3 ? /[A-Z]/ : posicao === 4 ? /[A-Z0-9]/ : /[0-9]/
+    if (permitido.test(caractere)) placa += caractere
+  }
+  return placa.length > 3 ? placa.slice(0, 3) + '-' + placa.slice(3) : placa
+}
+
 export function dataHoraLocal(value = new Date().toISOString()): string {
   const date = new Date(value)
 
@@ -90,8 +105,7 @@ export function dataHoraLocal(value = new Date().toISOString()): string {
 export function validarDadosOrdem(values: IFormOrdemServico): TGenericData {
   const errors: TGenericData = {}
 
-  if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(normalizarPlaca(values.an_placa)))
-    errors.an_placa = 'Informe uma placa válida.'
+  if (!placaValida(values.an_placa)) errors.an_placa = 'Informe uma placa válida.'
 
   if (
     values.nu_ano !== null &&

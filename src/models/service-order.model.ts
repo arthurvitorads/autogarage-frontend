@@ -8,7 +8,7 @@ export class ServiceOrderModel {
       cn_classificacao_os: null,
       dt_entrada: dataHoraLocal(),
       dt_previsao: '',
-      cn_responsavel: null,
+      cn_responsaveis: [],
       an_placa: '',
       an_marca: '',
       an_modelo: '',

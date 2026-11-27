@@ -43,9 +43,7 @@ const { removeItem } = orderStore
 const { normalizeError, canWrite } = useUtilStore()
 const { showSuccess, showError } = useAppToast()
 const code = computed(() => String(route.params.id))
-const order = computed(() =>
-  orders.value.find((item) => String(item.cn_ordem_servico) === code.value),
-)
+const order = computed(() => orders.value.find((item) => String(item.cn_ordem) === code.value))
 const orderStatus = computed(() => (order.value ? getOrderStatus(order.value.ca_status) : null))
 const classification = computed(() =>
   classifications.value.find(
@@ -90,11 +88,11 @@ async function removeOrderItem(item: TItemOrdemServico) {
   try {
     const data = {
       operacao: 'REMOVER_ITEM',
-      cn_ordem_servico: order.value.cn_ordem_servico,
+      cn_ordem: order.value.cn_ordem,
       cn_item: item.cn_item,
     }
 
-    await removeItem(data.cn_ordem_servico, data.cn_item)
+    await removeItem(data.cn_ordem, data.cn_item)
     showSuccess('Processo realizado com sucesso.')
   } catch (error) {
     showError(normalizeError(error))
@@ -296,7 +294,7 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
       </div>
     </Fieldset>
     <Fieldset legend="Informações">
-      <OrdemInformacoes :orderId="order.cn_ordem_servico">
+      <OrdemInformacoes :orderId="order.cn_ordem">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p class="text-surface-500 mb-2">Solicitação do cliente</p>
@@ -312,7 +310,7 @@ function onGridAction({ action, data }: { action: string; data: TItemOrdemServic
     <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="order" />
     <ItemOrdemServicoDialog
       v-model:visible="itemDialogVisible"
-      :orderCode="order.cn_ordem_servico"
+      :orderCode="order.cn_ordem"
       :item="selectItem"
     />
   </div>

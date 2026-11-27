@@ -54,7 +54,7 @@ async function confirmAction(values: IMoveOrderForm) {
   loading.value = true
   try {
     const order = await store.movimentar(
-      props.order.cn_ordem_servico,
+      props.order.cn_ordem,
       props.action,
       values.an_motivo_cancelamento.trim(),
     )

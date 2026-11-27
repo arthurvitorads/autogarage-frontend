@@ -6,7 +6,7 @@ export class SaleModel {
     return {
       ca_origem: order ? 'ORDEM_SERVICO' : 'DIRETA',
       cn_pessoa: order?.cn_pessoa ?? null,
-      cn_ordem_servico: order?.cn_ordem_servico ?? null,
+      cn_ordem: order?.cn_ordem ?? null,
       an_obs: '',
       ca_chave_requisicao: crypto.randomUUID(),
       itens: [],

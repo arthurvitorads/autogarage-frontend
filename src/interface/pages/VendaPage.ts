@@ -5,7 +5,7 @@ import type { IPageResponse } from '@/interface/api-response'
 
 export type TBillableOrder = Pick<
   IAdmOrdemServico,
-  'cn_ordem_servico' | 'cn_pessoa' | 'nu_numero' | 'an_cliente' | 'ca_status'
+  'cn_ordem' | 'cn_pessoa' | 'nu_numero' | 'an_cliente' | 'ca_status'
 > & {
   itens: Pick<
     TItemOrdemServico,
@@ -42,7 +42,7 @@ export interface IManutItemVenda {
 
 export interface IManutVenda {
   cn_pessoa: string | number
-  cn_ordem_servico?: string | number
+  cn_ordem?: string | number
   ca_chave_requisicao: string
   an_obs: string
   itens?: IManutItemVenda[]
@@ -50,7 +50,7 @@ export interface IManutVenda {
 
 export interface ITimeReport {
   cn_item: string
-  cn_ordem_servico: string
+  cn_ordem: string
   nu_ordem: number
   an_descr: string
   an_cliente: string
@@ -83,7 +83,7 @@ export interface ISaleDraftItem extends IManutItemVenda {
 export interface IFormVenda {
   ca_origem: TSaleOrigin
   cn_pessoa: string | number | null
-  cn_ordem_servico: string | number | null
+  cn_ordem: string | number | null
   an_obs: string
   ca_chave_requisicao: string
   itens: ISaleDraftItem[]

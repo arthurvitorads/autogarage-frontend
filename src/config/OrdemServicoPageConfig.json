@@ -48,7 +48,7 @@
       }
     }
   },
-  "dataKey": "cn_ordem_servico",
+  "dataKey": "cn_ordem",
   "columns": [
     {
       "field": "nu_numero",

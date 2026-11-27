@@ -12,10 +12,11 @@ import type {
   IServiceOrderEmployee,
   IServiceOrderEvidence,
   IServiceOrderVehicle,
+  IMarcaVeiculo,
 } from '@/interface/pages/OrdemServicoPage'
 
 export function getOrder(id: TServiceOrderCode) {
-  return apiRequest<IAdmOrdemServico>('/ordensServico/detalhar', { cn_ordem_servico: id })
+  return apiRequest<IAdmOrdemServico>('/ordensServico/detalhar', { cn_ordem: id })
 }
 
 export function getClassifications() {
@@ -34,6 +35,10 @@ export function getOrderEmployees() {
   return apiRequest<IServiceOrderEmployee[]>('/ordensServico/funcionarios/param')
 }
 
+export function getVehicleCatalog() {
+  return apiRequest<IMarcaVeiculo[]>('/ordensServico/veiculos/param')
+}
+
 export function lookupOrderPlate(plate: string) {
   return apiRequest<Pick<
     IServiceOrderVehicle,
@@ -43,7 +48,7 @@ export function lookupOrderPlate(plate: string) {
 
 export function getOrderEvidences(id: TServiceOrderCode) {
   return apiRequest<IServiceOrderEvidence[]>('/ordensServico/evidencias/view', {
-    cn_ordem_servico: id,
+    cn_ordem: id,
   })
 }
 
@@ -61,7 +66,7 @@ export function saveItem(values: TManutItemOrdemServico) {
 
 export function removeItem(orderId: TServiceOrderCode, itemId: TServiceOrderCode) {
   return apiRequest<{ cn_item: string }>('/ordensServico/itens/manut/remover', {
-    cn_ordem_servico: orderId,
+    cn_ordem: orderId,
     cn_item: itemId,
   })
 }
@@ -72,7 +77,7 @@ export function updateItemTime(
   action: 'INICIAR' | 'PAUSAR' | 'FINALIZAR',
 ) {
   return apiRequest<TItemOrdemServico>('/ordensServico/itens/manut/tempo', {
-    cn_ordem_servico: orderId,
+    cn_ordem: orderId,
     cn_item: itemId,
     acao: action,
   })
@@ -82,14 +87,14 @@ export function getOrdersPage(
   page: number,
   limit: number,
   search: string,
-  filters: Record<string, string> = {},
+  filters: Record<string, string | string[]> = {},
 ) {
   return apiPage<IAdmOrdemServico>('/ordensServico/view', page, limit, search, filters)
 }
 
 export function moveOrder(orderId: TServiceOrderCode, action: TServiceOrderAction, reason: string) {
   return apiRequest<IAdmOrdemServico>('/ordensServico/manut/movimentar', {
-    cn_ordem_servico: orderId,
+    cn_ordem: orderId,
     acao: action,
     an_motivo_cancelamento: reason,
   })

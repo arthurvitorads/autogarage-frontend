@@ -12,6 +12,7 @@ import { storeToRefs } from 'pinia'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
+import MultiSelect from 'primevue/multiselect'
 import DatePicker from 'primevue/datepicker'
 import Tabs from 'primevue/tabs'
 import TabList from 'primevue/tablist'
@@ -31,6 +32,7 @@ import OrdemEvidencias from '@/components/pages/OrdemEvidencias.vue'
 import {
   getOrderCustomer,
   getOrderEmployees,
+  getVehicleCatalog,
   getOrderEvidences,
   lookupOrderPlate,
 } from '@/services/ordem-api.service'
@@ -39,6 +41,7 @@ import type { TSaleCustomer } from '@/interface/pages/VendaPage'
 
 import type {
   IFormOrdemServico,
+  IMarcaVeiculo,
   IManutOrdemServico,
   IServiceOrderEmployee,
   IServiceOrderEvidenceInput,
@@ -48,6 +51,8 @@ import type { TGenericData } from '@/interface/util'
 import {
   dataHoraLocal as localDateTime,
   normalizarPlaca as normalizePlate,
+  mascararPlaca,
+  placaValida,
   validarDadosOrdem as validateOrderData,
 } from '@/services/ordem-servico.service'
 import { useAppToast } from '@/services/toast.service'
@@ -97,17 +102,36 @@ const evidenceSize = 1024 * 1024
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp']
 
 const employeeOptions = computed(() => {
-  const order = props.order
-  if (
-    order?.cn_responsavel &&
-    !employees.value.some((person) => person.cn_pessoa === String(order.cn_responsavel))
-  )
-    return [
-      ...employees.value,
-      { cn_pessoa: String(order.cn_responsavel), an_nome: order.an_responsavel },
-    ]
-  return employees.value
+  const assigned = props.order?.responsaveis ?? []
+  return [
+    ...employees.value,
+    ...assigned.filter(
+      (person) => !employees.value.some((employee) => employee.cn_pessoa === person.cn_pessoa),
+    ),
+  ].map((person) => ({
+    ...person,
+    label: person.an_cargo ? person.an_nome + ' - ' + person.an_cargo : person.an_nome,
+  }))
 })
+const catalogoVeiculos = ref<IMarcaVeiculo[]>([])
+const marcasVeiculo = computed(() => catalogoVeiculos.value.map((marca) => marca.an_marca))
+const modelosVeiculo = computed(
+  () =>
+    catalogoVeiculos.value.find(
+      (marca) => marca.an_marca.toLowerCase() === formData.an_marca.trim().toLowerCase(),
+    )?.modelos ?? [],
+)
+const dataEntrada = computed(() => (formData.dt_entrada ? new Date(formData.dt_entrada) : null))
+const dataPrevisao = computed(() => (formData.dt_previsao ? new Date(formData.dt_previsao) : null))
+const responsavelLegado = computed(() =>
+  props.order?.responsaveis?.length ? '' : props.order?.an_responsavel,
+)
+
+function alterarMarca(marca: string | null) {
+  const nome = marca ?? ''
+  if (formData.an_marca.trim().toLowerCase() !== nome.trim().toLowerCase()) formData.an_modelo = ''
+  formData.an_marca = nome
+}
 
 const customerName = computed(
   () => customerDetails.value?.an_nome ?? customerDetails.value?.an_razao_social ?? '',
@@ -169,9 +193,17 @@ function selectDate(
   delete formErrors.value[field]
 }
 
+function alterarPlaca(event: Event) {
+  const campo = event.target as HTMLInputElement
+  const placa = mascararPlaca(campo.value)
+  if (campo.value !== placa) campo.value = placa
+  formData.an_placa = placa
+  delete formErrors.value.an_placa
+}
+
 async function findPlate() {
   const plate = normalizePlate(formData.an_placa)
-  if (!/^[A-Z]{3}\d[A-Z0-9]\d{2}$/.test(plate)) {
+  if (!placaValida(plate)) {
     formErrors.value.an_placa = 'Informe uma placa válida.'
     return
   }
@@ -182,10 +214,10 @@ async function findPlate() {
     if (!props.visible || version !== formKey.value || normalizePlate(formData.an_placa) !== plate)
       return
     if (!dados) {
-      showWarn('Placa não encontrada no histórico de O.S. Preencha os dados do veículo.')
+      showWarn('Placa não encontrada na base de veículos Preencha os dados do veículo.')
       return
     }
-    Object.assign(formData, dados)
+    Object.assign(formData, dados, { an_placa: mascararPlaca(plate) })
     for (const field of ['an_placa', 'an_marca', 'an_modelo', 'nu_ano', 'an_cor'])
       delete formErrors.value[field]
   } catch (error) {
@@ -262,17 +294,14 @@ async function onSubmit(values: IFormOrdemServico) {
     if (values.cn_pessoa === null || values.cn_classificacao_os === null) return
 
     const data: IManutOrdemServico = {
-      ...(props.order ? { cn_ordem_servico: props.order.cn_ordem_servico } : {}),
+      ...(props.order ? { cn_ordem: props.order.cn_ordem } : {}),
       cn_pessoa: values.cn_pessoa,
       cn_classificacao_os: values.cn_classificacao_os,
       dt_entrada: new Date(values.dt_entrada).toISOString(),
       dt_previsao: values.dt_previsao ? new Date(values.dt_previsao).toISOString() : null,
-      cn_responsavel:
-        props.order?.an_responsavel &&
-        props.order.cn_responsavel == null &&
-        values.cn_responsavel === null
-          ? undefined
-          : values.cn_responsavel,
+      ...(responsavelLegado.value && !values.cn_responsaveis.length
+        ? {}
+        : { cn_responsaveis: values.cn_responsaveis }),
       evidencias: pendingEvidences.value,
       an_placa: normalizePlate(values.an_placa),
       an_marca: values.an_marca.trim(),
@@ -312,8 +341,8 @@ watch(
         cn_classificacao_os: order.cn_classificacao_os,
         dt_entrada: localDateTime(order.dt_entrada),
         dt_previsao: order.dt_previsao ? localDateTime(order.dt_previsao) : '',
-        cn_responsavel: order.cn_responsavel == null ? null : String(order.cn_responsavel),
-        an_placa: order.an_placa,
+        cn_responsaveis: order.responsaveis?.map((person) => person.cn_pessoa) ?? [],
+        an_placa: mascararPlaca(order.an_placa),
         an_marca: order.an_marca,
         an_modelo: order.an_modelo,
         nu_ano: order.nu_ano,
@@ -327,6 +356,7 @@ watch(
     formKey.value++
     informationTab.value = 'observacoes'
     employees.value = []
+    catalogoVeiculos.value = []
     savedEvidences.value = []
     pendingEvidences.value = []
     readingFiles.value = false
@@ -335,11 +365,13 @@ watch(
 
     const results = await Promise.allSettled([
       getOrderEmployees(),
-      order ? getOrderEvidences(order.cn_ordem_servico) : null,
+      getVehicleCatalog(),
+      order ? getOrderEvidences(order.cn_ordem) : null,
     ])
     if (!current) return
-    const [employeeResult, evidenceResult] = results
+    const [employeeResult, catalogResult, evidenceResult] = results
     if (employeeResult.status === 'fulfilled') employees.value = employeeResult.value.dados
+    if (catalogResult.status === 'fulfilled') catalogoVeiculos.value = catalogResult.value.dados
     if (evidenceResult.status === 'fulfilled')
       savedEvidences.value = evidenceResult.value?.dados ?? []
     evidenceLoading.value = false
@@ -465,46 +497,35 @@ watch(
               />
             </div>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 md:col-span-4"
-            name="cn_responsavel"
-            v-slot="{ field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 md:col-span-4" name="cn_responsaveis">
             <FloatLabel variant="on">
-              <Select
-                inputId="ManutOrdemServicoDialog-cn_responsavel"
-                v-model="formData.cn_responsavel"
-                :name="field"
+              <MultiSelect
+                inputId="ManutOrdemServicoDialog-cn_responsaveis"
+                v-model="formData.cn_responsaveis"
                 :options="employeeOptions"
-                optionLabel="an_nome"
+                optionLabel="label"
                 optionValue="cn_pessoa"
+                :maxSelectedLabels="2"
+                selectedItemsLabel="{0} responsáveis"
                 filter
-                showClear
                 fluid
                 emptyMessage="Nenhum funcionário disponível."
               />
-              <label for="ManutOrdemServicoDialog-cn_responsavel">Responsável</label>
+              <label for="ManutOrdemServicoDialog-cn_responsaveis">Responsáveis</label>
             </FloatLabel>
-            <small
-              v-if="
-                order?.an_responsavel &&
-                order.cn_responsavel == null &&
-                formData.cn_responsavel === null
-              "
-            >
-              Responsável registrado: {{ order.an_responsavel }}
+            <small v-if="responsavelLegado && !formData.cn_responsaveis.length">
+              Responsável registrado: {{ responsavelLegado }}
             </small>
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-6"
             name="dt_entrada"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid }"
           >
             <FloatLabel variant="on">
               <DatePicker
                 inputId="ManutOrdemServicoDialog-dt_entrada"
-                :modelValue="formData.dt_entrada ? new Date(formData.dt_entrada) : null"
-                :name="field"
+                :modelValue="dataEntrada"
                 :invalid="invalid"
                 dateFormat="dd/mm/yy"
                 showTime
@@ -520,13 +541,13 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-6"
             name="dt_previsao"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid }"
           >
             <FloatLabel variant="on">
               <DatePicker
                 inputId="ManutOrdemServicoDialog-dt_previsao"
-                :modelValue="formData.dt_previsao ? new Date(formData.dt_previsao) : null"
-                :name="field"
+                :modelValue="dataPrevisao"
+                showClear
                 :invalid="invalid"
                 dateFormat="dd/mm/yy"
                 showTime
@@ -543,45 +564,40 @@ watch(
       </Fieldset>
       <Fieldset legend="Dados do veículo">
         <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-3"
-            name="an_placa"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-3" name="an_placa" v-slot="{ invalid }">
             <div class="flex gap-2">
               <FloatLabel variant="on" class="min-w-0 flex-1">
-                <InputText
+                <input
                   id="ManutOrdemServicoDialog-an_placa"
-                  v-model="formData.an_placa"
-                  :name="field"
-                  :invalid="invalid"
-                  maxlength="8"
-                  fluid
-                  @update:modelValue="formData.an_placa = ($event ?? '').toUpperCase()"
+                  :value="formData.an_placa"
+                  class="p-inputtext p-component w-full"
+                  :class="{ 'p-filled': formData.an_placa, 'p-invalid': invalid }"
+                  :aria-invalid="invalid"
+                  autocapitalize="characters"
+                  autocomplete="off"
+                  spellcheck="false"
+                  @input="alterarPlaca"
                 />
                 <label for="ManutOrdemServicoDialog-an_placa">Placa</label>
               </FloatLabel>
               <Button
                 type="button"
                 icon="pi pi-search"
-                aria-label="Consultar placa no histórico"
-                v-tooltip.top="'Pesquisa na base de veículos cadastrados nas ordens de serviço.'"
+                aria-label="Consultar placa"
+                v-tooltip.top="'Pesquisa na base de veículos cadastrados.'"
                 :loading="plateLoading"
                 @click="findPlate"
               />
             </div>
           </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-4"
-            name="an_marca"
-            v-slot="{ invalid, field }"
-          >
+          <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="an_marca" v-slot="{ invalid }">
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_marca"
-                maxlength="4000"
-                v-model="formData.an_marca"
-                :name="field"
+              <Select
+                inputId="ManutOrdemServicoDialog-an_marca"
+                :modelValue="formData.an_marca"
+                :options="marcasVeiculo"
+                editable
+                @update:modelValue="alterarMarca($event)"
                 :invalid="invalid"
                 fluid
               />
@@ -591,14 +607,15 @@ watch(
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-5"
             name="an_modelo"
-            v-slot="{ invalid, field }"
+            v-slot="{ invalid }"
           >
             <FloatLabel variant="on">
-              <InputText
-                id="ManutOrdemServicoDialog-an_modelo"
-                maxlength="4000"
-                v-model="formData.an_modelo"
-                :name="field"
+              <Select
+                inputId="ManutOrdemServicoDialog-an_modelo"
+                :modelValue="formData.an_modelo"
+                :options="modelosVeiculo"
+                editable
+                @update:modelValue="formData.an_modelo = $event ?? ''"
                 :invalid="invalid"
                 fluid
               />

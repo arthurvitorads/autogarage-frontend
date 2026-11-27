@@ -98,7 +98,7 @@ const loadingButton = ref(false)
 const estadosData = ref<IEndEstado[]>([])
 
 const isEditing = computed(() => !!props.pessoa)
-const campoDocumento = computed(() => formData.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj')
+const campoDocumento = computed(() => (formData.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj'))
 
 const selectedCategories = computed({
   get: () => personCategories.filter(({ value }) => formData[value]).map(({ value }) => value),
@@ -152,7 +152,8 @@ async function handleCnpj() {
       formKey.value !== versao ||
       campoDocumento.value !== 'ca_cnpj' ||
       unMaskDocument(formData.ca_cnpj).toUpperCase() !== cnpj
-    ) return
+    )
+      return
 
     if (!response) {
       formErrors.value.ca_cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
@@ -178,8 +179,12 @@ async function handleCnpj() {
   } catch (error) {
     const message = normalizeError(error)
     if (message === documentoDuplicado) {
-      if (props.visible && formKey.value === versao && campoDocumento.value === 'ca_cnpj' &&
-          unMaskDocument(formData.ca_cnpj).toUpperCase() === cnpj)
+      if (
+        props.visible &&
+        formKey.value === versao &&
+        campoDocumento.value === 'ca_cnpj' &&
+        unMaskDocument(formData.ca_cnpj).toUpperCase() === cnpj
+      )
         formErrors.value.ca_cnpj = message
     } else showError(message)
   } finally {
@@ -329,7 +334,10 @@ watch(
     onCleanup(() => controller.abort())
     try {
       const { bo_uso } = await consultarDocumento(
-        campo, documento, props.pessoa?.cn_pessoa, controller.signal,
+        campo,
+        documento,
+        props.pessoa?.cn_pessoa,
+        controller.signal,
       )
       if (!controller.signal.aborted && bo_uso) formErrors.value[campo] = documentoDuplicado
     } catch (error) {

@@ -173,8 +173,8 @@ defineExpose({ loadGrid, loading, rows, total })
     >
       <template #body="{ data }">
         <slot :name="`cell-${column.field}`" :data="data">
-          <span v-if="column.field === 'dt_inc' || column.field === 'dt_alt'"> 
-            {{ formatDateTime(data[column.field]) }} 
+          <span v-if="column.field === 'dt_inc' || column.field === 'dt_alt'">
+            {{ formatDateTime(data[column.field]) }}
           </span>
 
           <span v-else-if="column.field === 'bo_sts_reg'">

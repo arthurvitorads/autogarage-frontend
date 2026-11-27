@@ -58,7 +58,7 @@ export function apiPage<T>(
   page: number,
   limit: number,
   search = '',
-  filters: Record<string, string> = {},
+  filters: Record<string, string | string[]> = {},
 ) {
   return apiRequest<T[], IPageResponse<T>>(endpoint, { page, limit, search, ...filters })
 }

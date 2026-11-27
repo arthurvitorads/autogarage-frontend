@@ -28,7 +28,7 @@ const { canRead, canWrite } = useUtilStore()
 const saleDialogVisible = ref(false)
 const registeredSale = ref<string | null>(null)
 watch(
-  () => [props.visible, props.order?.cn_ordem_servico],
+  () => [props.visible, props.order?.cn_ordem],
   () => {
     registeredSale.value = props.order?.cn_venda ?? null
   },
@@ -165,7 +165,7 @@ const classification = computed(() =>
         </p>
       </Fieldset>
       <Fieldset legend="Informações">
-        <OrdemInformacoes :orderId="order.cn_ordem_servico" :visible="visible">
+        <OrdemInformacoes :orderId="order.cn_ordem" :visible="visible">
           <p class="text-surface-500">Solicitação do cliente</p>
           <p class="whitespace-pre-wrap break-words mb-3">{{ order.an_solicitacao }}</p>
           <p class="text-surface-500">Observações internas</p>
