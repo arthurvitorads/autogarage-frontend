@@ -1,6 +1,6 @@
 import type { TItemOrdemServico } from '@/interface/tables'
 import type { IClassificacaoOrdemServico, IAdmOrdemServico } from '@/interface/tables'
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   IClienteOrdemServico,
@@ -18,9 +18,6 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   const clientes = ref<IClienteOrdemServico[]>([])
   const utilStore = useUtilStore()
   let sessionVersion = 0
-  const classificacaoPadrao = computed(
-    () => classificacoes.value.find((item) => item.bo_padrao) ?? null,
-  )
 
   async function loadParametros() {
     const version = sessionVersion
@@ -45,10 +42,6 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     values: IManutClassificacaoOrdemServico,
   ): Promise<IClassificacaoOrdemServico> {
     const { dados } = await orderService.saveClassification(values)
-    if (dados.bo_padrao)
-      classificacoes.value.forEach((item) => {
-        item.bo_padrao = false
-      })
     const index = classificacoes.value.findIndex(
       (item) => String(item.cn_classificacao_os) === String(dados.cn_classificacao_os),
     )
@@ -109,7 +102,6 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     ordens,
     classificacoes,
     clientes,
-    classificacaoPadrao,
     loadOrder,
     loadParametros,
     saveClassificacao,

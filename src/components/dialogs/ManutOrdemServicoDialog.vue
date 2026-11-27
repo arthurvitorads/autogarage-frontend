@@ -62,11 +62,7 @@ const emit = defineEmits<{
 }>()
 
 const orderStore = useServiceOrderStore()
-const {
-  clientes: customers,
-  classificacoes: classifications,
-  classificacaoPadrao: defaultClassification,
-} = storeToRefs(orderStore)
+const { clientes: customers, classificacoes: classifications } = storeToRefs(orderStore)
 const { saveOrdem: saveOrder } = orderStore
 const { normalizeError, setLoading, canWrite } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
@@ -86,9 +82,7 @@ const customerOptions = computed(() =>
   })),
 )
 
-const formData = reactive<IFormOrdemServico>(
-  ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null),
-)
+const formData = reactive<IFormOrdemServico>(ServiceOrderModel.createForm())
 
 const customerDetails = ref<TSaleCustomer | null>(null)
 const employees = ref<IServiceOrderEmployee[]>([])
@@ -311,10 +305,7 @@ watch(
 
     const order = props.order
 
-    Object.assign(
-      formData,
-      ServiceOrderModel.createForm(defaultClassification.value?.cn_classificacao_os ?? null),
-    )
+    Object.assign(formData, ServiceOrderModel.createForm())
     if (order) {
       Object.assign(formData, {
         cn_pessoa: order.cn_pessoa,

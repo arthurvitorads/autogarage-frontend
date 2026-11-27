@@ -4,7 +4,6 @@ import { onMounted, ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutPerfilDialog from '@/components/dialogs/ManutPerfilDialog.vue'
@@ -92,14 +91,7 @@ function onGridAction({ action, data }: { action: string; data: IAdmPerfil }) {
               : PerfilPageConfig.actions.filter((item) => item.action !== 'edit')
           "
           @action="onGridAction"
-        >
-          <template #cell-bo_sts_reg="{ data }">
-            <Tag
-              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-              :severity="data.bo_sts_reg ? 'success' : 'danger'"
-            />
-          </template>
-        </GridPage>
+        />
       </div>
     </div>
   </div>

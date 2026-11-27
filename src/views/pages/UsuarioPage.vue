@@ -4,7 +4,6 @@ import { onMounted, ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutUserDialog from '@/components/dialogs/ManutUserDialog.vue'
@@ -79,12 +78,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmUsuario }) {
           :actions="canWrite('ADMINISTRACAO') ? UsuarioPageConfig.actions : []"
           @action="onGridAction"
         >
-          <template #cell-bo_sts_reg="{ data }">
-            <Tag
-              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-              :severity="data.bo_sts_reg ? 'success' : 'danger'"
-            />
-          </template>
         </GridPage>
       </div>
     </div>

@@ -108,12 +108,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmProduto }) {
           <template #cell-qt_estoque_min="{ data }">{{
             formatQuantity(data.qt_estoque_min)
           }}</template>
-          <template #cell-bo_sts_reg="{ data }">
-            <Tag
-              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-              :severity="data.bo_sts_reg ? 'success' : 'danger'"
-            />
-          </template>
         </GridPage>
       </div>
     </div>

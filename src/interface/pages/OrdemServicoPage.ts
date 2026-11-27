@@ -20,7 +20,6 @@ export interface IClienteOrdemServico {
 export interface IFormClassificacaoOrdemServico {
   an_descr: string
   ca_cor: string
-  bo_padrao: boolean
 }
 
 export interface IManutClassificacaoOrdemServico extends IFormClassificacaoOrdemServico {

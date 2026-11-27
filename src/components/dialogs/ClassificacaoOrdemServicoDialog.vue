@@ -10,7 +10,6 @@ import { storeToRefs } from 'pinia'
 import InputText from 'primevue/inputtext'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import ToggleSwitch from 'primevue/toggleswitch'
 import Button from 'primevue/button'
 
 import Dialog from 'primevue/dialog'
@@ -26,6 +25,7 @@ import type {
 import type { TGenericData } from '@/interface/util'
 
 import { useAppToast } from '@/services/toast.service'
+import { useConfirmacao } from '@/composables/useConfirmacao'
 import { useUtilStore } from '@/stores/util.store'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
 
@@ -41,27 +41,25 @@ const { saveClassificacao: saveClassification } = orderStore
 const { normalizeError, setLoading, canWrite } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
 const { showSuccess, showError } = useAppToast()
+const confirmar = useConfirmacao()
 const selectClassification = ref<TServiceOrderCode | null>(null)
 const loadingGrid = ref(false)
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 
-const formData = reactive<IFormClassificacaoOrdemServico>(
-  OrderClassificationModel.createForm(classifications.value.length === 0),
-)
+const formData = reactive<IFormClassificacaoOrdemServico>(OrderClassificationModel.createForm())
 
 function loadClassification() {
   const selectedClassification = classifications.value.find(
     (item) => item.cn_classificacao_os === selectClassification.value,
   )
 
-  Object.assign(formData, OrderClassificationModel.createForm(classifications.value.length === 0))
+  Object.assign(formData, OrderClassificationModel.createForm())
   if (selectedClassification) {
     Object.assign(formData, {
       an_descr: selectedClassification.an_descr,
       ca_cor: selectedClassification.ca_cor,
-      bo_padrao: selectedClassification.bo_padrao,
     })
   }
   formErrors.value = {}
@@ -81,7 +79,14 @@ function validateForm(values: IFormClassificacaoOrdemServico) {
   return errors
 }
 
+function clearCode() {
+  if (loading.value || loadingGrid.value) return
+  handleClassification(null)
+}
+
 async function onSubmit(values: IFormClassificacaoOrdemServico) {
+  if (loading.value || !(await confirmar())) return
+
   setLoading(true)
 
   try {
@@ -91,12 +96,11 @@ async function onSubmit(values: IFormClassificacaoOrdemServico) {
         : {}),
       an_descr: values.an_descr.trim(),
       ca_cor: values.ca_cor,
-      bo_padrao: values.bo_padrao,
     }
     const result = await saveClassification(data)
+    handleClassification(result.cn_classificacao_os)
     emit('saved', result)
     showSuccess('Processo realizado com sucesso.')
-    emit('update:visible', false)
   } catch (error) {
     showError(normalizeError(error))
   } finally {
@@ -130,9 +134,12 @@ watch(
     @update:visible="emit('update:visible', $event)"
     header="Classificações da O.S."
     modal
-    :style="{ width: '48rem', maxWidth: '95vw', maxHeight: '90vh' }"
+    contentClass="flex min-h-0 flex-1 flex-col"
+    :contentStyle="{ scrollbarWidth: 'none' }"
+    :style="{ width: '48rem', height: '34rem', maxWidth: '95vw', maxHeight: '90vh' }"
   >
     <FormPage
+      class="shrink-0"
       v-if="canWrite('CADASTROS')"
       ref="formRef"
       :key="formKey"
@@ -144,22 +151,24 @@ watch(
       :validate="validateForm"
       @submit="onSubmit"
     >
-      <div class="mb-2 flex items-center justify-between gap-3">
-        <h3 class="font-semibold">Dados da classificação</h3>
-        <Button
-          type="button"
-          icon="pi pi-plus"
-          aria-label="Limpar formulário"
-          title="Limpar formulário"
-          :disabled="loading || loadingGrid"
-          @click="handleClassification(null)"
-        />
-      </div>
       <div class="rounded-md border border-surface-200 p-5">
-        <div class="grid grid-cols-3 gap-x-2">
+        <div class="grid grid-cols-12 gap-x-2">
+          <div class="m-[4px] col-span-12 sm:col-span-3">
+            <FloatLabel variant="on" class="min-w-0 flex-1">
+              <InputText
+                id="ClassificacaoOrdemServicoDialog-cn_classificacao_os"
+                :modelValue="selectClassification == null ? '' : String(selectClassification)"
+                readonly
+                fluid
+                @keydown.delete.prevent="clearCode"
+                @keydown.backspace.prevent="clearCode"
+              />
+              <label for="ClassificacaoOrdemServicoDialog-cn_classificacao_os">Código</label>
+            </FloatLabel>
+          </div>
           <FieldForm
             compact
-            class="m-[4px] col-span-2 min-w-0"
+            class="m-[4px] col-span-12 min-w-0 sm:col-span-5"
             name="an_descr"
             v-slot="{ invalid, field }"
           >
@@ -175,7 +184,12 @@ watch(
               <label for="ClassificacaoOrdemServicoDialog-an_descr">Nome</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm compact class="m-[4px] min-w-0" name="ca_cor" v-slot="{ invalid, field }">
+          <FieldForm
+            compact
+            class="m-[4px] col-span-12 min-w-0 sm:col-span-4"
+            name="ca_cor"
+            v-slot="{ invalid, field }"
+          >
             <FloatLabel variant="on">
               <InputText
                 id="ClassificacaoOrdemServicoDialog-ca_cor"
@@ -191,19 +205,6 @@ watch(
               <label for="ClassificacaoOrdemServicoDialog-ca_cor">Cor</label>
             </FloatLabel>
           </FieldForm>
-          <FieldForm
-            compact
-            class="m-[4px] col-span-full"
-            name="bo_padrao"
-            label="Padrão para novas ordens"
-            v-slot="{ field }"
-          >
-            <ToggleSwitch
-              v-model="formData.bo_padrao"
-              :name="field"
-              aria-label="Usar como classificação padrão em novas ordens"
-            />
-          </FieldForm>
         </div>
       </div>
     </FormPage>
@@ -212,8 +213,8 @@ watch(
       :loading="loadingGrid"
       size="small"
       scrollable
-      scrollHeight="14rem"
-      class="mt-4"
+      scrollHeight="flex"
+      class="mt-4 min-h-24 flex-1"
     >
       <Column v-if="canWrite('CADASTROS')" header="Ações">
         <template #body="{ data }">
@@ -226,6 +227,12 @@ watch(
           />
         </template>
       </Column>
+      <Column
+        field="cn_classificacao_os"
+        header="Código"
+        style="width: 72px"
+        bodyStyle="text-align: right"
+      />
       <Column field="an_descr" header="Descrição" />
       <Column header="Cor"
         ><template #body="{ data }"
@@ -234,15 +241,12 @@ watch(
             :style="{ background: data.ca_cor }"
           ></span></template
       ></Column>
-      <Column header="Padrão"
-        ><template #body="{ data }">{{ data.bo_padrao ? 'Sim' : 'Não' }}</template></Column
-      >
     </DataTable>
     <template v-if="canWrite('CADASTROS')" #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">
         <Button
           type="button"
-          label="Cancelar"
+          label="Fechar"
           severity="secondary"
           :disabled="loading"
           @click="emit('update:visible', false)"

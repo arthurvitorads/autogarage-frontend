@@ -4,7 +4,6 @@ import { ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import Tag from 'primevue/tag'
 
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutServicoDialog from '@/components/dialogs/ManutServicoDialog.vue'
@@ -86,12 +85,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmServico }) {
           <template #cell-nu_tempo_estimado="{ data }">{{
             data.nu_tempo_estimado ? data.nu_tempo_estimado + ' min' : ''
           }}</template>
-          <template #cell-bo_sts_reg="{ data }">
-            <Tag
-              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-              :severity="data.bo_sts_reg ? 'success' : 'danger'"
-            />
-          </template>
         </GridPage>
       </div>
     </div>

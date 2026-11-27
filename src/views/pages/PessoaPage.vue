@@ -3,7 +3,6 @@ import { onMounted, ref, useTemplateRef } from 'vue'
 
 import InputText from 'primevue/inputtext'
 import Button from 'primevue/button'
-import { Tag } from 'primevue'
 
 import GridPage from '@/components/pages/GridPage.vue'
 import ManutPessoaDialog from '@/components/dialogs/ManutPessoaDialog.vue'
@@ -99,12 +98,6 @@ onMounted(() => {
           <template #cell-an_telefone="{ data }">{{
             maskTelefone(data.an_telefone ?? '')
           }}</template>
-          <template #cell-bo_sts_reg="{ data }">
-            <Tag
-              :value="data.bo_sts_reg ? 'Ativo' : 'Inativo'"
-              :severity="data.bo_sts_reg ? 'success' : 'danger'"
-            />
-          </template>
         </GridPage>
       </div>
     </div>

@@ -28,7 +28,7 @@ import type { IEndEstado } from '@/interface/tables'
 import { createPerson, updatePerson } from '@/services/person.service'
 import { getStates } from '@/services/address.service'
 import { fetchCep } from '@/services/cep.service'
-import { fetchCnpj } from '@/services/documento.service'
+import { consultarCnpj, consultarDocumento, documentoDuplicado } from '@/services/documento.service'
 import { validateFormField } from '@/services/form-validation.service'
 import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
@@ -98,6 +98,7 @@ const loadingButton = ref(false)
 const estadosData = ref<IEndEstado[]>([])
 
 const isEditing = computed(() => !!props.pessoa)
+const campoDocumento = computed(() => formData.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj')
 
 const selectedCategories = computed({
   get: () => personCategories.filter(({ value }) => formData[value]).map(({ value }) => value),
@@ -140,11 +141,18 @@ async function handleCnpj() {
   }
 
   const cnpj = unMaskDocument(formData.ca_cnpj).toUpperCase()
+  const versao = formKey.value
 
   setLoading(true)
 
   try {
-    const response = await fetchCnpj(cnpj)
+    const response = await consultarCnpj(cnpj, props.pessoa?.cn_pessoa)
+    if (
+      !props.visible ||
+      formKey.value !== versao ||
+      campoDocumento.value !== 'ca_cnpj' ||
+      unMaskDocument(formData.ca_cnpj).toUpperCase() !== cnpj
+    ) return
 
     if (!response) {
       formErrors.value.ca_cnpj = 'Não foi encontrado nenhum cadastro para este CNPJ.'
@@ -168,7 +176,12 @@ async function handleCnpj() {
 
     showSuccess('Processo realizado com sucesso.')
   } catch (error) {
-    showError(normalizeError(error))
+    const message = normalizeError(error)
+    if (message === documentoDuplicado) {
+      if (props.visible && formKey.value === versao && campoDocumento.value === 'ca_cnpj' &&
+          unMaskDocument(formData.ca_cnpj).toUpperCase() === cnpj)
+        formErrors.value.ca_cnpj = message
+    } else showError(message)
   } finally {
     setLoading(false)
   }
@@ -202,6 +215,11 @@ async function handleCep() {
   } finally {
     setLoading(false)
   }
+}
+
+function validarDocumento() {
+  const campo = campoDocumento.value
+  return formErrors.value[campo] === documentoDuplicado ? { [campo]: documentoDuplicado } : {}
 }
 
 async function onSubmit(values: IFormPessoa) {
@@ -246,7 +264,10 @@ async function onSubmit(values: IFormPessoa) {
     emit('update:visible', false)
     emit('onSave', dados)
   } catch (error) {
-    showError(normalizeError(error))
+    const message = normalizeError(error)
+    if (message === documentoDuplicado)
+      formErrors.value[values.ca_tipo === 'PF' ? 'ca_cpf' : 'ca_cnpj'] = message
+    else showError(message)
   } finally {
     setLoading(false)
   }
@@ -295,6 +316,27 @@ watch(
   },
   { immediate: true },
 )
+
+watch(
+  [() => props.visible, () => formKey.value, campoDocumento, () => formData[campoDocumento.value]],
+  async ([visible, , campo, documento], _, onCleanup) => {
+    for (const field of ['ca_cpf', 'ca_cnpj'])
+      if (formErrors.value[field] === documentoDuplicado) delete formErrors.value[field]
+
+    if (!visible || validateFormField(campo, config.fields[campo], formData)) return
+
+    const controller = new AbortController()
+    onCleanup(() => controller.abort())
+    try {
+      const { bo_uso } = await consultarDocumento(
+        campo, documento, props.pessoa?.cn_pessoa, controller.signal,
+      )
+      if (!controller.signal.aborted && bo_uso) formErrors.value[campo] = documentoDuplicado
+    } catch (error) {
+      if (!controller.signal.aborted) showError(normalizeError(error))
+    }
+  },
+)
 </script>
 
 <template>
@@ -314,6 +356,7 @@ watch(
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.fields"
+      :validate="validarDocumento"
       @submit="onSubmit"
     >
       <Fieldset legend="Dados principais">
