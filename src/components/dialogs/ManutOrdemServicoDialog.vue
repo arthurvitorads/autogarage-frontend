@@ -27,9 +27,12 @@ import FormPage from '@/components/pages/FormPage.vue'
 import config from '@/config/OrdemServicoPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import ManutPessoaDialog from '@/components/dialogs/ManutPessoaDialog.vue'
+import CadastroVeiculoDialog from '@/components/dialogs/CadastroVeiculoDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 import OrdemEvidencias from '@/components/pages/OrdemEvidencias.vue'
 import {
+  anexarEvidencia,
+  gravarDescricaoEvidencia,
   getOrderCustomer,
   getOrderEmployees,
   getVehicleCatalog,
@@ -44,6 +47,7 @@ import type {
   IMarcaVeiculo,
   IManutOrdemServico,
   IServiceOrderEmployee,
+  IServiceOrderEvidence,
   IServiceOrderEvidenceInput,
 } from '@/interface/pages/OrdemServicoPage'
 import type { TGenericData } from '@/interface/util'
@@ -78,7 +82,10 @@ const formKey = ref(0)
 const formRef = ref<IFormPageRef | null>(null)
 const personDialogVisible = ref(false)
 const classificationDialogVisible = ref(false)
-const isEditing = computed(() => !!props.order)
+const marcaVeiculoVisible = ref(false)
+const modeloVeiculoVisible = ref(false)
+const ordemAtual = ref<IAdmOrdemServico | null>(null)
+const gravandoEvidencia = ref(false)
 const maxYear = new Date().getFullYear() + 1
 const customerOptions = computed(() =>
   customers.value.map((customer) => ({
@@ -91,7 +98,12 @@ const formData = reactive<IFormOrdemServico>(ServiceOrderModel.createForm())
 
 const customerDetails = ref<TSaleCustomer | null>(null)
 const employees = ref<IServiceOrderEmployee[]>([])
-const savedEvidences = ref<IServiceOrderEvidenceInput[]>([])
+const savedEvidences = ref<IServiceOrderEvidence[]>([])
+const evidenceInput = ref<HTMLInputElement | null>(null)
+const evidenceQueue = ref<IServiceOrderEvidenceInput[]>([])
+const evidenceEditIndex = ref<number | null>(null)
+const evidenceDraft = ref<IServiceOrderEvidenceInput | null>(null)
+const evidencias = computed(() => [...savedEvidences.value, ...pendingEvidences.value])
 const pendingEvidences = ref<IServiceOrderEvidenceInput[]>([])
 const evidenceLoading = ref(false)
 const readingFiles = ref(false)
@@ -102,7 +114,7 @@ const evidenceSize = 1024 * 1024
 const imageTypes = ['image/jpeg', 'image/png', 'image/webp']
 
 const employeeOptions = computed(() => {
-  const assigned = props.order?.responsaveis ?? []
+  const assigned = ordemAtual.value?.responsaveis ?? []
   return [
     ...employees.value,
     ...assigned.filter(
@@ -115,16 +127,27 @@ const employeeOptions = computed(() => {
 })
 const catalogoVeiculos = ref<IMarcaVeiculo[]>([])
 const marcasVeiculo = computed(() => catalogoVeiculos.value.map((marca) => marca.an_marca))
-const modelosVeiculo = computed(
-  () =>
-    catalogoVeiculos.value.find(
-      (marca) => marca.an_marca.toLowerCase() === formData.an_marca.trim().toLowerCase(),
-    )?.modelos ?? [],
+const marcaSelecionada = computed(() =>
+  catalogoVeiculos.value.find(
+    (marca) => marca.an_marca.toLowerCase() === formData.an_marca.trim().toLowerCase(),
+  ),
 )
+const modelosVeiculo = computed(
+  () => marcaSelecionada.value?.modelos.map((modelo) => modelo.an_descr) ?? [],
+)
+
+function selecionarCadastroVeiculo(catalogo: IMarcaVeiculo[], marca: string, modelo?: string) {
+  const modeloAtual = formData.an_modelo
+  catalogoVeiculos.value = catalogo
+  alterarMarca(marca)
+  if (modelo) formData.an_modelo = modelo
+  else if (modelosVeiculo.value.includes(modeloAtual)) formData.an_modelo = modeloAtual
+}
+
 const dataEntrada = computed(() => (formData.dt_entrada ? new Date(formData.dt_entrada) : null))
 const dataPrevisao = computed(() => (formData.dt_previsao ? new Date(formData.dt_previsao) : null))
 const responsavelLegado = computed(() =>
-  props.order?.responsaveis?.length ? '' : props.order?.an_responsavel,
+  ordemAtual.value?.responsaveis?.length ? '' : ordemAtual.value?.an_responsavel,
 )
 
 function alterarMarca(marca: string | null) {
@@ -177,12 +200,10 @@ function selectNewPerson(person: ICadPessoa) {
     ]
   }
   formData.cn_pessoa = person.cn_pessoa
-  delete formErrors.value.cn_pessoa
 }
 
 function selectClassification(item: IClassificacaoOrdemServico) {
   formData.cn_classificacao_os = item.cn_classificacao_os
-  delete formErrors.value.cn_classificacao_os
 }
 
 function selectDate(
@@ -190,7 +211,6 @@ function selectDate(
   value: Date | (Date | null)[] | null | undefined,
 ) {
   formData[field] = value instanceof Date ? localDateTime(value.toISOString()) : ''
-  delete formErrors.value[field]
 }
 
 function alterarPlaca(event: Event) {
@@ -198,7 +218,6 @@ function alterarPlaca(event: Event) {
   const placa = mascararPlaca(campo.value)
   if (campo.value !== placa) campo.value = placa
   formData.an_placa = placa
-  delete formErrors.value.an_placa
 }
 
 async function findPlate() {
@@ -218,8 +237,6 @@ async function findPlate() {
       return
     }
     Object.assign(formData, dados, { an_placa: mascararPlaca(plate) })
-    for (const field of ['an_placa', 'an_marca', 'an_modelo', 'nu_ano', 'an_cor'])
-      delete formErrors.value[field]
   } catch (error) {
     if (props.visible && version === formKey.value) showError(normalizeError(error))
   } finally {
@@ -236,11 +253,79 @@ function readImage(file: File): Promise<string> {
   })
 }
 
-async function selectEvidences(event: Event) {
+function selectEvidences(event: Event) {
   const input = event.target as HTMLInputElement
   const files = Array.from(input.files ?? [])
   input.value = ''
-  if (!files.length || readingFiles.value) return
+  return adicionarEvidencias(files)
+}
+
+function soltarEvidencias(event: DragEvent) {
+  return adicionarEvidencias(Array.from(event.dataTransfer?.files ?? []))
+}
+
+function editarEvidencia(index: number) {
+  const image = evidencias.value[index]
+  if (!image) return
+  evidenceEditIndex.value = index
+  evidenceDraft.value = { ...image }
+}
+
+function cancelarEvidencia() {
+  evidenceQueue.value = []
+  evidenceEditIndex.value = null
+  evidenceDraft.value = null
+}
+
+async function confirmarEvidencia() {
+  const image = evidenceDraft.value
+  if (!image || gravandoEvidencia.value) return
+  const index = evidenceEditIndex.value
+  const an_descr = image.an_descr.trim()
+  const ordem = ordemAtual.value
+  const version = formKey.value
+  gravandoEvidencia.value = true
+
+  try {
+    if (index === null) {
+      if (ordem) {
+        const { dados } = await anexarEvidencia(ordem.cn_ordem, { ...image, an_descr })
+        if (!props.visible || version !== formKey.value) return
+        savedEvidences.value.push(dados)
+        showSuccess('Processo realizado com sucesso.')
+      } else {
+        pendingEvidences.value.push({ ...image, an_descr })
+      }
+      evidenceDraft.value = evidenceQueue.value.shift() ?? null
+      return
+    }
+
+    const saved = savedEvidences.value[index]
+    if (saved && ordem) {
+      const { dados } = await gravarDescricaoEvidencia(ordem.cn_ordem, saved.cn_evidencia, an_descr)
+      if (!props.visible || version !== formKey.value) return
+      saved.an_descr = dados.an_descr
+    } else {
+      const evidence = evidencias.value[index]
+      if (evidence) evidence.an_descr = an_descr
+    }
+    cancelarEvidencia()
+  } catch (error) {
+    if (props.visible && version === formKey.value) showError(normalizeError(error))
+  } finally {
+    gravandoEvidencia.value = false
+  }
+}
+
+async function adicionarEvidencias(files: File[]) {
+  if (
+    !files.length ||
+    loading.value ||
+    readingFiles.value ||
+    evidenceLoading.value ||
+    evidenceDraft.value
+  )
+    return
   if (files.length + savedEvidences.value.length + pendingEvidences.value.length > evidenceLimit) {
     showWarn('Uma ordem pode ter até cinco imagens.')
     return
@@ -259,11 +344,15 @@ async function selectEvidences(event: Event) {
     const images = await Promise.all(
       files.map(async (file) => ({
         an_nome: file.name,
+        an_descr: '',
         ca_mime: file.type,
         bl_imagem: await readImage(file),
       })),
     )
-    if (props.visible && version === formKey.value) pendingEvidences.value.push(...images)
+    if (props.visible && version === formKey.value) {
+      evidenceDraft.value = images.shift() ?? null
+      evidenceQueue.value = images
+    }
   } catch (error) {
     if (props.visible && version === formKey.value) showError(normalizeError(error))
   } finally {
@@ -294,7 +383,7 @@ async function onSubmit(values: IFormOrdemServico) {
     if (values.cn_pessoa === null || values.cn_classificacao_os === null) return
 
     const data: IManutOrdemServico = {
-      ...(props.order ? { cn_ordem: props.order.cn_ordem } : {}),
+      ...(ordemAtual.value ? { cn_ordem: ordemAtual.value.cn_ordem } : {}),
       cn_pessoa: values.cn_pessoa,
       cn_classificacao_os: values.cn_classificacao_os,
       dt_entrada: new Date(values.dt_entrada).toISOString(),
@@ -312,10 +401,26 @@ async function onSubmit(values: IFormOrdemServico) {
       an_solicitacao: values.an_solicitacao.trim(),
       an_obs: values.an_obs.trim(),
     }
+    const version = formKey.value
     const result = await saveOrder(data)
+    if (!props.visible || version !== formKey.value) {
+      emit('saved', result)
+      return
+    }
+    ordemAtual.value = result
+    const atualizarEvidencias = pendingEvidences.value.length > 0
+    pendingEvidences.value = []
     emit('saved', result)
     showSuccess('Processo realizado com sucesso.')
-    emit('update:visible', false)
+    if (atualizarEvidencias) {
+      evidenceLoading.value = true
+      try {
+        const { dados } = await getOrderEvidences(result.cn_ordem)
+        if (props.visible && version === formKey.value) savedEvidences.value = dados
+      } finally {
+        if (version === formKey.value) evidenceLoading.value = false
+      }
+    }
   } catch (error) {
     showError(normalizeError(error))
   } finally {
@@ -333,6 +438,7 @@ watch(
     })
 
     const order = props.order
+    ordemAtual.value = order ?? null
 
     Object.assign(formData, ServiceOrderModel.createForm())
     if (order) {
@@ -358,6 +464,7 @@ watch(
     employees.value = []
     catalogoVeiculos.value = []
     savedEvidences.value = []
+    cancelarEvidencia()
     pendingEvidences.value = []
     readingFiles.value = false
     plateLoading.value = false
@@ -386,10 +493,17 @@ watch(
   <Dialog
     :visible="visible"
     @update:visible="emit('update:visible', $event)"
-    :header="isEditing ? 'Editar ordem de serviço' : 'Nova ordem de serviço'"
+    :header="ordemAtual ? 'Editar O.S.' : 'Nova O.S.'"
     modal
     :closeOnEscape="!personDialogVisible && !classificationDialogVisible"
-    :style="{ width: '96rem', maxWidth: '95vw', maxHeight: '90vh' }"
+    contentClass="min-h-0 flex-1"
+    :style="{
+      width: '96rem',
+      maxWidth: '95vw',
+      height: 'min(70rem, calc(100dvh - 8px))',
+      minHeight: 'min(70rem, calc(100dvh - 8px))',
+      maxHeight: 'calc(100dvh - 8px)',
+    }"
   >
     <FormPage
       ref="formRef"
@@ -397,6 +511,7 @@ watch(
       novalidate
       class="flex flex-col gap-4"
       v-model:errors="formErrors"
+      revalidateErrors
       :initialValues="formData"
       :modelValues="formData"
       :fields="config.fields"
@@ -591,36 +706,59 @@ watch(
             </div>
           </FieldForm>
           <FieldForm class="m-[4px] col-span-12 sm:col-span-4" name="an_marca" v-slot="{ invalid }">
-            <FloatLabel variant="on">
-              <Select
-                inputId="ManutOrdemServicoDialog-an_marca"
-                :modelValue="formData.an_marca"
-                :options="marcasVeiculo"
-                editable
-                @update:modelValue="alterarMarca($event)"
-                :invalid="invalid"
-                fluid
+            <div class="flex gap-2">
+              <FloatLabel variant="on" class="min-w-0 flex-1">
+                <Select
+                  inputId="ManutOrdemServicoDialog-an_marca"
+                  :modelValue="marcaSelecionada?.an_marca ?? formData.an_marca"
+                  :options="marcasVeiculo"
+                  filter
+                  @update:modelValue="alterarMarca($event)"
+                  :invalid="invalid"
+                  fluid
+                />
+                <label for="ManutOrdemServicoDialog-an_marca">Marca</label>
+              </FloatLabel>
+              <Button
+                v-if="canWrite('CADASTROS')"
+                type="button"
+                icon="pi pi-plus"
+                aria-label="Cadastrar marca de veículo"
+                @click="marcaVeiculoVisible = true"
               />
-              <label for="ManutOrdemServicoDialog-an_marca">Marca</label>
-            </FloatLabel>
+            </div>
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-5"
             name="an_modelo"
             v-slot="{ invalid }"
           >
-            <FloatLabel variant="on">
-              <Select
-                inputId="ManutOrdemServicoDialog-an_modelo"
-                :modelValue="formData.an_modelo"
-                :options="modelosVeiculo"
-                editable
-                @update:modelValue="formData.an_modelo = $event ?? ''"
-                :invalid="invalid"
-                fluid
+            <div class="flex gap-2">
+              <FloatLabel variant="on" class="min-w-0 flex-1">
+                <Select
+                  inputId="ManutOrdemServicoDialog-an_modelo"
+                  :modelValue="
+                    modelosVeiculo.find(
+                      (modelo) => modelo.toLowerCase() === formData.an_modelo.toLowerCase(),
+                    ) ?? formData.an_modelo
+                  "
+                  :options="modelosVeiculo"
+                  :disabled="!marcaSelecionada"
+                  filter
+                  @update:modelValue="formData.an_modelo = $event ?? ''"
+                  :invalid="invalid"
+                  fluid
+                />
+                <label for="ManutOrdemServicoDialog-an_modelo">Modelo</label>
+              </FloatLabel>
+              <Button
+                v-if="canWrite('CADASTROS')"
+                type="button"
+                icon="pi pi-plus"
+                aria-label="Cadastrar modelo de veículo"
+                @click="modeloVeiculoVisible = true"
               />
-              <label for="ManutOrdemServicoDialog-an_modelo">Modelo</label>
-            </FloatLabel>
+            </div>
           </FieldForm>
           <FieldForm
             class="m-[4px] col-span-12 sm:col-span-4"
@@ -682,7 +820,7 @@ watch(
             <Tab value="observacoes">Observações</Tab>
             <Tab value="evidencias">Evidências</Tab>
           </TabList>
-          <TabPanels>
+          <TabPanels class="h-44">
             <TabPanel value="observacoes">
               <div class="grid grid-cols-12 gap-x-4">
                 <FieldForm
@@ -696,7 +834,7 @@ watch(
                       maxlength="4000"
                       v-model="formData.an_solicitacao"
                       :name="field"
-                      rows="2"
+                      class="h-36 resize-none"
                       fluid
                     />
                     <label for="ManutOrdemServicoDialog-an_solicitacao"
@@ -715,7 +853,7 @@ watch(
                       maxlength="4000"
                       v-model="formData.an_obs"
                       :name="field"
-                      rows="2"
+                      class="h-36 resize-none"
                       fluid
                     />
                     <label for="ManutOrdemServicoDialog-an_obs">Observações internas</label>
@@ -724,31 +862,56 @@ watch(
               </div>
             </TabPanel>
             <TabPanel value="evidencias">
-              <div class="flex flex-col gap-3 py-3">
-                <label class="flex flex-col gap-1">
-                  Selecionar imagens
-                  <input
-                    type="file"
-                    :accept="imageTypes.join(',')"
-                    multiple
-                    :disabled="
-                      loading ||
-                      readingFiles ||
-                      evidenceLoading ||
-                      savedEvidences.length + pendingEvidences.length >= evidenceLimit
-                    "
-                    @change="selectEvidences"
-                  />
-                  <small>Até cinco imagens JPEG, PNG ou WebP de até 1 MB cada.</small>
-                </label>
-                <p v-if="evidenceLoading">Carregando evidências...</p>
-                <OrdemEvidencias v-if="savedEvidences.length" :images="savedEvidences" />
-                <OrdemEvidencias
-                  v-if="pendingEvidences.length"
-                  :images="pendingEvidences"
-                  removable
-                  @remove="pendingEvidences.splice($event, 1)"
+              <div class="flex h-36 flex-col justify-center">
+                <input
+                  ref="evidenceInput"
+                  type="file"
+                  :accept="imageTypes.join(',')"
+                  class="hidden"
+                  multiple
+                  @change="selectEvidences"
                 />
+                <p v-if="evidenceLoading">Carregando evidências...</p>
+                <template v-else>
+                  <button
+                    v-if="!evidencias.length"
+                    type="button"
+                    class="flex h-full w-full flex-col items-center justify-center gap-2 rounded-md border border-dashed border-surface-400 p-2 text-sm text-surface-600 hover:border-primary hover:text-primary disabled:opacity-50"
+                    :disabled="loading || readingFiles"
+                    @click="evidenceInput?.click()"
+                    @dragover.prevent
+                    @drop.prevent="soltarEvidencias"
+                  >
+                    <i class="pi pi-cloud-upload text-2xl" aria-hidden="true" />
+                    <span>{{
+                      readingFiles
+                        ? 'Carregando imagens...'
+                        : 'Arraste e solte imagens aqui ou clique para selecionar'
+                    }}</span>
+                    <small>Até cinco imagens JPEG, PNG ou WebP de até 1 MB cada.</small>
+                  </button>
+                  <OrdemEvidencias
+                    v-else
+                    :images="evidencias"
+                    :removableFrom="savedEvidences.length"
+                    compact
+                    @edit="editarEvidencia"
+                    @remove="pendingEvidences.splice($event - savedEvidences.length, 1)"
+                  >
+                    <li v-if="evidencias.length < evidenceLimit" class="shrink-0">
+                      <Button
+                        type="button"
+                        icon="pi pi-plus"
+                        aria-label="Adicionar imagens"
+                        :disabled="loading"
+                        :loading="readingFiles"
+                        @click="evidenceInput?.click()"
+                        @dragover.prevent
+                        @drop.prevent="soltarEvidencias"
+                      />
+                    </li>
+                  </OrdemEvidencias>
+                </template>
               </div>
             </TabPanel>
           </TabPanels>
@@ -773,7 +936,63 @@ watch(
       </div>
     </template>
   </Dialog>
+  <Dialog
+    :visible="!!evidenceDraft"
+    :header="evidenceEditIndex === null ? 'Adicionar evidência' : 'Editar descrição'"
+    :closable="!gravandoEvidencia"
+    :closeOnEscape="!gravandoEvidencia"
+    modal
+    :style="{ width: '28rem', maxWidth: '95vw' }"
+    @update:visible="!$event && cancelarEvidencia()"
+  >
+    <form
+      v-if="evidenceDraft"
+      id="form-evidencia-os"
+      class="flex flex-col gap-3"
+      @submit.prevent="confirmarEvidencia"
+    >
+      <p class="break-all font-semibold">{{ evidenceDraft.an_nome }}</p>
+      <label for="evidencia-os-descricao">Descrição</label>
+      <Textarea
+        id="evidencia-os-descricao"
+        v-model="evidenceDraft.an_descr"
+        placeholder="Descrição opcional"
+        rows="3"
+        maxlength="500"
+        fluid
+      />
+    </form>
+    <template #footer>
+      <Button
+        type="button"
+        label="Cancelar"
+        severity="secondary"
+        :disabled="gravandoEvidencia"
+        @click="cancelarEvidencia"
+      />
+      <Button
+        type="submit"
+        form="form-evidencia-os"
+        label="Confirmar"
+        :loading="gravandoEvidencia"
+      />
+    </template>
+  </Dialog>
   <ManutPessoaDialog v-model:visible="personDialogVisible" @on-save="selectNewPerson" />
+  <CadastroVeiculoDialog
+    v-model:visible="marcaVeiculoVisible"
+    tipo="marca"
+    @saved="(catalogo, registro) => selecionarCadastroVeiculo(catalogo, registro.an_marca)"
+  />
+  <CadastroVeiculoDialog
+    v-model:visible="modeloVeiculoVisible"
+    tipo="modelo"
+    :marca-inicial="marcaSelecionada?.cn_marca_veiculo"
+    @saved="
+      (catalogo, registro) =>
+        selecionarCadastroVeiculo(catalogo, registro.an_marca, registro.an_descr)
+    "
+  />
   <ClassificacaoOrdemServicoDialog
     v-model:visible="classificationDialogVisible"
     @saved="selectClassification"

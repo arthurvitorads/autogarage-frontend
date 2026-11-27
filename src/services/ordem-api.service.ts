@@ -11,6 +11,7 @@ import type {
   TServiceOrderAction,
   IServiceOrderEmployee,
   IServiceOrderEvidence,
+  IServiceOrderEvidenceInput,
   IServiceOrderVehicle,
   IMarcaVeiculo,
 } from '@/interface/pages/OrdemServicoPage'
@@ -39,6 +40,18 @@ export function getVehicleCatalog() {
   return apiRequest<IMarcaVeiculo[]>('/ordensServico/veiculos/param')
 }
 
+export function gravarMarcaVeiculo(dados: { cn_marca_veiculo?: number; an_descr: string }) {
+  return apiRequest<{ cn_marca_veiculo: number }>('/marcasVeiculos/manut', dados)
+}
+
+export function gravarModeloVeiculo(dados: {
+  cn_modelo_veiculo?: number
+  cn_marca_veiculo: number
+  an_descr: string
+}) {
+  return apiRequest<{ cn_modelo_veiculo: number }>('/modelosVeiculos/manut', dados)
+}
+
 export function lookupOrderPlate(plate: string) {
   return apiRequest<Pick<
     IServiceOrderVehicle,
@@ -49,6 +62,25 @@ export function lookupOrderPlate(plate: string) {
 export function getOrderEvidences(id: TServiceOrderCode) {
   return apiRequest<IServiceOrderEvidence[]>('/ordensServico/evidencias/view', {
     cn_ordem: id,
+  })
+}
+
+export function anexarEvidencia(cn_ordem: TServiceOrderCode, imagem: IServiceOrderEvidenceInput) {
+  return apiRequest<IServiceOrderEvidence>('/ordensServico/evidencias/manut', {
+    cn_ordem,
+    ...imagem,
+  })
+}
+
+export function gravarDescricaoEvidencia(
+  cn_ordem: TServiceOrderCode,
+  cn_evidencia: string,
+  an_descr: string,
+) {
+  return apiRequest<{ an_descr: string }>('/ordensServico/evidencias/manut', {
+    cn_ordem,
+    cn_evidencia,
+    an_descr,
   })
 }
 

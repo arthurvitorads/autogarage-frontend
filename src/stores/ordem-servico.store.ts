@@ -4,6 +4,7 @@ import { ref, watch } from 'vue'
 import { defineStore } from 'pinia'
 import type {
   IClienteOrdemServico,
+  IMarcaVeiculo,
   IManutOrdemServico,
   IManutClassificacaoOrdemServico,
   TManutItemOrdemServico,
@@ -15,6 +16,7 @@ import { useUtilStore } from '@/stores/util.store'
 export const useOrdemServicoStore = defineStore('ordem-servico', () => {
   const ordens = ref<IAdmOrdemServico[]>([])
   const classificacoes = ref<IClassificacaoOrdemServico[]>([])
+  const catalogoVeiculos = ref<IMarcaVeiculo[]>([])
   const clientes = ref<IClienteOrdemServico[]>([])
   const utilStore = useUtilStore()
   let sessionVersion = 0
@@ -28,6 +30,12 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     if (version !== sessionVersion) return
     classificacoes.value = classificationsResponse.dados
     clientes.value = customersResponse?.dados ?? []
+  }
+
+  async function carregarCatalogoVeiculos() {
+    const version = sessionVersion
+    const { dados } = await orderService.getVehicleCatalog()
+    if (version === sessionVersion) catalogoVeiculos.value = dados
   }
 
   async function loadOrder(id: TServiceOrderCode) {
@@ -91,6 +99,7 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
       ordens.value = []
       classificacoes.value = []
       clientes.value = []
+      catalogoVeiculos.value = []
     },
     { flush: 'sync' },
   )
@@ -98,6 +107,8 @@ export const useOrdemServicoStore = defineStore('ordem-servico', () => {
     ordens,
     classificacoes,
     clientes,
+    catalogoVeiculos,
+    carregarCatalogoVeiculos,
     loadOrder,
     loadParametros,
     saveClassificacao,

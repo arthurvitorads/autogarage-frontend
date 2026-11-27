@@ -56,10 +56,12 @@ export interface IManutOrdemServico extends IServiceOrderVehicle {
   an_solicitacao: string
   an_obs: string
   evidencias?: IServiceOrderEvidenceInput[]
+  descricoes_evidencias?: { cn_evidencia: string; an_descr: string }[]
 }
 
 export interface IServiceOrderEvidenceInput {
   an_nome: string
+  an_descr: string
   ca_mime: string
   bl_imagem: string
 }
@@ -74,9 +76,15 @@ export interface IServiceOrderEmployee {
   an_cargo: string
 }
 
+export interface IModeloVeiculo {
+  cn_modelo_veiculo: number
+  an_descr: string
+}
+
 export interface IMarcaVeiculo {
+  cn_marca_veiculo: number
   an_marca: string
-  modelos: string[]
+  modelos: IModeloVeiculo[]
 }
 
 export type TServiceOrderItemType = 'PRODUTO' | 'SERVICO'

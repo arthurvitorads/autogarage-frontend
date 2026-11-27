@@ -7,6 +7,7 @@ import CategoriaProdutoDialog from '@/components/dialogs/CategoriaProdutoDialog.
 import CategoriaServicoDialog from '@/components/dialogs/CategoriaServicoDialog.vue'
 import MarcaDialog from '@/components/dialogs/MarcaDialog.vue'
 import UnidadeDialog from '@/components/dialogs/UnidadeDialog.vue'
+import CadastroVeiculoDialog from '@/components/dialogs/CadastroVeiculoDialog.vue'
 import ClassificacaoOrdemServicoDialog from '@/components/dialogs/ClassificacaoOrdemServicoDialog.vue'
 import { useUtilStore } from '@/stores/util.store'
 import type { TModule } from '@/interface/access'
@@ -16,6 +17,8 @@ const serviceCategoryDialogVisible = ref(false)
 const brandDialogVisible = ref(false)
 const unitDialogVisible = ref(false)
 const classificationDialogVisible = ref(false)
+const marcaVeiculoVisible = ref(false)
+const modeloVeiculoVisible = ref(false)
 
 import PanelMenu, { type PanelMenuPanelOpenEvent } from 'primevue/panelmenu'
 
@@ -27,6 +30,15 @@ const route = useRoute()
 const { canRead } = useUtilStore()
 
 const expandedKeys = ref<Record<string, boolean>>({})
+
+interface IMenuItem {
+  key: string
+  label: string
+  icon: string
+  route: string
+  openDialog?: () => void
+  items?: IMenuItem[]
+}
 
 const modules = [
   {
@@ -46,39 +58,61 @@ const modules = [
       { key: 'cadastros:produto', label: 'Produtos', icon: 'box', route: '/produto' },
       { key: 'cadastros:servico', label: 'Serviços', icon: 'wrench', route: '/servico' },
       {
-        key: 'cadastros:classificacao',
-        label: 'Classificações de O.S.',
-        icon: 'tags',
+        key: 'cadastros:auxiliares',
+        label: 'Auxiliares',
+        icon: 'folder',
         route: '',
-        openDialog: () => (classificationDialogVisible.value = true),
-      },
-      {
-        key: 'cadastros:categoria-produto',
-        label: 'Categorias de produtos',
-        icon: 'list',
-        route: '',
-        openDialog: () => (productCategoryDialogVisible.value = true),
-      },
-      {
-        key: 'cadastros:categoria-servico',
-        label: 'Categorias de serviços',
-        icon: 'list',
-        route: '',
-        openDialog: () => (serviceCategoryDialogVisible.value = true),
-      },
-      {
-        key: 'cadastros:marca',
-        label: 'Marcas',
-        icon: 'tag',
-        route: '',
-        openDialog: () => (brandDialogVisible.value = true),
-      },
-      {
-        key: 'cadastros:unidade',
-        label: 'Unidades',
-        icon: 'box',
-        route: '',
-        openDialog: () => (unitDialogVisible.value = true),
+        items: [
+          {
+            key: 'cadastros:classificacao',
+            label: 'Classificações de O.S.',
+            icon: 'tags',
+            route: '',
+            openDialog: () => (classificationDialogVisible.value = true),
+          },
+          {
+            key: 'cadastros:categoria-produto',
+            label: 'Categorias de produtos',
+            icon: 'list',
+            route: '',
+            openDialog: () => (productCategoryDialogVisible.value = true),
+          },
+          {
+            key: 'cadastros:categoria-servico',
+            label: 'Categorias de serviços',
+            icon: 'list',
+            route: '',
+            openDialog: () => (serviceCategoryDialogVisible.value = true),
+          },
+          {
+            key: 'cadastros:marca',
+            label: 'Marcas',
+            icon: 'tag',
+            route: '',
+            openDialog: () => (brandDialogVisible.value = true),
+          },
+          {
+            key: 'cadastros:unidade',
+            label: 'Unidades',
+            icon: 'box',
+            route: '',
+            openDialog: () => (unitDialogVisible.value = true),
+          },
+          {
+            key: 'cadastros:marca-veiculo',
+            label: 'Marcas de veículos',
+            icon: 'tag',
+            route: '',
+            openDialog: () => (marcaVeiculoVisible.value = true),
+          },
+          {
+            key: 'cadastros:modelo-veiculo',
+            label: 'Modelos de veículos',
+            icon: 'car',
+            route: '',
+            openDialog: () => (modeloVeiculoVisible.value = true),
+          },
+        ],
       },
     ],
   },
@@ -132,13 +166,7 @@ const modules = [
   access: TModule
   label: string
   icon: string
-  items: {
-    key: string
-    label: string
-    icon: string
-    route: string
-    openDialog?: () => void
-  }[]
+  items: IMenuItem[]
 }[]
 const visibleModules = computed(() => modules.filter((module) => canRead(module.access)))
 
@@ -219,6 +247,8 @@ onMounted(openCurrentModule)
   <MarcaDialog v-model:visible="brandDialogVisible" />
   <UnidadeDialog v-model:visible="unitDialogVisible" />
   <ClassificacaoOrdemServicoDialog v-model:visible="classificationDialogVisible" />
+  <CadastroVeiculoDialog v-model:visible="marcaVeiculoVisible" tipo="marca" />
+  <CadastroVeiculoDialog v-model:visible="modeloVeiculoVisible" tipo="modelo" />
 </template>
 
 <style scoped>

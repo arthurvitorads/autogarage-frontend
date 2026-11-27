@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { IAdmOrdemServico } from '@/interface/tables'
 import { usePesquisa as useSearch } from '@/composables/usePesquisa'
-import { getOrdersPage, getVehicleCatalog } from '@/services/ordem-api.service'
+import { getOrdersPage } from '@/services/ordem-api.service'
 import { usePageLoad } from '@/composables/usePageLoad'
 import { computed, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -18,7 +18,7 @@ import Paginator from 'primevue/paginator'
 
 import ManutOrdemServicoDialog from '@/components/dialogs/ManutOrdemServicoDialog.vue'
 
-import type { IMarcaVeiculo, TServiceOrderCode } from '@/interface/pages/OrdemServicoPage'
+import type { TServiceOrderCode } from '@/interface/pages/OrdemServicoPage'
 
 import {
   calcularTotalOrdem as calculateOrderTotal,
@@ -31,12 +31,10 @@ import {
 } from '@/services/ordem-servico.service'
 import { formatDateTime } from '@/services/util.service'
 import { useOrdemServicoStore as useServiceOrderStore } from '@/stores/ordem-servico.store'
-import { useAppToast } from '@/services/toast.service'
 import { useUtilStore } from '@/stores/util.store'
 
 const router = useRouter()
-const { canWrite, normalizeError, setLoading } = useUtilStore()
-const { showError } = useAppToast()
+const { canWrite, setLoading } = useUtilStore()
 const { inicio: start, fim: end, status } = router.options.history.state
 const dates = ref<(Date | null)[]>(currentMonthDates())
 if (typeof start === 'string' && typeof end === 'string') {
@@ -57,13 +55,16 @@ const filtros = ref({
   status: typeof status === 'string' && status ? [status] : [],
 })
 const filtrosPesquisa = ref({ ...filtros.value })
-const catalogoVeiculos = ref<IMarcaVeiculo[]>([])
+const ordemStore = useServiceOrderStore()
+const { classificacoes: classifications, catalogoVeiculos } = storeToRefs(ordemStore)
 const marcasVeiculo = computed(() => catalogoVeiculos.value.map((marca) => marca.an_marca))
 const modelosVeiculo = computed(() => {
   const marcas = filtros.value.marca.length
     ? catalogoVeiculos.value.filter((marca) => filtros.value.marca.includes(marca.an_marca))
     : catalogoVeiculos.value
-  return [...new Set(marcas.flatMap((marca) => marca.modelos))].sort((a, b) => a.localeCompare(b))
+  return [
+    ...new Set(marcas.flatMap((marca) => marca.modelos.map((modelo) => modelo.an_descr))),
+  ].sort((a, b) => a.localeCompare(b))
 })
 
 function filtrarMarca(marcas: string[] | null) {
@@ -75,19 +76,6 @@ function filtrarMarca(marcas: string[] | null) {
 
 function limparFiltros() {
   filtros.value = criarFiltros()
-}
-
-async function carregarCatalogoVeiculos() {
-  try {
-    const { dados } = await getVehicleCatalog()
-    catalogoVeiculos.value = dados
-  } catch (error) {
-    showError(normalizeError(error))
-  }
-}
-
-async function aoGravarOrdem() {
-  await Promise.all([load(), carregarCatalogoVeiculos()])
 }
 
 function orderFilters() {
@@ -104,7 +92,6 @@ function orderFilters() {
 watch(dates, () => {
   if (dateInterval(dates.value)) search()
 })
-const { classificacoes: classifications } = storeToRefs(useServiceOrderStore())
 const {
   records: orders,
   total,
@@ -166,8 +153,8 @@ function getClassification(code: TServiceOrderCode) {
 }
 
 usePageLoad(async () => {
-  await useServiceOrderStore().loadParametros()
-  await Promise.all([load(), carregarCatalogoVeiculos()])
+  await ordemStore.loadParametros()
+  await Promise.all([load(), ordemStore.carregarCatalogoVeiculos()])
 })
 function updateSale(sale: { cn_venda: string }) {
   if (detailOrder.value) detailOrder.value.cn_venda = sale.cn_venda
@@ -379,11 +366,7 @@ function updateSale(sale: { cn_venda: string }) {
       @page="changePage"
     />
   </div>
-  <ManutOrdemServicoDialog
-    v-model:visible="manutOrderVisible"
-    :order="selectOrder"
-    @saved="aoGravarOrdem"
-  />
+  <ManutOrdemServicoDialog v-model:visible="manutOrderVisible" :order="selectOrder" @saved="load" />
   <MovimentarOrdemServicoDialog
     v-model:visible="orderMovementVisible"
     :order="movementOrder"

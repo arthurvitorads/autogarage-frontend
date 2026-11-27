@@ -19,6 +19,13 @@
       "required": true
     }
   },
+  "marcaVeiculoFields": {
+    "an_descr": { "required": true }
+  },
+  "modeloVeiculoFields": {
+    "cn_marca_veiculo": { "required": true },
+    "an_descr": { "required": true }
+  },
   "classificationFields": {
     "an_descr": {
       "required": true
