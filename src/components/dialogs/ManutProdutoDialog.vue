@@ -6,10 +6,15 @@ import type { ICadUnidade } from '@/interface/pages/Unidade'
 import FloatLabel from 'primevue/floatlabel'
 import { ProductModel } from '@/models/product.model'
 import type { IFormPageRef } from '@/interface/util'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 
 import Fieldset from 'primevue/fieldset'
+import Tabs from 'primevue/tabs'
+import TabList from 'primevue/tablist'
+import Tab from 'primevue/tab'
+import TabPanels from 'primevue/tabpanels'
+import TabPanel from 'primevue/tabpanel'
 import InputText from 'primevue/inputtext'
 import InputNumber from 'primevue/inputnumber'
 import Select from 'primevue/select'
@@ -19,6 +24,7 @@ import Button from 'primevue/button'
 
 import Dialog from 'primevue/dialog'
 import FormPage from '@/components/pages/FormPage.vue'
+import { useConfirmacao } from '@/composables/useConfirmacao'
 import config from '@/config/ProdutoPageConfig.json'
 import FieldForm from '@/components/field/FieldForm.vue'
 import CategoriaProdutoDialog from '@/components/dialogs/CategoriaProdutoDialog.vue'
@@ -77,6 +83,34 @@ function handleUnidade(unit: ICadUnidade) {
 
 const formData = reactive<IFormProduto>(ProductModel.createForm())
 
+type CampoValor = 'vl_custo' | 'vl_venda'
+const valoresDigitados = reactive<Record<CampoValor, string>>({ vl_custo: '', vl_venda: '' })
+const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+
+function formatarValor(campo: CampoValor) {
+  const valor = formData[campo]
+  if (valor !== null) valoresDigitados[campo] = moeda.format(valor)
+}
+
+function editarValor(campo: CampoValor, event: FocusEvent) {
+  const input = event.target as HTMLInputElement
+  const valor = formData[campo]
+  if (valor !== null) valoresDigitados[campo] = valor.toFixed(2).replace('.', ',')
+  void nextTick(() => input.select())
+}
+
+function digitarValor(campo: CampoValor, texto = '') {
+  valoresDigitados[campo] = texto
+  const valor = texto.trim().replace(/^R\$\s*/, '')
+  if (/^(?:\d+|\d{1,3}(?:\.\d{3})+)(?:,\d{0,2})?$/.test(valor)) {
+    formData[campo] = Number(valor.replace(/\./g, '').replace(',', '.'))
+  } else if (/^\d+\.\d{1,2}$/.test(valor)) {
+    formData[campo] = Number(valor)
+  } else {
+    formData[campo] = null
+  }
+}
+
 function validateForm(values: IFormProduto) {
   const errors: TGenericData = {}
 
@@ -121,7 +155,11 @@ function validateForm(values: IFormProduto) {
   return errors
 }
 
+const confirmar = useConfirmacao()
+
 async function onSubmit(values: IFormProduto) {
+  if (loading.value || !(await confirmar())) return
+
   setLoading(true)
 
   try {
@@ -174,6 +212,8 @@ watch(
         bo_sts_reg: product.bo_sts_reg,
       })
     }
+    formatarValor('vl_custo')
+    formatarValor('vl_venda')
     formErrors.value = {}
     formKey.value++
   },
@@ -203,45 +243,47 @@ watch(
     >
       <Fieldset legend="Dados principais">
         <div class="grid grid-cols-12 gap-x-4">
+          <div class="col-span-12 grid gap-x-4 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_auto]">
+            <FieldForm
+              class="m-[4px] min-w-0"
+              name="an_referencia"
+              v-slot="{ invalid, field }"
+            >
+              <FloatLabel variant="on">
+                <InputText
+                  id="ManutProdutoDialog-an_referencia"
+                  maxlength="4000"
+                  v-model="formData.an_referencia"
+                  :name="field"
+                  :invalid="invalid"
+                  fluid
+                />
+                <label for="ManutProdutoDialog-an_referencia">Referência</label>
+              </FloatLabel>
+            </FieldForm>
+            <FieldForm
+              class="m-[4px] min-w-0"
+              name="an_nome"
+              v-slot="{ invalid, field }"
+            >
+              <FloatLabel variant="on">
+                <InputText
+                  id="ManutProdutoDialog-an_nome"
+                  maxlength="4000"
+                  v-model="formData.an_nome"
+                  :name="field"
+                  :invalid="invalid"
+                  fluid
+                />
+                <label for="ManutProdutoDialog-an_nome">Nome</label>
+              </FloatLabel>
+            </FieldForm>
+            <FieldForm class="m-[4px] items-end" name="bo_sts_reg">
+              <StatusField v-model="formData.bo_sts_reg" />
+            </FieldForm>
+          </div>
           <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-10"
-            name="an_nome"
-            v-slot="{ invalid, field }"
-          >
-            <FloatLabel variant="on">
-              <InputText
-                id="ManutProdutoDialog-an_nome"
-                maxlength="4000"
-                v-model="formData.an_nome"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
-              <label for="ManutProdutoDialog-an_nome">Nome</label>
-            </FloatLabel>
-          </FieldForm>
-          <FieldForm class="m-[4px] col-span-12 sm:col-span-2 flex items-start" name="bo_sts_reg">
-            <StatusField v-model="formData.bo_sts_reg" />
-          </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-3"
-            name="an_referencia"
-            v-slot="{ invalid, field }"
-          >
-            <FloatLabel variant="on">
-              <InputText
-                id="ManutProdutoDialog-an_referencia"
-                maxlength="4000"
-                v-model="formData.an_referencia"
-                :name="field"
-                :invalid="invalid"
-                fluid
-              />
-              <label for="ManutProdutoDialog-an_referencia">Referência / código interno</label>
-            </FloatLabel>
-          </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-3"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="an_categoria"
             v-slot="{ invalid, field }"
           >
@@ -261,14 +303,13 @@ watch(
               <Button
                 type="button"
                 icon="pi pi-plus"
-                severity="secondary"
                 aria-label="Cadastrar categoria"
                 @click="categoryDialogVisible = true"
               />
             </div>
           </FieldForm>
           <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-3"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="an_marca"
             v-slot="{ invalid, field }"
           >
@@ -288,14 +329,13 @@ watch(
               <Button
                 type="button"
                 icon="pi pi-plus"
-                severity="secondary"
                 aria-label="Cadastrar marca"
                 @click="brandDialogVisible = true"
               />
             </div>
           </FieldForm>
           <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-3"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="ca_unidade"
             v-slot="{ invalid, field }"
           >
@@ -316,113 +356,120 @@ watch(
               <Button
                 type="button"
                 icon="pi pi-plus"
-                severity="secondary"
                 aria-label="Cadastrar unidade"
                 @click="unitDialogVisible = true"
               />
             </div>
           </FieldForm>
           <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-3"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="vl_custo"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutProdutoDialog-vl_custo"
-                v-model="formData.vl_custo"
+              <InputText
+                id="ManutProdutoDialog-vl_custo"
+                :modelValue="valoresDigitados.vl_custo"
                 :name="field"
                 :invalid="invalid"
                 fluid
-                locale="pt-BR"
-                mode="currency"
-                currency="BRL"
-                :max="999999999.99"
-                :min="0"
+                inputmode="decimal"
+                @focus="editarValor('vl_custo', $event)"
+                @update:modelValue="digitarValor('vl_custo', $event ?? '')"
+                @blur="formatarValor('vl_custo')"
               />
-              <label for="ManutProdutoDialog-vl_custo">Preço de custo</label>
+              <label for="ManutProdutoDialog-vl_custo">Vl. custo</label>
             </FloatLabel>
           </FieldForm>
           <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-3"
+            class="m-[4px] col-span-12 sm:col-span-4"
             name="vl_venda"
             v-slot="{ invalid, field }"
           >
             <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutProdutoDialog-vl_venda"
-                v-model="formData.vl_venda"
+              <InputText
+                id="ManutProdutoDialog-vl_venda"
+                :modelValue="valoresDigitados.vl_venda"
                 :name="field"
                 :invalid="invalid"
                 fluid
-                locale="pt-BR"
-                mode="currency"
-                currency="BRL"
-                :max="999999999.99"
-                :min="0"
+                inputmode="decimal"
+                @focus="editarValor('vl_venda', $event)"
+                @update:modelValue="digitarValor('vl_venda', $event ?? '')"
+                @blur="formatarValor('vl_venda')"
               />
-              <label for="ManutProdutoDialog-vl_venda">Preço de venda</label>
-            </FloatLabel>
-          </FieldForm>
-          <FieldForm class="m-[4px] col-span-12 lg:col-span-6" name="an_obs" v-slot="{ field }">
-            <FloatLabel variant="on">
-              <Textarea
-                id="ManutProdutoDialog-an_obs"
-                maxlength="4000"
-                v-model="formData.an_obs"
-                :name="field"
-                rows="2"
-                fluid
-              />
-              <label for="ManutProdutoDialog-an_obs">Observações</label>
+              <label for="ManutProdutoDialog-vl_venda">Vl. venda</label>
             </FloatLabel>
           </FieldForm>
         </div>
       </Fieldset>
-      <Fieldset legend="Dados do estoque">
-        <div class="grid grid-cols-12 gap-x-4">
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6"
-            name="qt_estoque"
-            v-slot="{ invalid, field }"
-          >
-            <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutProdutoDialog-qt_estoque"
-                v-model="formData.qt_estoque"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                locale="pt-BR"
-                :max="999999999.999"
-                :min="0"
-                :maxFractionDigits="3"
-              />
-              <label for="ManutProdutoDialog-qt_estoque">Quantidade em estoque</label>
-            </FloatLabel>
-          </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6"
-            name="qt_estoque_min"
-            v-slot="{ invalid, field }"
-          >
-            <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutProdutoDialog-qt_estoque_min"
-                v-model="formData.qt_estoque_min"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                locale="pt-BR"
-                :max="999999999.999"
-                :min="0"
-                :maxFractionDigits="3"
-              />
-              <label for="ManutProdutoDialog-qt_estoque_min">Estoque mínimo</label>
-            </FloatLabel>
-          </FieldForm>
-        </div>
-      </Fieldset>
+      <Tabs value="estoque">
+        <TabList>
+          <Tab value="estoque">Estoque</Tab>
+          <Tab value="observacao">Observação</Tab>
+        </TabList>
+        <TabPanels class="h-[calc(10rem+20px)] sm:h-[calc(8rem+20px)]">
+          <TabPanel value="estoque">
+            <div class="grid grid-cols-12 gap-x-4">
+              <FieldForm
+                class="m-[4px] col-span-12 sm:col-span-6"
+                name="qt_estoque"
+                v-slot="{ invalid, field }"
+              >
+                <FloatLabel variant="on">
+                  <InputNumber
+                    inputId="ManutProdutoDialog-qt_estoque"
+                    v-model="formData.qt_estoque"
+                    :name="field"
+                    :invalid="invalid"
+                    fluid
+                    locale="pt-BR"
+                    :max="999999999.999"
+                    :min="0"
+                    :maxFractionDigits="3"
+                  />
+                  <label for="ManutProdutoDialog-qt_estoque">Quantidade em estoque</label>
+                </FloatLabel>
+              </FieldForm>
+              <FieldForm
+                class="m-[4px] col-span-12 sm:col-span-6"
+                name="qt_estoque_min"
+                v-slot="{ invalid, field }"
+              >
+                <FloatLabel variant="on">
+                  <InputNumber
+                    inputId="ManutProdutoDialog-qt_estoque_min"
+                    v-model="formData.qt_estoque_min"
+                    :name="field"
+                    :invalid="invalid"
+                    fluid
+                    locale="pt-BR"
+                    :max="999999999.999"
+                    :min="0"
+                    :maxFractionDigits="3"
+                  />
+                  <label for="ManutProdutoDialog-qt_estoque_min">Etq. mínimo</label>
+                </FloatLabel>
+              </FieldForm>
+            </div>
+          </TabPanel>
+          <TabPanel value="observacao">
+            <FieldForm compact class="m-[4px]" name="an_obs" v-slot="{ field }">
+              <FloatLabel variant="on">
+                <Textarea
+                  id="ManutProdutoDialog-an_obs"
+                  maxlength="4000"
+                  v-model="formData.an_obs"
+                  :name="field"
+                  class="h-[clamp(4rem,14dvh,5.5rem)] resize-none overflow-y-auto"
+                  fluid
+                />
+                <label for="ManutProdutoDialog-an_obs">Observações</label>
+              </FloatLabel>
+            </FieldForm>
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </FormPage>
     <template #footer>
       <div class="flex w-full justify-end gap-2 border-t border-surface-200 pt-4">

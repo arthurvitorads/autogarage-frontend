@@ -54,13 +54,13 @@
     },
     {
       "field": "vl_custo",
-      "header": "Custo",
+      "header": "Vl. custo",
       "align": "end",
       "width": 120
     },
     {
       "field": "vl_venda",
-      "header": "Venda",
+      "header": "Vl. venda",
       "align": "end",
       "width": 120
     },
@@ -71,7 +71,7 @@
     },
     {
       "field": "qt_estoque_min",
-      "header": "Mínimo",
+      "header": "Etq. mínimo",
       "width": 120
     },
     {
