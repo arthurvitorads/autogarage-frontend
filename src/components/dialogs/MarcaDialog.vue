@@ -170,7 +170,7 @@ watch(
             icon="pi pi-pencil"
             severity="secondary"
             text
-            aria-label="Editar marca"
+            aria-label="Editar"
             @click="handleMarca(data)"
           />
         </template>

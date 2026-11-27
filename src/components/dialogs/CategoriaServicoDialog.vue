@@ -177,7 +177,7 @@ watch(
             icon="pi pi-pencil"
             severity="secondary"
             text
-            aria-label="Editar categoria"
+            aria-label="Editar"
             @click="handleCategoria(data)"
           />
         </template>

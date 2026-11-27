@@ -196,7 +196,7 @@ watch(
             icon="pi pi-pencil"
             severity="secondary"
             text
-            aria-label="Editar unidade"
+            aria-label="Editar"
             @click="handleUnidade(data)"
           />
         </template>

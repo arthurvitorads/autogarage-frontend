@@ -58,7 +58,7 @@
   "actions": [
     {
       "action": "edit",
-      "label": "Editar usuário",
+      "label": "Editar",
       "icon": "pi pi-pencil"
     }
   ]

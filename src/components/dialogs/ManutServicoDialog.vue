@@ -6,6 +6,7 @@ import { ServiceModel } from '@/models/service.model'
 import type { IFormPageRef } from '@/interface/util'
 import { computed, reactive, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useConfirmacao } from '@/composables/useConfirmacao'
 
 import Fieldset from 'primevue/fieldset'
 import InputText from 'primevue/inputtext'
@@ -48,6 +49,7 @@ function handleCategoria(category: ICadCategoriaServico) {
 
 const { normalizeError, setLoading } = useUtilStore()
 const { loading } = storeToRefs(useUtilStore())
+const confirmar = useConfirmacao()
 
 const formErrors = ref<TGenericData>({})
 const formKey = ref(0)
@@ -71,18 +73,12 @@ function validateForm(values: IFormServico) {
   )
     errors.vl_preco = 'Informe um preço válido, com até duas casas decimais.'
 
-  if (
-    values.nu_tempo_estimado !== null &&
-    (!Number.isSafeInteger(values.nu_tempo_estimado) ||
-      values.nu_tempo_estimado < 1 ||
-      values.nu_tempo_estimado > 999999)
-  )
-    errors.nu_tempo_estimado = 'Informe o tempo em minutos inteiros, maior que zero.'
-
   return errors
 }
 
 async function onSubmit(values: IFormServico) {
+  if (loading.value || !(await confirmar())) return
+
   setLoading(true)
 
   try {
@@ -91,7 +87,6 @@ async function onSubmit(values: IFormServico) {
       an_nome: values.an_nome.trim(),
       an_categoria: values.an_categoria ?? '',
       vl_preco: values.vl_preco ?? 0,
-      ...(values.nu_tempo_estimado !== null ? { nu_tempo_estimado: values.nu_tempo_estimado } : {}),
       an_obs: values.an_obs.trim(),
       bo_sts_reg: values.bo_sts_reg,
     }
@@ -120,7 +115,6 @@ watch(
         an_nome: service.an_nome,
         an_categoria: service.an_categoria,
         vl_preco: service.vl_preco,
-        nu_tempo_estimado: service.nu_tempo_estimado ?? null,
         an_obs: service.an_obs,
         bo_sts_reg: service.bo_sts_reg,
       })
@@ -195,7 +189,6 @@ watch(
               <Button
                 type="button"
                 icon="pi pi-plus"
-                severity="secondary"
                 aria-label="Cadastrar categoria"
                 @click="categoryDialogVisible = true"
               />
@@ -219,27 +212,7 @@ watch(
                 :max="999999999.99"
                 :min="0"
               />
-              <label for="ManutServicoDialog-vl_preco">Preço do serviço</label>
-            </FloatLabel>
-          </FieldForm>
-          <FieldForm
-            class="m-[4px] col-span-12 sm:col-span-6 lg:col-span-4"
-            name="nu_tempo_estimado"
-            v-slot="{ invalid, field }"
-          >
-            <FloatLabel variant="on">
-              <InputNumber
-                inputId="ManutServicoDialog-nu_tempo_estimado"
-                v-model="formData.nu_tempo_estimado"
-                :name="field"
-                :invalid="invalid"
-                fluid
-                locale="pt-BR"
-                :max="999999"
-                :min="0"
-                :maxFractionDigits="0"
-              />
-              <label for="ManutServicoDialog-nu_tempo_estimado">Tempo estimado (minutos)</label>
+              <label for="ManutServicoDialog-vl_preco">Vl. serviço</label>
             </FloatLabel>
           </FieldForm>
         </div>

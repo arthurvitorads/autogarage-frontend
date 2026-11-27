@@ -94,7 +94,7 @@
   "actions": [
     {
       "action": "edit",
-      "label": "Editar produto",
+      "label": "Editar",
       "icon": "pi pi-pencil"
     }
   ]

@@ -222,7 +222,7 @@ watch(
             icon="pi pi-pencil"
             severity="secondary"
             text
-            aria-label="Editar classificação"
+            aria-label="Editar"
             @click="handleClassification(data.cn_classificacao_os)"
           />
         </template>

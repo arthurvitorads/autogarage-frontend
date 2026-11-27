@@ -107,7 +107,7 @@
   "actions": [
     {
       "action": "edit",
-      "label": "Editar ordem",
+      "label": "Editar",
       "icon": "pi pi-pencil"
     },
     {

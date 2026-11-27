@@ -236,7 +236,7 @@ function updateSale(sale: { cn_venda: string }) {
             v-if="canWrite('ORDEM_SERVICO') && !isOrderClosed(order)"
             icon="pi pi-pencil"
             severity="secondary"
-            aria-label="Editar O.S."
+            aria-label="Editar"
             @click="editOrder(order)"
           />
           <Button

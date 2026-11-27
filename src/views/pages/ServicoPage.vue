@@ -82,9 +82,6 @@ function onGridAction({ action, data }: { action: string; data: IAdmServico }) {
           @action="onGridAction"
         >
           <template #cell-vl_preco="{ data }">{{ formatCurrency(data.vl_preco) }}</template>
-          <template #cell-nu_tempo_estimado="{ data }">{{
-            data.nu_tempo_estimado ? data.nu_tempo_estimado + ' min' : ''
-          }}</template>
         </GridPage>
       </div>
     </div>

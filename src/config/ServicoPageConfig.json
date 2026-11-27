@@ -27,14 +27,9 @@
     },
     {
       "field": "vl_preco",
-      "header": "Preço",
+      "header": "Vl. serviço",
       "align": "end",
       "width": 120
-    },
-    {
-      "field": "nu_tempo_estimado",
-      "header": "Tempo estimado",
-      "width": 160
     },
     {
       "field": "bo_sts_reg",
@@ -56,7 +51,7 @@
   "actions": [
     {
       "action": "edit",
-      "label": "Editar serviço",
+      "label": "Editar",
       "icon": "pi pi-pencil"
     }
   ]
